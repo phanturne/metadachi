@@ -3,11 +3,11 @@
 import {
   Archive,
   Bell,
-  BookmarkIcon,
   Bot,
   Brain,
   ChevronRight,
   ChevronsUpDown,
+  Flame,
   FolderOpenDot,
   Home,
   LandPlot,
@@ -16,11 +16,13 @@ import {
   LogOut,
   MoreHorizontal,
   Notebook,
+  Plus,
   Search,
   Send,
   Settings,
   Sparkles,
   User,
+  WalletCards,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -55,6 +57,15 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import * as React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DialogHeader } from "next/dist/client/components/react-dev-overlay/internal/components/Dialog";
+import { Button } from "@/components/ui/button";
 
 const data = {
   user: {
@@ -72,11 +83,6 @@ const data = {
       title: "Ask AI",
       url: "#",
       icon: Sparkles,
-    },
-    {
-      title: "Quick Capture",
-      url: "#",
-      icon: BookmarkIcon,
     },
     {
       title: "Home",
@@ -217,6 +223,23 @@ const data = {
       ],
     },
   ],
+  navTools: [
+    {
+      title: "Habit Tracker",
+      url: "#",
+      icon: Flame,
+    },
+    {
+      title: "Flashcards",
+      url: "#",
+      icon: WalletCards,
+    },
+    {
+      title: "More",
+      url: "#",
+      icon: MoreHorizontal,
+    },
+  ],
   navSecondary: [
     {
       title: "Support",
@@ -242,6 +265,7 @@ export default function AppSidebar() {
       <SidebarContent>
         <NavFavorites />
         <NavWorkspace />
+        <NavTools />
         <NavSecondary />
       </SidebarContent>
       <SidebarFooter>
@@ -252,17 +276,41 @@ export default function AppSidebar() {
 }
 
 function AppSidebarMenu() {
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton size="lg" asChild>
-          <a href="#">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              <Brain className="size-5" />
+          <a href="#" className="flex w-full items-center justify-between">
+            <div className="flex items-center">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <Brain className="size-5" />
+              </div>
+              <div className="ml-3 grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">Metadachi</span>
+              </div>
             </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">Metadachi</span>
-            </div>
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="ml-2">
+                  <Plus className="size-4" />
+                  <span className="sr-only">Add new item</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Item</DialogTitle>
+                  <DialogDescription>
+                    Create a new item to add.
+                  </DialogDescription>
+                </DialogHeader>
+                {/* Add your form or content for the modal here */}
+                <div className="mt-4">
+                  <Button onClick={() => setIsModalOpen(false)}>Close</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </a>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -297,8 +345,7 @@ function NavFavorites() {
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip={item.title}>
                 <a href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
+                  <item.icon /> <span>{item.title}</span>{" "}
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -371,6 +418,28 @@ function NavSecondary() {
           ))}
         </SidebarMenu>
       </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
+function NavTools() {
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>Tools</SidebarGroupLabel>
+      <SidebarMenu>
+        {data.navTools.map((item) => (
+          <Collapsible key={item.title} asChild>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip={item.title}>
+                <a href={item.url}>
+                  <item.icon />
+                  <span>{item.title}</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </Collapsible>
+        ))}
+      </SidebarMenu>
     </SidebarGroup>
   );
 }
