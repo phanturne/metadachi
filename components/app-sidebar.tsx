@@ -66,6 +66,7 @@ import {
 } from "@/components/ui/dialog";
 import { DialogHeader } from "next/dist/client/components/react-dev-overlay/internal/components/Dialog";
 import { Button } from "@/components/ui/button";
+import { useSearchDialog } from "@/providers/search-dialog-provider";
 
 const data = {
   user: {
@@ -76,7 +77,6 @@ const data = {
   navMain: [
     {
       title: "Search",
-      url: "#",
       icon: Search,
     },
     {
@@ -319,12 +319,20 @@ function AppSidebarMenu() {
 }
 
 function NavMain() {
+  const { setOpen } = useSearchDialog();
+
+  const handleNavClick = (title: string) => {
+    if (title === "Search") {
+      setOpen(true);
+    }
+  };
+
   return (
     <SidebarMenu>
       {data.navMain.map((item) => (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild tooltip={item.title}>
-            <a href={item.url}>
+            <a href={item.url} onClick={() => handleNavClick(item.title)}>
               <item.icon />
               <span>{item.title}</span>
             </a>
