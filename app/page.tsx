@@ -39,7 +39,10 @@ const RecentlyVisited = () => (
         "Notes",
         "Inbox",
       ].map((item, index) => (
-        <div key={index} className="rounded-lg bg-[#2E2E2E] p-4">
+        <div
+          key={index}
+          className="transform rounded-lg bg-[#1E1E1E] p-4 shadow-md transition-transform hover:scale-105"
+        >
           <h3 className="mb-2 text-sm font-normal">{item}</h3>
           <p className="text-xs text-gray-400">
             K · {["1w", "3w", "3w", "1m", "1m", "3w"][index]} ago
@@ -81,7 +84,7 @@ const CalendarComponent = () => {
   const [selectedDate, setSelectedDate] = React.useState(22);
 
   return (
-    <div className="flex rounded-xl bg-[#2E2E2E] p-6">
+    <div className="flex rounded-xl bg-[#1E1E1E] p-6 shadow-md">
       <div className="w-2/5 border-r border-gray-600 pr-4">
         <div className="mb-4 text-center">
           <h3 className="text-lg font-semibold text-white">May 2024</h3>
@@ -116,7 +119,10 @@ const CalendarComponent = () => {
           {events
             .filter((event) => event.date === selectedDate)
             .map((event) => (
-              <div key={event.id} className="rounded-lg bg-gray-800 p-3">
+              <div
+                key={event.id}
+                className="rounded-lg bg-gray-800 p-3 shadow-md"
+              >
                 <h5 className="mb-2 text-sm font-medium text-white">
                   {event.title}
                 </h5>
@@ -143,7 +149,7 @@ const CalendarComponent = () => {
 };
 
 const UpcomingTasks = () => (
-  <div className="rounded-xl bg-[#2E2E2E] p-6">
+  <div className="rounded-xl bg-[#1E1E1E] p-6 shadow-md">
     <h3 className="mb-4 text-lg font-semibold">Upcoming Tasks</h3>
     <ul className="space-y-3">
       {[
@@ -168,7 +174,7 @@ const InboxComponent = () => (
       <Inbox className="mr-2 h-4 w-4" />
       Inbox
     </h2>
-    <div className="rounded-xl bg-[#2E2E2E] p-6">
+    <div className="rounded-xl bg-[#1E1E1E] p-6 shadow-md">
       <div className="space-y-4">
         {/*<div className="flex items-center space-x-2">*/}
         {/*  <Inbox className="h-5 w-5" />*/}
@@ -244,18 +250,19 @@ const Areas = () => (
       ].map((area, index) => (
         <div
           key={index}
-          className="flex flex-col items-center justify-center rounded-xl bg-[#2E2E2E] p-4"
+          className="group relative flex transform flex-col items-center justify-center rounded-xl bg-[#2E2E2E] p-4 shadow-md transition-transform hover:scale-105"
         >
-          <area.icon className="mb-2 h-8 w-8" />
-          <span>{area.name}</span>
+          <area.icon className="mb-2 h-8 w-8 text-white transition-transform group-hover:scale-110" />
+          <span className="text-white">{area.name}</span>
+          <div className="absolute inset-0 rounded-xl bg-black opacity-0 transition-opacity group-hover:opacity-30"></div>
         </div>
       ))}
       <Button
         variant="ghost"
-        className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600"
+        className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600 transition-transform hover:scale-105"
       >
-        <Plus className="mb-2 h-6 w-6" />
-        <span>New area</span>
+        <Plus className="mb-2 h-6 w-6 text-gray-400 transition-transform hover:scale-110" />
+        <span className="text-gray-400">New area</span>
       </Button>
     </div>
   </div>
@@ -302,7 +309,7 @@ const Projects = () => (
           ],
         },
       ].map((column, index) => (
-        <div key={index} className="rounded-xl bg-[#2E2E2E] p-6">
+        <div key={index} className="rounded-xl bg-[#1E1E1E] p-6 shadow-md">
           <div className="mb-4 flex items-center space-x-2">
             <span className={`h-2 w-2 rounded-full ${column.color}`}></span>
             <span>{column.status}</span>
@@ -310,7 +317,10 @@ const Projects = () => (
           </div>
           <div className="space-y-4">
             {column.projects.map((project, projectIndex) => (
-              <div key={projectIndex} className="rounded-lg bg-[#3A3A3A] p-4">
+              <div
+                key={projectIndex}
+                className="transform rounded-lg bg-[#2A2A2A] p-4 shadow-md transition-transform hover:scale-105"
+              >
                 <div className="mb-2 flex items-center justify-between">
                   <span>{project.name}</span>
                   <Folder className="h-4 w-4" />
@@ -341,7 +351,7 @@ const QuickActions = () => {
       <Button
         size="icon"
         variant="outline"
-        className="rounded-full border-gray-600 bg-[#2E2E2E]"
+        className="rounded-full border-gray-600 bg-[#1E1E1E] shadow-md"
         onClick={() => setOpen(true)}
       >
         <Plus className="h-4 w-4" />
