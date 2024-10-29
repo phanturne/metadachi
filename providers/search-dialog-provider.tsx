@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, ReactNode, useContext, useState } from "react";
+import SearchDialog from "@/components/search-dialog";
 
 interface SearchDialogProvider {
   open: boolean;
@@ -15,6 +16,7 @@ export const SearchDialogProvider = ({ children }: { children: ReactNode }) => {
   return (
     <SearchDialogContext.Provider value={{ open, setOpen }}>
       {children}
+      <SearchDialog />
     </SearchDialogContext.Provider>
   );
 };
@@ -23,7 +25,7 @@ export const useSearchDialog = () => {
   const context = useContext(SearchDialogContext);
   if (!context) {
     throw new Error(
-      "useCommandMenuDialog must be used within a CommandMenuDialogProvider",
+      "useCommandMenuDialog must be used within a SearchDialogProvider",
     );
   }
   return context;

@@ -6,7 +6,7 @@ import * as React from "react";
 import AppSidebar from "@/components/app-sidebar";
 import AppHeader from "@/components/app-header";
 import { SearchDialogProvider } from "@/providers/search-dialog-provider";
-import SearchDialog from "@/components/search-dialog";
+import { NoteDialogProvider } from "@/providers/note-dialog-provider";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -33,14 +33,15 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SearchDialogProvider>
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>
-                <AppHeader />
-                {children}
-              </SidebarInset>
-            </SidebarProvider>
-            <SearchDialog />
+            <NoteDialogProvider>
+              <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset>
+                  <AppHeader />
+                  {children}
+                </SidebarInset>
+              </SidebarProvider>
+            </NoteDialogProvider>
           </SearchDialogProvider>
         </ThemeProvider>
       </body>

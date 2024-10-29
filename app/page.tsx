@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useNoteDialog } from "@/providers/note-dialog-provider";
 
 const RecentlyVisited = () => (
   <div>
@@ -281,17 +282,22 @@ const Projects = () => (
   </div>
 );
 
-const QuickActions = () => (
-  <div className="fixed bottom-4 right-4 flex space-x-2">
-    <Button
-      size="icon"
-      variant="outline"
-      className="rounded-full border-gray-600 bg-[#2E2E2E]"
-    >
-      <Plus className="h-4 w-4" />
-    </Button>
-  </div>
-);
+const QuickActions = () => {
+  const { setOpen } = useNoteDialog();
+
+  return (
+    <div className="fixed bottom-4 right-4 flex space-x-2">
+      <Button
+        size="icon"
+        variant="outline"
+        className="rounded-full border-gray-600 bg-[#2E2E2E]"
+        onClick={() => setOpen(true)}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
 
 export default function Component() {
   return (
