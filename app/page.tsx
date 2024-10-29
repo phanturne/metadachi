@@ -5,6 +5,7 @@ import {
   Bookmark,
   Briefcase,
   Calendar,
+  CalendarIcon,
   Clock,
   DollarSign,
   Folder,
@@ -67,29 +68,79 @@ const UpcomingEvents = () => (
   </div>
 );
 
-const CalendarComponent = () => (
-  <div className="rounded-xl bg-[#2E2E2E] p-6">
-    <div className="mb-4 text-center">
-      <h3 className="text-lg font-semibold">May 2024</h3>
-    </div>
-    <div className="grid grid-cols-7 gap-2">
-      {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-        <div key={day} className="text-center text-xs text-gray-400">
-          {day}
+const events = [
+  { id: 1, title: "Team Meeting", time: "09:00 AM", date: 22 },
+  { id: 2, title: "Project Deadline", time: "11:30 AM", date: 22 },
+  { id: 7, title: "Product Demo", time: "10:00 AM", date: 23 },
+  { id: 8, title: "Strategy Meeting", time: "02:00 PM", date: 24 },
+  { id: 9, title: "Client Call", time: "11:00 AM", date: 25 },
+  { id: 10, title: "Team Lunch", time: "12:30 PM", date: 26 },
+];
+
+const CalendarComponent = () => {
+  const [selectedDate, setSelectedDate] = React.useState(22);
+
+  return (
+    <div className="flex rounded-xl bg-[#2E2E2E] p-6">
+      <div className="w-2/5 border-r border-gray-600 pr-4">
+        <div className="mb-4 text-center">
+          <h3 className="text-lg font-semibold text-white">May 2024</h3>
         </div>
-      ))}
-      {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
-        <Button
-          key={date}
-          variant="ghost"
-          className={`h-8 w-full p-0 ${date === 22 ? "bg-blue-600 text-white" : ""}`}
-        >
-          {date}
-        </Button>
-      ))}
+        <div className="grid grid-cols-7 gap-1">
+          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+            <div key={day} className="text-center text-xs text-gray-400">
+              {day}
+            </div>
+          ))}
+          {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
+            <Button
+              key={date}
+              variant="ghost"
+              className={`h-7 w-full p-0 text-sm ${
+                date === selectedDate
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:text-white"
+              }`}
+              onClick={() => setSelectedDate(date)}
+            >
+              {date}
+            </Button>
+          ))}
+        </div>
+      </div>
+      <div className="w-3/5 pl-4">
+        <h4 className="mb-4 text-lg font-semibold text-white">
+          Events for May {selectedDate}
+        </h4>
+        <div className="max-h-[400px] space-y-3 overflow-y-auto pr-2">
+          {events
+            .filter((event) => event.date === selectedDate)
+            .map((event) => (
+              <div key={event.id} className="rounded-lg bg-gray-800 p-3">
+                <h5 className="mb-2 text-sm font-medium text-white">
+                  {event.title}
+                </h5>
+                <div className="flex items-center justify-between text-xs text-gray-400">
+                  <span className="flex items-center">
+                    <CalendarIcon className="mr-1 h-3 w-3" />
+                    May {event.date}, 2024
+                  </span>
+                  <span className="flex items-center">
+                    <Clock className="mr-1 h-3 w-3" />
+                    {event.time}
+                  </span>
+                </div>
+              </div>
+            ))}
+          {events.filter((event) => event.date === selectedDate).length ===
+            0 && (
+            <p className="text-sm text-gray-400">No events for this date.</p>
+          )}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const UpcomingTasks = () => (
   <div className="rounded-xl bg-[#2E2E2E] p-6">
@@ -193,9 +244,9 @@ const Areas = () => (
       ].map((area, index) => (
         <div
           key={index}
-          className="flex flex-col items-center justify-center rounded-xl bg-[#2E2E2E] p-6"
+          className="flex flex-col items-center justify-center rounded-xl bg-[#2E2E2E] p-4"
         >
-          <area.icon className="mb-4 h-12 w-12" />
+          <area.icon className="mb-2 h-8 w-8" />
           <span>{area.name}</span>
         </div>
       ))}
@@ -203,7 +254,7 @@ const Areas = () => (
         variant="ghost"
         className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600"
       >
-        <Plus className="mb-2 h-8 w-8" />
+        <Plus className="mb-2 h-6 w-6" />
         <span>New area</span>
       </Button>
     </div>
@@ -299,7 +350,7 @@ const QuickActions = () => {
   );
 };
 
-export default function Component() {
+export default function TaskPage() {
   return (
     <>
       <div className="m-auto flex flex-1 flex-col gap-8 pb-20 pt-0">
