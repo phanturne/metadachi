@@ -15,10 +15,10 @@ import {
   LandPlot,
   Languages,
   ListChecks,
-  Menu,
   MoreHorizontal,
   Plane,
   Plus,
+  StickyNote,
   User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -191,27 +191,23 @@ const InboxComponent = () => (
     </h2>
     <div className="flex-grow overflow-y-auto rounded-xl bg-card p-6 shadow-md">
       <div className="space-y-4">
-        <div className="flex items-center space-x-2 text-gray-400">
+        <div className="flex items-center space-x-4 text-gray-400">
           <div className="flex items-center gap-2">
-            <Bookmark className="h-4 w-4" />
-            <span>Resources</span>
+            <StickyNote className="ml-2 h-4 w-4" />
+            <span>Notes</span>
           </div>
           <div className="flex items-center gap-2">
-            <Clock className="ml-2 h-4 w-4" />
+            <ListChecks className="ml-2 h-4 w-4" />
             <span>Tasks</span>
           </div>
           <div className="flex items-center gap-2">
-            <Folder className="ml-2 h-4 w-4" />
+            <FolderOpenDot className="ml-2 h-4 w-4" />
             <span>Projects</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Menu className="ml-2 h-4 w-4" />
-            <span>Notes</span>
           </div>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Bookmark className="h-4 w-4" />
+            <StickyNote className="h-4 w-4" />
             <span>Second Brain PARA-Thiago Forte</span>
           </div>
           <div className="flex items-center space-x-2">
@@ -224,7 +220,7 @@ const InboxComponent = () => (
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Bookmark className="h-4 w-4" />
+            <StickyNote className="h-4 w-4" />
             <span>How to Invest for Beginners</span>
           </div>
           <div className="flex items-center space-x-2">
@@ -293,7 +289,6 @@ const Projects = () => (
           projects: [
             {
               name: "Learn Japanese",
-              area: "Language Learning",
               progress: 0,
             },
           ],
@@ -301,7 +296,7 @@ const Projects = () => (
         {
           status: "Planned",
           color: "bg-blue-600",
-          projects: [{ name: "Learn Python", area: "Personal", progress: 0 }],
+          projects: [{ name: "Learn Python", progress: 0 }],
         },
         {
           status: "In progress",
@@ -309,12 +304,10 @@ const Projects = () => (
           projects: [
             {
               name: "Trip to Japan",
-              area: "Travel",
               progress: 100,
             },
             {
               name: "Get AI/ML Job",
-              area: "Investing",
               progress: 25,
             },
           ],
@@ -330,13 +323,12 @@ const Projects = () => (
             {column.projects.map((project, projectIndex) => (
               <div
                 key={projectIndex}
-                className="bg-nested-card-background transform rounded-lg p-4 shadow-md transition-transform hover:scale-105"
+                className="transform rounded-lg bg-nested-card-background p-4 shadow-md transition-transform hover:scale-105"
               >
                 <div className="mb-2 flex items-center justify-between">
                   <span>{project.name}</span>
                   <Folder className="h-4 w-4" />
                 </div>
-                <div className="mb-2 text-sm text-gray-400">{project.area}</div>
                 <Progress value={project.progress} className="h-1" />
               </div>
             ))}
@@ -350,6 +342,79 @@ const Projects = () => (
           </div>
         </div>
       ))}
+    </div>
+  </div>
+);
+
+const Resources = () => (
+  <div className="flex h-full flex-col">
+    <h2 className="mb-4 flex items-center text-sm text-gray-400">
+      <Bookmark className="mr-2 h-4 w-4" />
+      Resources
+    </h2>
+    <div className="grid flex-grow grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+      {[
+        { name: "Second Brain PARA", category: "Productivity" },
+        {
+          name: "How to Invest for Beginners",
+          category: "Investment",
+        },
+        { name: "Project Management Tips", category: "Work" },
+        { name: "Healthy Living Guide", category: "Health" },
+      ].map((resource, index) => (
+        <div
+          key={index}
+          className="transform rounded-lg bg-card p-4 shadow-md transition-transform hover:scale-105"
+        >
+          <div className="mb-2 flex items-center justify-between">
+            <span>{resource.name}</span>
+            <Bookmark className="h-4 w-4" />
+          </div>
+          <div className="text-xs text-gray-400">{resource.category}</div>
+        </div>
+      ))}
+      <Button
+        variant="ghost"
+        className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600 transition-transform hover:scale-105"
+      >
+        <Plus className="mb-2 h-6 w-6 text-gray-400 transition-transform hover:scale-110" />
+        <span className="text-gray-400">New resource</span>
+      </Button>
+    </div>
+  </div>
+);
+
+const Notes = () => (
+  <div className="flex h-full flex-col">
+    <h2 className="mb-4 flex items-center text-sm text-gray-400">
+      <StickyNote className="mr-2 h-4 w-4" />
+      Notes
+    </h2>
+    <div className="grid flex-grow grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+      {[
+        { name: "Meeting Notes", date: "2024-05-22" },
+        { name: "Project Ideas", date: "2024-05-21" },
+        { name: "Daily Journal", date: "2024-05-20" },
+        { name: "Research Notes", date: "2024-05-19" },
+      ].map((note, index) => (
+        <div
+          key={index}
+          className="transform rounded-lg bg-card p-4 shadow-md transition-transform hover:scale-105"
+        >
+          <div className="mb-2 flex items-center justify-between">
+            <span>{note.name}</span>
+            <StickyNote className="h-4 w-4" />
+          </div>
+          <div className="text-xs text-gray-400">{note.date}</div>
+        </div>
+      ))}
+      <Button
+        variant="ghost"
+        className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600 transition-transform hover:scale-105"
+      >
+        <Plus className="mb-2 h-6 w-6 text-gray-400 transition-transform hover:scale-110" />
+        <span className="text-gray-400">New note</span>
+      </Button>
     </div>
   </div>
 );
@@ -371,7 +436,7 @@ const QuickActions = () => {
   );
 };
 
-export default function TaskPage() {
+export default function DashboardPage() {
   return (
     <>
       <div className="m-auto flex h-full max-w-[90%] flex-1 flex-col gap-8 pb-20 pt-0 sm:max-w-[90%] sm:px-4 md:max-w-[90%] md:px-6 lg:max-w-5xl lg:px-8 xl:max-w-6xl">
@@ -387,6 +452,8 @@ export default function TaskPage() {
         <InboxComponent />
         <Projects />
         <Areas />
+        <Resources />
+        <Notes />
       </div>
       <QuickActions />
     </>

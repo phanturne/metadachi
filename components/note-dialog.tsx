@@ -45,14 +45,16 @@ const areas = ["Health", "Finance", "Career", "Relationships"];
 export default function NoteDialog() {
   const { open, setOpen } = useNoteDialog();
 
-  const [note, setNote] = useState<NoteData>({
+  const initialNoteState: NoteData = {
     title: "",
     content: "",
     tags: [],
     project: "",
     area: "",
     isArchived: false,
-  });
+  };
+
+  const [note, setNote] = useState<NoteData>(initialNoteState);
   const [tagInput, setTagInput] = useState("");
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -73,7 +75,11 @@ export default function NoteDialog() {
     onClose();
   };
 
-  const onClose = () => setOpen(false);
+  const onClose = () => {
+    setOpen(false);
+    setNote(initialNoteState);
+    setTagInput("");
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

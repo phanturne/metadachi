@@ -3,6 +3,7 @@
 import {
   Archive,
   Bell,
+  Bookmark,
   Bot,
   Brain,
   ChevronRight,
@@ -11,16 +12,16 @@ import {
   FolderOpenDot,
   Home,
   LandPlot,
-  Leaf,
   LifeBuoy,
   LogOut,
+  LucideTrash2,
   MoreHorizontal,
   Notebook,
-  Plus,
   Search,
   Send,
   Settings,
   Sparkles,
+  Telescope,
   User,
   WalletCards,
 } from "lucide-react";
@@ -57,15 +58,6 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import * as React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { DialogHeader } from "next/dist/client/components/react-dev-overlay/internal/components/Dialog";
-import { Button } from "@/components/ui/button";
 import { useSearchDialog } from "@/providers/search-dialog-provider";
 
 const data = {
@@ -89,6 +81,11 @@ const data = {
       url: "#",
       icon: Home,
       isActive: true,
+    },
+    {
+      title: "Explore",
+      url: "#",
+      icon: Telescope,
     },
   ],
   navFavorites: [
@@ -156,7 +153,7 @@ const data = {
     {
       title: "Resources",
       url: "#",
-      icon: Leaf,
+      icon: Bookmark,
       items: [
         {
           title: "LLM Comparisons",
@@ -242,6 +239,11 @@ const data = {
   ],
   navSecondary: [
     {
+      title: "Trash",
+      url: "#",
+      icon: LucideTrash2,
+    },
+    {
       title: "Support",
       url: "#",
       icon: LifeBuoy,
@@ -276,7 +278,7 @@ export default function AppSidebar() {
 }
 
 function AppSidebarMenu() {
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  // const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   return (
     <SidebarMenu>
@@ -291,26 +293,26 @@ function AppSidebarMenu() {
                 <span className="truncate font-semibold">Metadachi</span>
               </div>
             </div>
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="ml-2">
-                  <Plus className="size-4" />
-                  <span className="sr-only">Add new item</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Item</DialogTitle>
-                  <DialogDescription>
-                    Create a new item to add.
-                  </DialogDescription>
-                </DialogHeader>
-                {/* Add your form or content for the modal here */}
-                <div className="mt-4">
-                  <Button onClick={() => setIsModalOpen(false)}>Close</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            {/*<Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>*/}
+            {/*  <DialogTrigger asChild>*/}
+            {/*    <Button variant="ghost" size="icon" className="ml-2">*/}
+            {/*      <Plus className="size-4" />*/}
+            {/*      <span className="sr-only">Add new item</span>*/}
+            {/*    </Button>*/}
+            {/*  </DialogTrigger>*/}
+            {/*  <DialogContent>*/}
+            {/*    <DialogHeader>*/}
+            {/*      <DialogTitle>Add New Item</DialogTitle>*/}
+            {/*      <DialogDescription>*/}
+            {/*        Create a new item to add.*/}
+            {/*      </DialogDescription>*/}
+            {/*    </DialogHeader>*/}
+            {/*    /!* Add your form or content for the modal here *!/*/}
+            {/*    <div className="mt-4">*/}
+            {/*      <Button onClick={() => setIsModalOpen(false)}>Close</Button>*/}
+            {/*    </div>*/}
+            {/*  </DialogContent>*/}
+            {/*</Dialog>*/}
           </a>
         </SidebarMenuButton>
       </SidebarMenuItem>
