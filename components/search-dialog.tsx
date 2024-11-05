@@ -3,9 +3,9 @@
 import * as React from "react";
 import {
   Archive,
+  ArrowUpDown,
   BarChart2,
   Book,
-  Check,
   FileText,
   FolderGit2,
   Map,
@@ -20,6 +20,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useSearchDialog } from "@/providers/search-dialog-provider";
 
@@ -81,6 +82,7 @@ export default function SearchDialog() {
   const { open, setOpen } = useSearchDialog();
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortDirection, setSortDirection] = React.useState("asc");
 
   const clearSearchQuery = () => {
     setSearchQuery("");
@@ -91,14 +93,21 @@ export default function SearchDialog() {
     clearSearchQuery();
   };
 
-  const filteredItems = items.filter((item) => {
-    const matchesSearch = item.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredItems = items
+    .filter((item) => {
+      const matchesSearch = item.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" || item.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      if (sortDirection === "asc") {
+        return a.name.localeCompare(b.name);
+      }
+      return b.name.localeCompare(a.name);
+    });
 
   return (
     <CommandDialog
@@ -113,31 +122,39 @@ export default function SearchDialog() {
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
-      <div className="flex h-[450px]">
-        <div className="w-[200px] border-r border-border/80">
-          <ScrollArea className="h-full">
-            <div className="p-2">
-              {categories.map((category) => (
-                <button
-                  key={category.value}
-                  onClick={() => setSelectedCategory(category.value)}
-                  className={cn(
-                    "mb-1 flex w-full items-center rounded-md px-2 py-1.5 text-sm transition-colors",
-                    selectedCategory === category.value
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted",
-                  )}
-                >
-                  <category.icon className="mr-2 h-4 w-4" />
-                  {category.label}
-                  {selectedCategory === category.value && (
-                    <Check className="ml-auto h-4 w-4" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </ScrollArea>
+      <div className="border-b border-border/80 px-3 py-2">
+        <div className="flex flex-wrap gap-2">
+          <Badge
+            variant="outline"
+            className="cursor-pointer text-sm transition-all hover:scale-105"
+            onClick={() =>
+              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
+            }
+          >
+            <ArrowUpDown className="mr-2 h-4 w-4" />
+            {sortDirection === "asc" ? "Sort A-Z" : "Sort Z-A"}
+          </Badge>
+          {categories.map((category) => (
+            <Badge
+              key={category.value}
+              variant={
+                selectedCategory === category.value ? "default" : "secondary"
+              }
+              className={cn(
+                "cursor-pointer text-sm transition-all hover:scale-105",
+                selectedCategory === category.value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-secondary/80",
+              )}
+              onClick={() => setSelectedCategory(category.value)}
+            >
+              <category.icon className="mr-1 h-3 w-3" />
+              {category.label}
+            </Badge>
+          ))}
         </div>
+      </div>
+      <div className="flex h-[450px]">
         <div className="flex-1">
           <ScrollArea className="h-full p-4">
             <CommandList>
