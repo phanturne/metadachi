@@ -89,12 +89,7 @@ export default function NoteDialog() {
           className="grid gap-6 py-4"
         >
           <div className="space-y-2">
-            <Label
-              htmlFor="title"
-              className="text-sm font-medium text-zinc-400"
-            >
-              Title
-            </Label>
+            <Label htmlFor="title">Title</Label>
             <Input
               id="title"
               placeholder="Note Title"
@@ -102,66 +97,44 @@ export default function NoteDialog() {
               onChange={(e) =>
                 setNote((prev) => ({ ...prev, title: e.target.value }))
               }
-              className="border-zinc-700 bg-zinc-800 text-white placeholder-zinc-500"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tags" className="text-sm font-medium text-zinc-400">
-              Tags
-            </Label>
+            <Label htmlFor="tags">Tags</Label>
             <div className="mb-2 flex flex-wrap gap-2">
               {note.tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="bg-zinc-700 text-zinc-200"
-                >
+                <Badge key={tag} variant="secondary">
                   {tag}
-                  <button
-                    onClick={() => handleRemoveTag(tag)}
-                    className="ml-2 text-zinc-400 hover:text-white"
-                  >
-                    ×
-                  </button>
+                  <button onClick={() => handleRemoveTag(tag)}>×</button>
                 </Badge>
               ))}
             </div>
             <div className="flex items-center">
-              <Hash className="mr-2 h-4 w-4 text-zinc-500" />
+              <Hash className="mr-2 h-4 w-4" />
               <Input
                 id="tags"
                 placeholder="Add tags..."
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleAddTag}
-                className="border-zinc-700 bg-zinc-800 text-white placeholder-zinc-500"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label
-                htmlFor="project"
-                className="text-sm font-medium text-zinc-400"
-              >
-                Project
-              </Label>
+              <Label htmlFor="project">Project</Label>
               <Select
                 value={note.project}
                 onValueChange={(value) =>
                   setNote((prev) => ({ ...prev, project: value }))
                 }
               >
-                <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
+                <SelectTrigger>
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
-                <SelectContent className="border-zinc-700 bg-zinc-800">
+                <SelectContent>
                   {projects.map((project) => (
-                    <SelectItem
-                      key={project}
-                      value={project}
-                      className="text-white"
-                    >
+                    <SelectItem key={project} value={project}>
                       {project}
                     </SelectItem>
                   ))}
@@ -169,24 +142,19 @@ export default function NoteDialog() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label
-                htmlFor="area"
-                className="text-sm font-medium text-zinc-400"
-              >
-                Area
-              </Label>
+              <Label htmlFor="area">Area</Label>
               <Select
                 value={note.area}
                 onValueChange={(value) =>
                   setNote((prev) => ({ ...prev, area: value }))
                 }
               >
-                <SelectTrigger className="border-zinc-700 bg-zinc-800 text-white">
+                <SelectTrigger>
                   <SelectValue placeholder="Select area" />
                 </SelectTrigger>
-                <SelectContent className="border-zinc-700 bg-zinc-800">
+                <SelectContent>
                   {areas.map((area) => (
-                    <SelectItem key={area} value={area} className="text-white">
+                    <SelectItem key={area} value={area}>
                       {area}
                     </SelectItem>
                   ))}
@@ -196,21 +164,12 @@ export default function NoteDialog() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label
-                htmlFor="content"
-                className="text-sm font-medium text-zinc-400"
-              >
-                Content
-              </Label>
+              <Label htmlFor="content">Content</Label>
               <div className="flex space-x-2">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-zinc-400 transition-colors hover:text-white"
-                      >
+                      <Button variant="ghost" size="icon">
                         <Bold className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
@@ -222,11 +181,7 @@ export default function NoteDialog() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-zinc-400 transition-colors hover:text-white"
-                      >
+                      <Button variant="ghost" size="icon">
                         <Italic className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
@@ -238,11 +193,7 @@ export default function NoteDialog() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-zinc-400 transition-colors hover:text-white"
-                      >
+                      <Button variant="ghost" size="icon">
                         <List className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
@@ -254,11 +205,7 @@ export default function NoteDialog() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-zinc-400 transition-colors hover:text-white"
-                      >
+                      <Button variant="ghost" size="icon">
                         <ListOrdered className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
@@ -270,11 +217,7 @@ export default function NoteDialog() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-zinc-400 transition-colors hover:text-white"
-                      >
+                      <Button variant="ghost" size="icon">
                         <Link className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
@@ -292,7 +235,7 @@ export default function NoteDialog() {
               onChange={(e) =>
                 setNote((prev) => ({ ...prev, content: e.target.value }))
               }
-              className="min-h-[200px] border-zinc-700 bg-zinc-800 text-white placeholder-zinc-500"
+              className="min-h-[200px]"
             />
           </div>
           <div className="flex items-center space-x-2">
@@ -303,12 +246,7 @@ export default function NoteDialog() {
                 setNote((prev) => ({ ...prev, isArchived: checked }))
               }
             />
-            <Label
-              htmlFor="archive"
-              className="text-sm font-medium text-zinc-400"
-            >
-              Archive
-            </Label>
+            <Label htmlFor="archive">Archive</Label>
           </div>
         </motion.div>
         <DialogFooter>

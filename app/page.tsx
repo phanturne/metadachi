@@ -14,6 +14,7 @@ import {
   Inbox,
   LandPlot,
   Languages,
+  ListChecks,
   Menu,
   MoreHorizontal,
   Plane,
@@ -25,12 +26,12 @@ import { Progress } from "@/components/ui/progress";
 import { useNoteDialog } from "@/providers/note-dialog-provider";
 
 const RecentlyVisited = () => (
-  <div>
+  <div className="flex h-full flex-col">
     <h2 className="mb-2 flex items-center text-sm text-gray-400">
       <Clock className="mr-2 h-4 w-4" />
       Recently visited
     </h2>
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
+    <div className="grid flex-grow grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
       {[
         "Home",
         "Resources",
@@ -41,7 +42,7 @@ const RecentlyVisited = () => (
       ].map((item, index) => (
         <div
           key={index}
-          className="transform rounded-lg bg-[#1E1E1E] p-4 shadow-md transition-transform hover:scale-105"
+          className="transform rounded-lg bg-card p-4 shadow-md transition-transform hover:scale-105"
         >
           <h3 className="mb-2 text-sm font-normal">{item}</h3>
           <p className="text-xs text-gray-400">
@@ -49,24 +50,6 @@ const RecentlyVisited = () => (
           </p>
         </div>
       ))}
-    </div>
-  </div>
-);
-
-const UpcomingEvents = () => (
-  <div>
-    <div className="mb-2 flex items-center justify-between">
-      <h2 className="flex items-center text-sm text-gray-400">
-        <Calendar className="mr-2 h-4 w-4" />
-        Upcoming events
-      </h2>
-      <Button variant="ghost" size="sm" className="text-gray-400">
-        <MoreHorizontal className="h-4 w-4" />
-      </Button>
-    </div>
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <CalendarComponent />
-      <UpcomingTasks />
     </div>
   </div>
 );
@@ -84,14 +67,19 @@ const CalendarComponent = () => {
   const [selectedDate, setSelectedDate] = React.useState(22);
 
   return (
-    <div className="flex rounded-xl bg-[#1E1E1E] p-6 shadow-md">
-      <div className="w-2/5 border-r border-gray-600 pr-4">
-        <div className="mb-4 text-center">
-          <h3 className="text-lg font-semibold text-white">May 2024</h3>
+    <div className="flex h-full rounded-xl bg-card p-4 shadow-md">
+      <div className="w-2/5 border-r border-gray-600 pr-3">
+        <div className="mb-3 text-center">
+          <h3 className="text-base font-semibold text-black dark:text-white">
+            May 2024
+          </h3>
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5">
           {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-            <div key={day} className="text-center text-xs text-gray-400">
+            <div
+              key={day}
+              className="mb-1 text-center text-[10px] text-gray-400"
+            >
               {day}
             </div>
           ))}
@@ -99,7 +87,7 @@ const CalendarComponent = () => {
             <Button
               key={date}
               variant="ghost"
-              className={`h-7 w-full p-0 text-sm ${
+              className={`h-6 w-full p-0 text-xs ${
                 date === selectedDate
                   ? "bg-blue-600 text-white"
                   : "text-gray-300 hover:text-white"
@@ -111,19 +99,19 @@ const CalendarComponent = () => {
           ))}
         </div>
       </div>
-      <div className="w-3/5 pl-4">
-        <h4 className="mb-4 text-lg font-semibold text-white">
+      <div className="w-3/5 pl-3">
+        <h4 className="mb-3 text-base font-semibold text-black dark:text-white">
           Events for May {selectedDate}
         </h4>
-        <div className="max-h-[400px] space-y-3 overflow-y-auto pr-2">
+        <div className="max-h-[400px] space-y-2 overflow-y-auto pr-2">
           {events
             .filter((event) => event.date === selectedDate)
             .map((event) => (
               <div
                 key={event.id}
-                className="rounded-lg bg-gray-800 p-3 shadow-md"
+                className="rounded-lg bg-gray-200 p-2.5 shadow-md dark:bg-gray-800"
               >
-                <h5 className="mb-2 text-sm font-medium text-white">
+                <h5 className="mb-1.5 text-xs font-medium text-black dark:text-white">
                   {event.title}
                 </h5>
                 <div className="flex items-center justify-between text-xs text-gray-400">
@@ -140,7 +128,7 @@ const CalendarComponent = () => {
             ))}
           {events.filter((event) => event.date === selectedDate).length ===
             0 && (
-            <p className="text-sm text-gray-400">No events for this date.</p>
+            <p className="text-xs text-gray-400">No events for this date.</p>
           )}
         </div>
       </div>
@@ -148,38 +136,61 @@ const CalendarComponent = () => {
   );
 };
 
+const UpcomingEvents = () => (
+  <div className="flex h-full flex-col">
+    <div className="mb-2 flex items-center justify-between">
+      <h2 className="flex items-center text-sm text-gray-400">
+        <Calendar className="mr-2 h-4 w-4" />
+        Upcoming events
+      </h2>
+      <Button variant="ghost" size="sm" className="text-gray-400">
+        <MoreHorizontal className="h-4 w-4" />
+      </Button>
+    </div>
+    <div className="flex-grow">
+      <CalendarComponent />
+    </div>
+  </div>
+);
+
 const UpcomingTasks = () => (
-  <div className="rounded-xl bg-[#1E1E1E] p-6 shadow-md">
-    <h3 className="mb-4 text-lg font-semibold">Upcoming Tasks</h3>
-    <ul className="space-y-3">
-      {[
-        { title: "Team Meeting", date: "Today, 2:00 PM" },
-        { title: "Project Deadline", date: "Tomorrow, 5:00 PM" },
-        { title: "Client Presentation", date: "May 25, 10:00 AM" },
-        { title: "Weekly Review", date: "May 26, 9:00 AM" },
-        { title: "Product Launch", date: "May 30, 3:00 PM" },
-      ].map((task, index) => (
-        <li key={index} className="flex items-center justify-between">
-          <span>{task.title}</span>
-          <span className="text-sm text-gray-400">{task.date}</span>
-        </li>
-      ))}
-    </ul>
+  <div className="flex h-full flex-col">
+    <div className="mb-2 flex items-center justify-between">
+      <h2 className="flex items-center text-sm text-gray-400">
+        <ListChecks className="mr-2 h-4 w-4" />
+        Upcoming tasks
+      </h2>
+      <Button variant="ghost" size="sm" className="text-gray-400">
+        <MoreHorizontal className="h-4 w-4" />
+      </Button>
+    </div>
+    <div className="flex-grow overflow-y-auto rounded-xl bg-card p-6 shadow-md">
+      <ul className="space-y-3">
+        {[
+          { title: "Team Meeting", date: "Today, 2:00 PM" },
+          { title: "Project Deadline", date: "Tomorrow, 5:00 PM" },
+          { title: "Client Presentation", date: "May 25, 10:00 AM" },
+          { title: "Weekly Review", date: "May 26, 9:00 AM" },
+          { title: "Product Launch", date: "May 30, 3:00 PM" },
+        ].map((task, index) => (
+          <li key={index} className="flex items-center justify-between">
+            <span>{task.title}</span>
+            <span className="text-sm text-gray-400">{task.date}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   </div>
 );
 
 const InboxComponent = () => (
-  <div>
+  <div className="flex h-full flex-col">
     <h2 className="mb-4 flex items-center text-sm text-gray-400">
       <Inbox className="mr-2 h-4 w-4" />
       Inbox
     </h2>
-    <div className="rounded-xl bg-[#1E1E1E] p-6 shadow-md">
+    <div className="flex-grow overflow-y-auto rounded-xl bg-card p-6 shadow-md">
       <div className="space-y-4">
-        {/*<div className="flex items-center space-x-2">*/}
-        {/*  <Inbox className="h-5 w-5" />*/}
-        {/*  <span>Inbox</span>*/}
-        {/*</div>*/}
         <div className="flex items-center space-x-2 text-gray-400">
           <div className="flex items-center gap-2">
             <Bookmark className="h-4 w-4" />
@@ -234,12 +245,12 @@ const InboxComponent = () => (
 );
 
 const Areas = () => (
-  <div>
+  <div className="flex h-full flex-col">
     <h2 className="mb-4 flex items-center text-sm text-gray-400">
       <LandPlot className="mr-2 h-4 w-4" />
       Areas
     </h2>
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+    <div className="grid flex-grow grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
       {[
         { name: "Personal", icon: User },
         { name: "Health & Fitness", icon: Heart },
@@ -250,11 +261,11 @@ const Areas = () => (
       ].map((area, index) => (
         <div
           key={index}
-          className="group relative flex transform flex-col items-center justify-center rounded-xl bg-[#2E2E2E] p-4 shadow-md transition-transform hover:scale-105"
+          className="group relative flex transform flex-col items-center justify-center rounded-xl bg-card p-4 shadow-md transition-transform hover:scale-105"
         >
-          <area.icon className="mb-2 h-8 w-8 text-white transition-transform group-hover:scale-110" />
-          <span className="text-white">{area.name}</span>
-          <div className="absolute inset-0 rounded-xl bg-black opacity-0 transition-opacity group-hover:opacity-30"></div>
+          <area.icon className="mb-2 h-8 w-8 text-black transition-transform group-hover:scale-110 dark:text-white" />
+          <span className="text-black dark:text-white">{area.name}</span>
+          <div className="absolute inset-0 rounded-xl bg-card opacity-0 transition-opacity group-hover:opacity-30"></div>
         </div>
       ))}
       <Button
@@ -269,12 +280,12 @@ const Areas = () => (
 );
 
 const Projects = () => (
-  <div>
+  <div className="flex h-full flex-col">
     <h2 className="mb-4 flex items-center text-sm text-gray-400">
       <FolderOpenDot className="mr-2 h-4 w-4" />
       Projects
     </h2>
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div className="grid flex-grow grid-cols-1 gap-4 md:grid-cols-3">
       {[
         {
           status: "Inbox",
@@ -309,7 +320,7 @@ const Projects = () => (
           ],
         },
       ].map((column, index) => (
-        <div key={index} className="rounded-xl bg-[#1E1E1E] p-6 shadow-md">
+        <div key={index} className="rounded-xl bg-card p-6 shadow-md">
           <div className="mb-4 flex items-center space-x-2">
             <span className={`h-2 w-2 rounded-full ${column.color}`}></span>
             <span>{column.status}</span>
@@ -319,7 +330,7 @@ const Projects = () => (
             {column.projects.map((project, projectIndex) => (
               <div
                 key={projectIndex}
-                className="transform rounded-lg bg-[#2A2A2A] p-4 shadow-md transition-transform hover:scale-105"
+                className="bg-nested-card-background transform rounded-lg p-4 shadow-md transition-transform hover:scale-105"
               >
                 <div className="mb-2 flex items-center justify-between">
                   <span>{project.name}</span>
@@ -351,7 +362,7 @@ const QuickActions = () => {
       <Button
         size="icon"
         variant="outline"
-        className="rounded-full border-gray-600 bg-[#1E1E1E] shadow-md"
+        className="rounded-full border-gray-600 bg-card shadow-md"
         onClick={() => setOpen(true)}
       >
         <Plus className="h-4 w-4" />
@@ -363,13 +374,16 @@ const QuickActions = () => {
 export default function TaskPage() {
   return (
     <>
-      <div className="m-auto flex flex-1 flex-col gap-8 pb-20 pt-0">
+      <div className="m-auto flex h-full max-w-[90%] flex-1 flex-col gap-8 pb-20 pt-0 sm:max-w-[90%] sm:px-4 md:max-w-[90%] md:px-6 lg:max-w-5xl lg:px-8 xl:max-w-6xl">
         <h1 className="text-center text-3xl font-bold">
           Good evening, Kevin Ding
         </h1>
 
         <RecentlyVisited />
-        <UpcomingEvents />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <UpcomingEvents />
+          <UpcomingTasks />
+        </div>
         <InboxComponent />
         <Projects />
         <Areas />

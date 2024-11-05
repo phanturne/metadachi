@@ -62,6 +62,9 @@ const config = {
           "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
         },
+        "nested-card-background": "hsl(var(--nested-card-background))",
+        "nested-card-foreground": "hsl(var(--nested-card-foreground))",
+        "nested-card-border": "hsl(var(--nested-card-border))",
       },
       borderRadius: {
         lg: "var(--radius)",
