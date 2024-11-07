@@ -2,7 +2,6 @@
 
 import {
   Archive,
-  Bell,
   Bookmark,
   Bot,
   Brain,
@@ -13,20 +12,15 @@ import {
   Home,
   LandPlot,
   LifeBuoy,
-  LogOut,
   LucideTrash2,
   MoreHorizontal,
   Notebook,
   Search,
   Send,
-  Settings,
   Sparkles,
   Telescope,
-  User,
   WalletCards,
 } from "lucide-react";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Collapsible,
   CollapsibleContent,
@@ -34,11 +28,6 @@ import {
 } from "@/components/ui/collapsible";
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -59,6 +48,8 @@ import {
 } from "@/components/ui/sidebar";
 import * as React from "react";
 import { useSearchDialog } from "@/providers/search-dialog-provider";
+import { ProfileMenu } from "@/components/profile/profile-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const data = {
   user: {
@@ -468,7 +459,7 @@ function AppFooter() {
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <ProfileMenuContent />
+          <ProfileMenu />
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
@@ -487,37 +478,5 @@ export function UserInfoCard() {
         <span className="truncate text-xs">{data.user.email}</span>
       </div>
     </>
-  );
-}
-
-export function ProfileMenuContent() {
-  return (
-    <DropdownMenuContent className="w-56" align="end" forceMount>
-      <DropdownMenuLabel className="p-0 font-normal">
-        <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-          <UserInfoCard />
-        </div>
-      </DropdownMenuLabel>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup>
-        <DropdownMenuItem>
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Bell />
-          Notifications
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
-        </DropdownMenuItem>
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem>
-        <LogOut className="mr-2 h-4 w-4" />
-        <span>Log out</span>
-      </DropdownMenuItem>
-    </DropdownMenuContent>
   );
 }

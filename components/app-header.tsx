@@ -17,9 +17,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ProfileMenuContent } from "@/components/app-sidebar";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useScroll } from "@/hooks/use-scroll";
+import { ProfileMenu } from "@/components/profile/profile-menu";
 
 const data = {
   user: {
@@ -59,7 +59,7 @@ export default function AppHeader() {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <ProfileMenuContent />
+          <ProfileMenu />
         </DropdownMenu>
       </div>
     </header>
