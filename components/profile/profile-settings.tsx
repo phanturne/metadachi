@@ -17,7 +17,7 @@ import { Check, Loader2, UserRoundPen, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Session } from "@supabase/supabase-js";
-import { ProfileService } from "@/utils/supabase/profile";
+import { ProfileService } from "@/utils/database/profile";
 import { Routes } from "@/utils/constants";
 import { useDebouncedCallback } from "use-debounce";
 
