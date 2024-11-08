@@ -48,12 +48,8 @@ pnpm install
     - `anon public`: found in "Project API keys"
     - `service_role`: found in "Project API keys"
 
-#### c. Add vault secrets to the "Vault" tab in "Project Settings" page
-- `SUPABASE_PROJECT_URL`: Use the `URL` value
-- `SUPABASE_SERVICE_ROLE_KEY`: Use the `service_role` value
-
 #### d. Connect database
-Open a terminal in the root directory of your local repository and run the following commands. Replace `<project-id>` with the "REFERENCE ID" value.
+Open a terminal in the root directory of your local repository and run the following commands. Replace `<project-id>` with the `REFERENCE ID` value.
 ```sh 
 supabase login
 supabase link --project-ref <project-id>

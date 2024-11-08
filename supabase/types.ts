@@ -48,12 +48,254 @@ export type Database = {
         }
         Relationships: []
       }
+      project_connections: {
+        Row: {
+          connected_project_id: string
+          connection_type: string
+          context: string | null
+          created_at: string | null
+          project_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          connected_project_id: string
+          connection_type: string
+          context?: string | null
+          created_at?: string | null
+          project_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          connected_project_id?: string
+          connection_type?: string
+          context?: string | null
+          created_at?: string | null
+          project_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_connections_connected_project_id_fkey"
+            columns: ["connected_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "project_connections_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          is_archived: boolean | null
+          name: string
+          parent_project_id: string | null
+          priority: number | null
+          project_id: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          is_archived?: boolean | null
+          name: string
+          parent_project_id?: string | null
+          priority?: number | null
+          project_id?: string
+          status: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          is_archived?: boolean | null
+          name?: string
+          parent_project_id?: string | null
+          priority?: number | null
+          project_id?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_parent_project_id_fkey"
+            columns: ["parent_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      taggables: {
+        Row: {
+          context: string | null
+          created_at: string | null
+          tag_id: string
+          taggable_id: string
+          taggable_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string | null
+          tag_id: string
+          taggable_id: string
+          taggable_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          context?: string | null
+          created_at?: string | null
+          tag_id?: string
+          taggable_id?: string
+          taggable_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taggables_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["tag_id"]
+          },
+        ]
+      }
+      tags: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          name: string
+          tag_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          name: string
+          tag_id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          name?: string
+          tag_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_connected_projects: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: Json
+      }
+      get_item_tags: {
+        Args: {
+          p_taggable_id: string
+          p_taggable_type: string
+        }
+        Returns: {
+          tag_id: string
+          tag_name: string
+          context: string
+        }[]
+      }
+      get_project_connections: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: {
+          connected_project_id: string
+          name: string
+          connection_type: string
+          context: string
+          created_at: string
+          tags: Json
+        }[]
+      }
+      get_project_hierarchy: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: {
+          project_id: string
+          name: string
+          status: string
+          level: number
+          path: string[]
+          has_children: boolean
+          tags: Json
+        }[]
+      }
+      get_project_hierarchy_path: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: Json
+      }
+      get_project_summary: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: {
+          project_id: string
+          name: string
+          description: string
+          status: string
+          priority: number
+          due_date: string
+          created_at: string
+          tags: Json
+          connections: Json
+          parent_path: Json
+        }[]
+      }
+      get_project_tags: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: Json
+      }
+      move_project: {
+        Args: {
+          p_project_id: string
+          p_new_parent_id: string
+        }
+        Returns: boolean
+      }
+      tag_item: {
+        Args: {
+          p_taggable_id: string
+          p_taggable_type: string
+          p_tag_id: string
+          p_context?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       onboarding_status: "not_started" | "in_progress" | "completed"
