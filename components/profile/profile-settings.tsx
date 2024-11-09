@@ -17,7 +17,7 @@ import { Check, Loader2, UserRoundPen, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Session } from "@supabase/supabase-js";
-import { ProfileService } from "@/utils/database/profile";
+import { ProfileService } from "@/utils/database/profile-service";
 import { Routes } from "@/utils/constants";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -160,7 +160,9 @@ const ProfileSettings: React.FC = () => {
   return (
     <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Profile Settings</CardTitle>
+        <CardTitle className="text-2xl font-bold">
+          ProfileService Settings
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
