@@ -9,6 +9,107 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      areas: {
+        Row: {
+          area_id: string
+          created_at: string | null
+          description: string | null
+          is_archived: boolean | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          area_id?: string
+          created_at?: string | null
+          description?: string | null
+          is_archived?: boolean | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          area_id?: string
+          created_at?: string | null
+          description?: string | null
+          is_archived?: boolean | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          area_id: string | null
+          content: Json
+          created_at: string | null
+          name: string
+          note_id: string
+          note_type: string | null
+          project_id: string | null
+          resource_id: string | null
+          task_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          area_id?: string | null
+          content: Json
+          created_at?: string | null
+          name: string
+          note_id?: string
+          note_type?: string | null
+          project_id?: string | null
+          resource_id?: string | null
+          task_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          area_id?: string | null
+          content?: Json
+          created_at?: string | null
+          name?: string
+          note_id?: string
+          note_type?: string | null
+          project_id?: string | null
+          resource_id?: string | null
+          task_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["area_id"]
+          },
+          {
+            foreignKeyName: "notes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+          {
+            foreignKeyName: "notes_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["resource_id"]
+          },
+          {
+            foreignKeyName: "notes_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["task_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -140,6 +241,75 @@ export type Database = {
           },
         ]
       }
+      related_notes: {
+        Row: {
+          created_at: string | null
+          note_id: string
+          related_note_id: string
+          relationship_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          note_id: string
+          related_note_id: string
+          relationship_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          note_id?: string
+          related_note_id?: string
+          relationship_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "related_notes_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["note_id"]
+          },
+          {
+            foreignKeyName: "related_notes_related_note_id_fkey"
+            columns: ["related_note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["note_id"]
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          is_archived: boolean | null
+          name: string
+          resource_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          is_archived?: boolean | null
+          name: string
+          resource_id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          is_archived?: boolean | null
+          name?: string
+          resource_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       taggables: {
         Row: {
           context: string | null
@@ -202,11 +372,164 @@ export type Database = {
         }
         Relationships: []
       }
+      task_dependencies: {
+        Row: {
+          created_at: string | null
+          dependency_task_id: string
+          dependent_task_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dependency_task_id: string
+          dependent_task_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dependency_task_id?: string
+          dependent_task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_dependency_task_id_fkey"
+            columns: ["dependency_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["task_id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_dependent_task_id_fkey"
+            columns: ["dependent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["task_id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          actual_hours: number | null
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          estimated_hours: number | null
+          is_archived: boolean | null
+          parent_task_id: string | null
+          priority: string | null
+          project_id: string | null
+          status: string | null
+          task_id: string
+          task_type: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_hours?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_hours?: number | null
+          is_archived?: boolean | null
+          parent_task_id?: string | null
+          priority?: string | null
+          project_id?: string | null
+          status?: string | null
+          task_id?: string
+          task_type?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_hours?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_hours?: number | null
+          is_archived?: boolean | null
+          parent_task_id?: string | null
+          priority?: string | null
+          project_id?: string | null
+          status?: string | null
+          task_id?: string
+          task_type?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["task_id"]
+          },
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      archive_project_cascade: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: undefined
+      }
+      archive_task_cascade: {
+        Args: {
+          p_task_id: string
+        }
+        Returns: undefined
+      }
+      can_complete_task: {
+        Args: {
+          p_task_id: string
+        }
+        Returns: boolean
+      }
+      get_area_summary: {
+        Args: {
+          p_area_id: string
+        }
+        Returns: {
+          area_id: string
+          name: string
+          description: string
+          created_at: string
+          tags: Json
+        }[]
+      }
+      get_area_tags: {
+        Args: {
+          p_area_id: string
+        }
+        Returns: Json
+      }
+      get_completed_tasks_in_project: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: {
+          task_id: string
+          title: string
+          completed_at: string
+          estimated_hours: number
+          actual_hours: number
+        }[]
+      }
       get_connected_projects: {
         Args: {
           p_project_id: string
@@ -222,6 +545,71 @@ export type Database = {
           tag_id: string
           tag_name: string
           context: string
+        }[]
+      }
+      get_note_tags: {
+        Args: {
+          p_note_id: string
+        }
+        Returns: Json
+      }
+      get_notes_for_project: {
+        Args: {
+          p_project_id: string
+          p_area_id?: string
+          p_task_id?: string
+          p_note_type?: string
+        }
+        Returns: {
+          note_id: string
+          name: string
+          content: Json
+          note_type: string
+          created_at: string
+          tags: Json
+        }[]
+      }
+      get_notes_for_task: {
+        Args: {
+          p_task_id: string
+        }
+        Returns: {
+          note_id: string
+          name: string
+          content: Json
+          note_type: string
+          created_at: string
+          updated_at: string
+          tags: Json
+        }[]
+      }
+      get_notes_with_related_notes: {
+        Args: {
+          p_note_id: string
+        }
+        Returns: {
+          note_id: string
+          name: string
+          content: Json
+          note_type: string
+          created_at: string
+          updated_at: string
+          tags: Json
+          related_notes: Json
+        }[]
+      }
+      get_overdue_tasks: {
+        Args: {
+          p_user_id?: string
+          p_project_id?: string
+        }
+        Returns: {
+          task_id: string
+          title: string
+          status: string
+          due_date: string
+          project_id: string
+          user_id: string
         }[]
       }
       get_project_connections: {
@@ -257,6 +645,20 @@ export type Database = {
         }
         Returns: Json
       }
+      get_project_statistics: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: {
+          total_tasks: number
+          completed_tasks: number
+          overdue_tasks: number
+          total_estimated_hours: number
+          total_actual_hours: number
+          completion_percentage: number
+          on_track: boolean
+        }[]
+      }
       get_project_summary: {
         Args: {
           p_project_id: string
@@ -279,6 +681,193 @@ export type Database = {
           p_project_id: string
         }
         Returns: Json
+      }
+      get_project_timeline: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: {
+          item_type: string
+          item_id: string
+          title: string
+          status: string
+          start_date: string
+          due_date: string
+          completion_percentage: number
+        }[]
+      }
+      get_recent_notes: {
+        Args: {
+          p_user_id?: string
+          p_project_id?: string
+          p_limit?: number
+        }
+        Returns: {
+          note_id: string
+          name: string
+          content: Json
+          note_type: string
+          created_at: string
+          tags: Json
+        }[]
+      }
+      get_related_notes: {
+        Args: {
+          p_note_id: string
+        }
+        Returns: {
+          related_note_id: string
+          content: Json
+          created_at: string
+          tags: Json
+        }[]
+      }
+      get_resource_summary: {
+        Args: {
+          p_resource_id: string
+        }
+        Returns: {
+          resource_id: string
+          name: string
+          description: string
+          created_at: string
+          tags: Json
+        }[]
+      }
+      get_resource_tags: {
+        Args: {
+          p_resource_id: string
+        }
+        Returns: Json
+      }
+      get_task_dependencies: {
+        Args: {
+          p_task_id: string
+        }
+        Returns: {
+          task_id: string
+          title: string
+          status: string
+          dependency_type: string
+        }[]
+      }
+      get_task_hierarchy: {
+        Args: {
+          p_task_id: string
+        }
+        Returns: {
+          task_id: string
+          title: string
+          level: number
+          path: string[]
+        }[]
+      }
+      get_task_hierarchy_with_dependencies: {
+        Args: {
+          p_task_id: string
+        }
+        Returns: {
+          task_id: string
+          title: string
+          level: number
+          dependency_task_id: string
+          dependency_title: string
+          dependency_type: string
+        }[]
+      }
+      get_task_summary_for_user: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          total_tasks: number
+          completed_tasks: number
+          overdue_tasks: number
+          pending_tasks: number
+          total_estimated_hours: number
+          total_actual_hours: number
+        }[]
+      }
+      get_tasks_for_project: {
+        Args: {
+          p_project_id: string
+          p_include_subtasks?: boolean
+          p_status?: string
+        }
+        Returns: {
+          task_id: string
+          title: string
+          status: string
+          due_date: string
+          priority: string
+          parent_task_id: string
+        }[]
+      }
+      get_user_areas: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          area_id: string
+          name: string
+          description: string
+          created_at: string
+          tags: Json
+        }[]
+      }
+      get_user_notes: {
+        Args: {
+          p_user_id: string
+          p_project_id?: string
+          p_area_id?: string
+          p_task_id?: string
+          p_note_type?: string
+        }
+        Returns: {
+          note_id: string
+          name: string
+          content: Json
+          note_type: string
+          created_at: string
+          updated_at: string
+          tags: Json
+        }[]
+      }
+      get_user_resources: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          resource_id: string
+          name: string
+          description: string
+          created_at: string
+          tags: Json
+        }[]
+      }
+      get_user_tasks: {
+        Args: {
+          p_user_id: string
+          p_status?: string
+          p_is_archived?: boolean
+        }
+        Returns: {
+          task_id: string
+          title: string
+          status: string
+          due_date: string
+          priority: string
+        }[]
+      }
+      move_note: {
+        Args: {
+          p_note_id: string
+          p_new_project_id: string
+          p_new_area_id: string
+          p_new_resource_id: string
+          p_new_task_id: string
+        }
+        Returns: boolean
       }
       move_project: {
         Args: {
