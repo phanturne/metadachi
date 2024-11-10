@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { Bold, Hash, Italic, Link, List, ListOrdered } from "lucide-react";
+import { Hash } from "lucide-react";
+import { Editor, EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +22,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import {
@@ -42,6 +45,160 @@ interface NoteData {
 const projects = ["Work", "Personal", "Side Hustle"];
 const areas = ["Health", "Finance", "Career", "Relationships"];
 
+const MenuBar = ({ editor }: { editor: Editor | null }) => {
+  if (!editor) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              className={editor.isActive("bold") ? "bg-secondary" : ""}
+            >
+              <span className="font-bold">B</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Bold</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              className={editor.isActive("italic") ? "bg-secondary" : ""}
+            >
+              <span className="italic">I</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Italic</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+              className={editor.isActive("strike") ? "bg-secondary" : ""}
+            >
+              <span className="line-through">S</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Strikethrough</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <div className="mx-1 h-6 w-px bg-border" />
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 1 }).run()
+              }
+              className={
+                editor.isActive("heading", { level: 1 }) ? "bg-secondary" : ""
+              }
+            >
+              H1
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Heading 1</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
+              className={
+                editor.isActive("heading", { level: 2 }) ? "bg-secondary" : ""
+              }
+            >
+              H2
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Heading 2</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
+              className={
+                editor.isActive("heading", { level: 3 }) ? "bg-secondary" : ""
+              }
+            >
+              H3
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Heading 3</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <div className="mx-1 h-6 w-px bg-border" />
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              className={editor.isActive("bulletList") ? "bg-secondary" : ""}
+            >
+              •
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Bullet List</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              className={editor.isActive("orderedList") ? "bg-secondary" : ""}
+            >
+              1.
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Numbered List</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+};
+
 export default function NoteDialog() {
   const { open, setOpen } = useNoteDialog();
 
@@ -56,6 +213,27 @@ export default function NoteDialog() {
 
   const [note, setNote] = useState<NoteData>(initialNoteState);
   const [tagInput, setTagInput] = useState("");
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Link.configure({
+        openOnClick: false,
+      }),
+      Placeholder.configure({
+        placeholder: "Write your note here...",
+      }),
+    ],
+    content: note.content,
+    onUpdate: ({ editor }) => {
+      setNote((prev) => ({ ...prev, content: editor.getHTML() }));
+    },
+    editorProps: {
+      attributes: {
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[200px]",
+      },
+    },
+  });
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tagInput.trim() !== "") {
@@ -79,6 +257,7 @@ export default function NoteDialog() {
     setOpen(false);
     setNote(initialNoteState);
     setTagInput("");
+    editor?.commands.clearContent();
   };
 
   return (
@@ -111,7 +290,12 @@ export default function NoteDialog() {
               {note.tags.map((tag) => (
                 <Badge key={tag} variant="secondary">
                   {tag}
-                  <button onClick={() => handleRemoveTag(tag)}>×</button>
+                  <button
+                    onClick={() => handleRemoveTag(tag)}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    ×
+                  </button>
                 </Badge>
               ))}
             </div>
@@ -171,77 +355,11 @@ export default function NoteDialog() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="content">Content</Label>
-              <div className="flex space-x-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Bold className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Bold</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Italic className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Italic</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <List className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Bullet List</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <ListOrdered className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Numbered List</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Link className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Insert Link</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+              <MenuBar editor={editor} />
             </div>
-            <Textarea
-              id="content"
-              placeholder="Write your note here..."
-              value={note.content}
-              onChange={(e) =>
-                setNote((prev) => ({ ...prev, content: e.target.value }))
-              }
-              className="min-h-[200px]"
+            <EditorContent
+              editor={editor}
+              className="relative min-h-[200px] rounded-md border border-input bg-background px-3 py-2"
             />
           </div>
           <div className="flex items-center space-x-2">
