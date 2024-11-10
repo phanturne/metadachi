@@ -21,7 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
-import { NotesService } from "@/utils/database/notes-service";
+import { NotesService } from "@/lib/database/notes-service";
 import { createClient } from "@/utils/supabase/client";
 import { TablesInsert } from "@/supabase/types";
 import { useSession } from "@/hooks/use-session"; // Import the NotesService

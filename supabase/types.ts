@@ -871,8 +871,8 @@ export type Database = {
       }
       move_project: {
         Args: {
-          p_project_id: string
-          p_new_parent_id: string
+          p_project_id?: string
+          p_new_parent_id?: string
         }
         Returns: boolean
       }

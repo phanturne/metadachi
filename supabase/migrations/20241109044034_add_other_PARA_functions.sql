@@ -1,4 +1,3 @@
-
 -- Function to get project statistics
 CREATE OR REPLACE FUNCTION get_project_statistics(p_project_id UUID)
 RETURNS TABLE (
