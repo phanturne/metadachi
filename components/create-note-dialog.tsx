@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Hash } from "lucide-react";
 import { Editor, EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -14,7 +13,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useNoteDialog } from "@/providers/note-dialog-provider";
 import {
   Tooltip,
@@ -22,28 +20,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { NotesService } from "@/utils/database/notes-service";
+import { createClient } from "@/utils/supabase/client";
+import { TablesInsert } from "@/supabase/types";
+import { useSession } from "@/hooks/use-session"; // Import the NotesService
 
-interface NoteData {
-  title: string;
-  content: string;
-  tags: string[];
-  project: string;
-  area: string;
-  isArchived: boolean;
-  dueDate?: Date;
-}
-
-const projects = ["Work", "Personal", "Side Hustle"];
-const areas = ["Health", "Finance", "Career", "Relationships"];
+// const projects = ["Work", "Personal", "Side Hustle"];
+// const areas = ["Health", "Finance", "Career", "Relationships"];
 
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
@@ -199,20 +183,26 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
   );
 };
 
-export default function NoteDialog() {
+export default function CreateNoteDialog() {
   const { open, setOpen } = useNoteDialog();
+  const supabase = createClient();
+  const { session } = useSession();
+  const notesService = new NotesService(supabase);
 
-  const initialNoteState: NoteData = {
-    title: "",
-    content: "",
-    tags: [],
-    project: "",
-    area: "",
-    isArchived: false,
+  // TODO: handle user.id is null
+
+  const initialNoteState: TablesInsert<"notes"> = {
+    area_id: null,
+    content: {},
+    name: "",
+    project_id: null,
+    resource_id: null,
+    task_id: null,
+    user_id: "",
   };
 
-  const [note, setNote] = useState<NoteData>(initialNoteState);
-  const [tagInput, setTagInput] = useState("");
+  const [note, setNote] = useState<TablesInsert<"notes">>(initialNoteState);
+  // const [tagInput, setTagInput] = useState("");
 
   const editor = useEditor({
     extensions: [
@@ -224,7 +214,6 @@ export default function NoteDialog() {
         placeholder: "Write your note here...",
       }),
     ],
-    content: note.content,
     onUpdate: ({ editor }) => {
       setNote((prev) => ({ ...prev, content: editor.getHTML() }));
     },
@@ -235,28 +224,37 @@ export default function NoteDialog() {
     },
   });
 
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && tagInput.trim() !== "") {
-      setNote((prev) => ({ ...prev, tags: [...prev.tags, tagInput.trim()] }));
-      setTagInput("");
+  // const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === "Enter" && tagInput.trim() !== "") {
+  //     setNote((prev) => ({ ...prev, tags: [...prev.tags, tagInput.trim()] }));
+  //     setTagInput("");
+  //   }
+  // };
+  //
+  // const handleRemoveTag = (tagToRemove: string) => {
+  //   setNote((prev) => ({
+  //     ...prev,
+  //     tags: prev.tags.filter((tag) => tag !== tagToRemove),
+  //   }));
+  // };
+
+  const handleSave = async () => {
+    try {
+      await notesService.insertNote({
+        ...note,
+        content: editor?.getJSON() ?? {},
+        user_id: session?.user?.id ?? "",
+      });
+      onClose();
+    } catch (error) {
+      console.error("Failed to save note:", error);
     }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setNote((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }));
-  };
-
-  const handleSave = () => {
-    onClose();
   };
 
   const onClose = () => {
     setOpen(false);
     setNote(initialNoteState);
-    setTagInput("");
+    // setTagInput("");
     editor?.commands.clearContent();
   };
 
@@ -278,80 +276,80 @@ export default function NoteDialog() {
             <Input
               id="title"
               placeholder="Note Title"
-              value={note.title}
+              value={note.name}
               onChange={(e) =>
-                setNote((prev) => ({ ...prev, title: e.target.value }))
+                setNote((prev) => ({ ...prev, name: e.target.value }))
               }
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="tags">Tags</Label>
-            <div className="mb-2 flex flex-wrap gap-2">
-              {note.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                  <button
-                    onClick={() => handleRemoveTag(tag)}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            <div className="flex items-center">
-              <Hash className="mr-2 h-4 w-4" />
-              <Input
-                id="tags"
-                placeholder="Add tags..."
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleAddTag}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="project">Project</Label>
-              <Select
-                value={note.project}
-                onValueChange={(value) =>
-                  setNote((prev) => ({ ...prev, project: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project} value={project}>
-                      {project}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="area">Area</Label>
-              <Select
-                value={note.area}
-                onValueChange={(value) =>
-                  setNote((prev) => ({ ...prev, area: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select area" />
-                </SelectTrigger>
-                <SelectContent>
-                  {areas.map((area) => (
-                    <SelectItem key={area} value={area}>
-                      {area}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          {/*<div className="space-y-2">*/}
+          {/*  <Label htmlFor="tags">Tags</Label>*/}
+          {/*  <div className="mb-2 flex flex-wrap gap-2">*/}
+          {/*    {note.tags.map((tag) => (*/}
+          {/*      <Badge key={tag} variant="secondary">*/}
+          {/*        {tag}*/}
+          {/*        <button*/}
+          {/*          onClick={() => handleRemoveTag(tag)}*/}
+          {/*          className="ml-1 hover:text-destructive"*/}
+          {/*        >*/}
+          {/*          ×*/}
+          {/*        </button>*/}
+          {/*      </Badge>*/}
+          {/*    ))}*/}
+          {/*  </div>*/}
+          {/*  <div className="flex items-center">*/}
+          {/*    <Hash className="mr-2 h-4 w-4" />*/}
+          {/*    <Input*/}
+          {/*      id="tags"*/}
+          {/*      placeholder="Add tags..."*/}
+          {/*      value={tagInput}*/}
+          {/*      onChange={(e) => setTagInput(e.target.value)}*/}
+          {/*      onKeyDown={handleAddTag}*/}
+          {/*    />*/}
+          {/*  </div>*/}
+          {/*</div>*/}
+          {/*<div className="grid grid-cols-2 gap-4">*/}
+          {/*  <div className="space-y-2">*/}
+          {/*    <Label htmlFor="project">Project</Label>*/}
+          {/*    <Select*/}
+          {/*      value={note.project}*/}
+          {/*      onValueChange={(value) =>*/}
+          {/*        setNote((prev) => ({ ...prev, project: value }))*/}
+          {/*      }*/}
+          {/*    >*/}
+          {/*      <SelectTrigger>*/}
+          {/*        <SelectValue placeholder="Select project" />*/}
+          {/*      </SelectTrigger>*/}
+          {/*      <SelectContent>*/}
+          {/*        {projects.map((project) => (*/}
+          {/*          <SelectItem key={project} value={project}>*/}
+          {/*            {project}*/}
+          {/*          </SelectItem>*/}
+          {/*        ))}*/}
+          {/*      </SelectContent>*/}
+          {/*    </Select>*/}
+          {/*  </div>*/}
+          {/*  <div className="space-y-2">*/}
+          {/*    <Label htmlFor="area">Area</Label>*/}
+          {/*    <Select*/}
+          {/*      value={note.area}*/}
+          {/*      onValueChange={(value) =>*/}
+          {/*        setNote((prev) => ({ ...prev, area: value }))*/}
+          {/*      }*/}
+          {/*    >*/}
+          {/*      <SelectTrigger>*/}
+          {/*        <SelectValue placeholder="Select area" />*/}
+          {/*      </SelectTrigger>*/}
+          {/*      <SelectContent>*/}
+          {/*        {areas.map((area) => (*/}
+          {/*          <SelectItem key={area} value={area}>*/}
+          {/*            {area}*/}
+          {/*          </SelectItem>*/}
+          {/*        ))}*/}
+          {/*      </SelectContent>*/}
+          {/*    </Select>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="content">Content</Label>
@@ -362,16 +360,16 @@ export default function NoteDialog() {
               className="relative min-h-[200px] rounded-md border border-input bg-background px-3 py-2"
             />
           </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="archive"
-              checked={note.isArchived}
-              onCheckedChange={(checked) =>
-                setNote((prev) => ({ ...prev, isArchived: checked }))
-              }
-            />
-            <Label htmlFor="archive">Archive</Label>
-          </div>
+          {/*<div className="flex items-center space-x-2">*/}
+          {/*  <Switch*/}
+          {/*    id="archive"*/}
+          {/*    checked={note.is_archived}*/}
+          {/*    onCheckedChange={(checked) =>*/}
+          {/*      setNote((prev) => ({ ...prev, isArchived: checked }))*/}
+          {/*    }*/}
+          {/*  />*/}
+          {/*  <Label htmlFor="archive">Archive</Label>*/}
+          {/*</div>*/}
         </motion.div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "@/supabase/types";
+import { Database, TablesInsert } from "@/supabase/types";
 
 export type Note = Database["public"]["Tables"]["notes"]["Row"];
 export type GetNoteTagsReturnType =
@@ -137,7 +137,7 @@ export class NotesService {
     return data;
   }
 
-  async insertNote(note: InsertNoteReturnType): Promise<InsertNoteReturnType> {
+  async insertNote(note: TablesInsert<"notes">): Promise<InsertNoteReturnType> {
     const { data, error } = await this.supabase
       .from("notes")
       .insert(note)
