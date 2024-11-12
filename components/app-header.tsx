@@ -20,17 +20,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { useScroll } from "@/hooks/use-scroll";
 import { ProfileMenu } from "@/components/profile/profile-menu";
-
-const data = {
-  user: {
-    name: "Kevin Ding",
-    email: "kding60@gatech.edu",
-    avatar: "",
-  },
-};
+import { useGetProfile } from "@/hooks/use-profile-service";
+import { useSession } from "@/hooks/use-session";
+import { User } from "lucide-react";
 
 export default function AppHeader() {
   const isScrolled = useScroll();
+  const { session } = useSession();
+  const { data: profile } = useGetProfile(session?.user.id || "");
 
   return (
     <header
@@ -54,8 +51,13 @@ export default function AppHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={data.user.avatar} alt={data.user.name} />
-                <AvatarFallback>KD</AvatarFallback>
+                <AvatarImage
+                  src={profile?.avatar_url || ""}
+                  alt={profile?.display_name || "User"}
+                />
+                <AvatarFallback>
+                  <User className="h-8 w-8" />
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>

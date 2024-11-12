@@ -18,8 +18,8 @@ import { useRouter } from "next/navigation";
 import { Session } from "@supabase/supabase-js";
 import { Routes } from "@/utils/constants";
 import { useGetProfile, useUpdateProfile } from "@/hooks/use-profile-service";
-import { useUsernameInput } from "@/hooks/use-username-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useUsernameInput } from "@/hooks/use-username-input";
 
 interface FormData {
   displayName: string;
