@@ -1,9 +1,8 @@
-// ProfileService.ts
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "@/supabase/types";
 
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 export class ProfileService {
   private static readonly AVATAR_BUCKET = "avatars";

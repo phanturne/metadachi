@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, ReactNode, useContext, useState } from "react";
-import CreateNoteDialog from "@/components/create-note-dialog";
+import CreateNoteDialog from "@/components/notes/create-note-dialog";
 
 interface NoteDialogProvider {
   open: boolean;

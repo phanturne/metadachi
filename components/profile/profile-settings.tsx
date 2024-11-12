@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
@@ -17,12 +16,12 @@ import { Check, Loader2, UserRoundPen, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Session } from "@supabase/supabase-js";
-import { ProfileService } from "@/lib/database/profile-service";
 import { Routes } from "@/utils/constants";
-import { useDebouncedCallback } from "use-debounce";
+import { useGetProfile, useUpdateProfile } from "@/hooks/use-profile-service";
+import { useUsernameInput } from "@/hooks/use-username-input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface FormData {
-  username: string;
   displayName: string;
 }
 
@@ -34,20 +33,14 @@ const ProfileSettings: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
-    username: "",
     displayName: "",
   });
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(
-    null,
-  );
-  const [isCheckingUsername, setIsCheckingUsername] = useState<boolean>(false);
+  const [hasDisplayNameChanged, setHasDisplayNameChanged] =
+    useState<boolean>(false);
 
   const router = useRouter();
   const supabase = createClient();
-  const profileService = useMemo(
-    () => new ProfileService(supabase),
-    [supabase],
-  );
+
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
@@ -63,54 +56,34 @@ const ProfileSettings: React.FC = () => {
     loadSession();
   }, [supabase, router]);
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!session?.user) return;
-
-      try {
-        const profile = await profileService.getProfile(session.user.id);
-        setFormData({
-          username: profile.username || "",
-          displayName: profile.display_name || "",
-        });
-        setAvatarPreview(profile.avatar_url);
-      } catch (err) {
-        console.error("Error loading profile:", err);
-        setError("Failed to load profile data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (session) {
-      loadProfile();
-    }
-  }, [session, profileService]);
-
-  const checkUsernameAvailability = useDebouncedCallback(
-    async (username: string) => {
-      if (username.length < 3) {
-        setUsernameAvailable(null);
-        return;
-      }
-      setIsCheckingUsername(true);
-      try {
-        const isAvailable = await profileService.isUsernameAvailable(username);
-        setUsernameAvailable(isAvailable);
-      } catch (err) {
-        console.error("Error checking username availability:", err);
-      } finally {
-        setIsCheckingUsername(false);
-      }
-    },
-    300,
+  const { data: profile, isLoading: profileLoading } = useGetProfile(
+    session?.user.id || "",
   );
+  const { mutate: updateProfile } = useUpdateProfile();
 
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUsername = e.target.value;
-    setFormData((prev) => ({ ...prev, username: newUsername }));
-    checkUsernameAvailability(newUsername);
-  };
+  const initialUsername = profile?.username || "";
+  const {
+    username,
+    setUsername,
+    isLoading: isUsernameLoading,
+    validation,
+    hasChanged: hasUsernameChanged,
+  } = useUsernameInput(initialUsername);
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        displayName: profile.display_name || "",
+      });
+      setAvatarPreview(profile.avatar_url);
+      setUsername(profile.username || "");
+      setIsLoading(false);
+    }
+  }, [profile, setUsername]);
+
+  useEffect(() => {
+    setHasDisplayNameChanged(formData.displayName !== profile?.display_name);
+  }, [formData.displayName, profile?.display_name]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,17 +99,20 @@ const ProfileSettings: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!session?.user || !usernameAvailable) return;
+    if (!session?.user || !validation.isValid) return;
 
     setIsSaving(true);
     setError("");
     setSuccess("");
 
     try {
-      await profileService.updateProfile(session.user.id, {
-        username: formData.username,
-        display_name: formData.displayName,
-        avatar_file: avatarFile || undefined,
+      updateProfile({
+        userId: session.user.id,
+        updates: {
+          username: username,
+          display_name: formData.displayName,
+          avatar_file: avatarFile || undefined,
+        },
       });
 
       setSuccess("Profile updated successfully!");
@@ -160,12 +136,10 @@ const ProfileSettings: React.FC = () => {
   return (
     <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">
-          ProfileService Settings
-        </CardTitle>
+        <CardTitle className="text-2xl font-bold">Profile Settings</CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {isLoading || profileLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-32 w-32 rounded-full" />
             <Skeleton className="h-10 w-full" />
@@ -216,33 +190,39 @@ const ProfileSettings: React.FC = () => {
                 <Input
                   id="username"
                   placeholder="your_username"
-                  value={formData.username}
-                  onChange={handleUsernameChange}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className={`pr-10 ${
-                    usernameAvailable === true
+                    hasUsernameChanged && validation.isValid
                       ? "border-green-500"
-                      : usernameAvailable === false
+                      : hasUsernameChanged && validation.message
                         ? "border-red-500"
                         : ""
                   }`}
                 />
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                  {isCheckingUsername && (
+                  {isUsernameLoading && (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   )}
-                  {!isCheckingUsername && usernameAvailable === true && (
-                    <Check className="h-4 w-4 text-green-500" />
-                  )}
-                  {!isCheckingUsername && usernameAvailable === false && (
-                    <X className="h-4 w-4 text-red-500" />
-                  )}
+                  {!isUsernameLoading &&
+                    hasUsernameChanged &&
+                    validation.isValid && (
+                      <Check className="h-4 w-4 text-green-500" />
+                    )}
+                  {!isUsernameLoading &&
+                    hasUsernameChanged &&
+                    !validation.isValid &&
+                    validation.message && (
+                      <X className="h-4 w-4 text-red-500" />
+                    )}
                 </div>
               </div>
-              {!isCheckingUsername && usernameAvailable === false && (
-                <p className="text-sm text-red-500">
-                  Username is already taken
-                </p>
-              )}
+              {!isUsernameLoading &&
+                hasUsernameChanged &&
+                !validation.isValid &&
+                validation.message && (
+                  <p className="text-sm text-red-500">{validation.message}</p>
+                )}
             </div>
 
             <div className="space-y-2">
@@ -279,7 +259,9 @@ const ProfileSettings: React.FC = () => {
               type="submit"
               className="w-full"
               disabled={
-                isSaving || !usernameAvailable || formData.username.length < 3
+                isSaving ||
+                !validation.isValid ||
+                (!hasUsernameChanged && !hasDisplayNameChanged)
               }
             >
               {isSaving ? (

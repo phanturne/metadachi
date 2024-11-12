@@ -1,15 +1,13 @@
 import { GeistSans } from "geist/font/sans";
-import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import * as React from "react";
 import AppSidebar from "@/components/app-sidebar";
 import AppHeader from "@/components/app-header";
-import { SearchDialogProvider } from "@/providers/search-dialog-provider";
-import { NoteDialogProvider } from "@/providers/note-dialog-provider";
+import { SidebarInset } from "@/components/ui/sidebar";
+import AppProviders from "@/components/app-providers";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+const defaultUrl = process.env.NEXT_PUBLIC_VERCEL_URL
+  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
   : "http://localhost:3000";
 
 export const metadata = {
@@ -26,24 +24,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <SearchDialogProvider>
-            <NoteDialogProvider>
-              <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset>
-                  <AppHeader />
-                  {children}
-                </SidebarInset>
-              </SidebarProvider>
-            </NoteDialogProvider>
-          </SearchDialogProvider>
-        </ThemeProvider>
+        <AppProviders>
+          <AppSidebar />
+          <SidebarInset>
+            <AppHeader />
+            {children}
+          </SidebarInset>
+        </AppProviders>
       </body>
     </html>
   );
