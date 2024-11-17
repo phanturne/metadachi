@@ -137,10 +137,11 @@ export class NotesService {
     return data;
   }
 
-  async insertNote(note: TablesInsert<"notes">): Promise<InsertNoteReturnType> {
+  async insertNote(note: TablesInsert<"notes">): Promise<Note> {
     const { data, error } = await this.supabase
       .from("notes")
       .insert(note)
+      .select("*")
       .single();
 
     if (error) throw error;

@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { createClient } from "@/utils/supabase/client";
 import { TablesInsert } from "@/supabase/types";
 import { useSession } from "@/hooks/use-session";
 import {
@@ -28,7 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { ProjectsService } from "@/lib/database/projects-service";
+import { useCreateProject } from "@/hooks/use-projects-service";
 
 const STATUS_OPTIONS = [
   "active",
@@ -55,9 +54,8 @@ export default function CreateProjectDialog({
   onOpenChange: (open: boolean) => void;
   parentProjectId?: string | null;
 }) {
-  const supabase = createClient();
   const { session } = useSession();
-  const projectsService = new ProjectsService(supabase);
+  const createProjectMutation = useCreateProject();
 
   const initialProjectState: TablesInsert<"projects"> = {
     user_id: session?.user?.id ?? "",
@@ -75,7 +73,7 @@ export default function CreateProjectDialog({
 
   const handleSave = async () => {
     try {
-      await projectsService.insertProject({
+      await createProjectMutation.mutateAsync({
         ...project,
         user_id: session?.user?.id ?? "",
       });

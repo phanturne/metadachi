@@ -21,13 +21,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
-import { NotesService } from "@/lib/database/notes-service";
-import { createClient } from "@/utils/supabase/client";
 import { TablesInsert } from "@/supabase/types";
-import { useSession } from "@/hooks/use-session"; // Import the NotesService
-
-// const projects = ["Work", "Personal", "Side Hustle"];
-// const areas = ["Health", "Finance", "Career", "Relationships"];
+import { useSession } from "@/hooks/use-session";
+import { useCreateNote } from "@/hooks/use-notes-service";
 
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
@@ -185,11 +181,8 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
 
 export default function CreateNoteDialog() {
   const { open, setOpen } = useNoteDialog();
-  const supabase = createClient();
   const { session } = useSession();
-  const notesService = new NotesService(supabase);
-
-  // TODO: handle user.id is null
+  const createNoteMutation = useCreateNote();
 
   const initialNoteState: TablesInsert<"notes"> = {
     area_id: null,
@@ -202,7 +195,6 @@ export default function CreateNoteDialog() {
   };
 
   const [note, setNote] = useState<TablesInsert<"notes">>(initialNoteState);
-  // const [tagInput, setTagInput] = useState("");
 
   const editor = useEditor({
     extensions: [
@@ -240,7 +232,7 @@ export default function CreateNoteDialog() {
 
   const handleSave = async () => {
     try {
-      await notesService.insertNote({
+      await createNoteMutation.mutateAsync({
         ...note,
         content: editor?.getJSON() ?? {},
         user_id: session?.user?.id ?? "",
