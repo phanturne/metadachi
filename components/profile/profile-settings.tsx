@@ -260,8 +260,10 @@ const ProfileSettings: React.FC = () => {
               className="w-full"
               disabled={
                 isSaving ||
-                !validation.isValid ||
-                (!hasUsernameChanged && !hasDisplayNameChanged)
+                (!hasUsernameChanged &&
+                  !hasDisplayNameChanged &&
+                  !avatarFile) ||
+                (hasUsernameChanged && !validation.isValid)
               }
             >
               {isSaving ? (
