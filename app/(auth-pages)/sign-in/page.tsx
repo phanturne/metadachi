@@ -1,4 +1,3 @@
-import { use } from "react";
 import { signInAction } from "@/app/actions";
 import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
@@ -7,13 +6,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { Routes } from "@/utils/constants";
 
-export default function Login({
-  searchParams,
-}: {
-  searchParams: Promise<Message>;
-}) {
-  const message = use(searchParams);
-
+export default function Login({ searchParams }: { searchParams: Message }) {
   return (
     <form className="flex min-w-64 flex-1 flex-col">
       <h1 className="text-2xl font-medium">Sign in</h1>
@@ -47,7 +40,7 @@ export default function Login({
         <SubmitButton pendingText="Signing In..." formAction={signInAction}>
           Sign in
         </SubmitButton>
-        <FormMessage message={message} />
+        <FormMessage message={searchParams} />
       </div>
     </form>
   );
