@@ -6,6 +6,7 @@ import { SearchDialogProvider } from "@/providers/search-dialog-provider";
 import { NoteDialogProvider } from "@/providers/note-dialog-provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,7 @@ const AppProviders: React.FC<{ children: React.ReactNode }> = ({
         <SearchDialogProvider>
           <NoteDialogProvider>
             <SidebarProvider>{children}</SidebarProvider>
+            <Toaster richColors position="top-center" />
           </NoteDialogProvider>
         </SearchDialogProvider>
       </ThemeProvider>

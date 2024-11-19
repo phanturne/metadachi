@@ -47,6 +47,7 @@ export class AreasService {
     const { data, error } = await this.supabase
       .from("areas")
       .insert(area)
+      .select("*")
       .single();
 
     if (error) throw error;
