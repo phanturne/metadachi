@@ -53,6 +53,7 @@ export class ResourcesService {
     const { data, error } = await this.supabase
       .from("resources")
       .insert(resource)
+      .select("*")
       .single();
 
     if (error) throw error;
