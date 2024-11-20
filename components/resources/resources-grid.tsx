@@ -1,46 +1,97 @@
-import { Bookmark, Plus } from "lucide-react";
+import { AlertCircle, Bookmark, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import CreateResourceDialog from "@/components/resources/create-resource-dialog";
+import ResourceItem from "@/components/resources/resource-item";
+import { useGetUserResources } from "@/hooks/use-resources-service";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
 export function ResourcesGrid() {
   const [open, setOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const supabase = createClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        router.push("/sign-in");
+      } else {
+        setUserId(session.user.id);
+      }
+      setIsLoadingSession(false);
+    };
+    loadSession();
+  }, [supabase, router]);
+
+  const {
+    data: resources,
+    isLoading,
+    error,
+  } = useGetUserResources(userId || "");
+
+  if (isLoadingSession || isLoading) {
+    return (
+      <Card className="flex h-[50vh] items-center justify-center">
+        <CardContent className="flex flex-col items-center justify-center p-4 text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-lg font-medium text-muted-foreground">
+            Loading resources...
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="flex h-[50vh] items-center justify-center bg-destructive/5">
+        <CardContent className="p-4 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+          <CardTitle className="mt-4 text-xl text-destructive">
+            Error loading resources
+          </CardTitle>
+          <p className="mt-2 text-destructive-foreground">
+            {error instanceof Error
+              ? error.message
+              : "An unexpected error occurred."}
+          </p>
+          <Button
+            className="mt-6"
+            variant="outline"
+            onClick={() => window.location.reload()}
+          >
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
       <div className="flex h-full flex-col">
-        <h2 className="mb-4 flex items-center text-sm text-gray-400">
+        <h2 className="mb-4 flex items-center text-sm text-muted-foreground">
           <Bookmark className="mr-2 h-4 w-4" />
           Resources
         </h2>
         <div className="grid flex-grow grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {[
-            { name: "Second Brain PARA", category: "Productivity" },
-            {
-              name: "How to Invest for Beginners",
-              category: "Investment",
-            },
-            { name: "Project Management Tips", category: "Work" },
-            { name: "Healthy Living Guide", category: "Health" },
-          ].map((resource, index) => (
-            <div
-              key={index}
-              className="transform rounded-lg bg-card p-4 shadow-md transition-transform hover:scale-105"
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <span>{resource.name}</span>
-                <Bookmark className="h-4 w-4" />
-              </div>
-              <div className="text-xs text-gray-400">{resource.category}</div>
-            </div>
+          {resources?.map((resource, index) => (
+            <ResourceItem key={index} resource={resource} />
           ))}
           <Button
-            variant="ghost"
-            className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600 transition-transform hover:scale-105"
+            variant="outline"
+            className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed transition-transform hover:scale-105"
             onClick={() => setOpen(true)}
           >
-            <Plus className="mb-2 h-6 w-6 text-gray-400 transition-transform hover:scale-110" />
-            <span className="text-gray-400">New resource</span>
+            <Plus className="mb-2 h-6 w-6 text-muted-foreground transition-transform hover:scale-110" />
+            <span className="text-muted-foreground">New resource</span>
           </Button>
         </div>
       </div>

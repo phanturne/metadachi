@@ -68,6 +68,7 @@ export class ResourcesService {
       .from("resources")
       .update(resource)
       .eq("resource_id", resourceId)
+      .select("*")
       .single();
 
     if (error) throw error;
