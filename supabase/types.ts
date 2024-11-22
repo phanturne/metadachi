@@ -26,7 +26,7 @@ export type Database = {
           is_archived?: boolean | null
           name: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string
         }
         Update: {
           area_id?: string
@@ -44,6 +44,7 @@ export type Database = {
           area_id: string | null
           content: Json
           created_at: string | null
+          is_archived: boolean | null
           name: string
           note_id: string
           note_type: string | null
@@ -57,6 +58,7 @@ export type Database = {
           area_id?: string | null
           content: Json
           created_at?: string | null
+          is_archived?: boolean | null
           name: string
           note_id?: string
           note_type?: string | null
@@ -70,6 +72,7 @@ export type Database = {
           area_id?: string | null
           content?: Json
           created_at?: string | null
+          is_archived?: boolean | null
           name?: string
           note_id?: string
           note_type?: string | null
@@ -216,7 +219,7 @@ export type Database = {
           project_id?: string
           status: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string
         }
         Update: {
           created_at?: string | null
@@ -297,7 +300,7 @@ export type Database = {
           name: string
           resource_id?: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string
         }
         Update: {
           created_at?: string | null
@@ -440,7 +443,7 @@ export type Database = {
           task_type?: string | null
           title: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string
         }
         Update: {
           actual_hours?: number | null
@@ -500,6 +503,46 @@ export type Database = {
         }
         Returns: boolean
       }
+      delete_area: {
+        Args: {
+          p_area_id: string
+        }
+        Returns: boolean
+      }
+      delete_note: {
+        Args: {
+          p_note_id: string
+        }
+        Returns: boolean
+      }
+      delete_project: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: boolean
+      }
+      delete_resource: {
+        Args: {
+          p_resource_id: string
+        }
+        Returns: boolean
+      }
+      find_or_create_tag:
+        | {
+            Args: {
+              p_tag_name: string
+              p_description?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_user_id: string
+              p_tag_name: string
+              p_description?: string
+            }
+            Returns: string
+          }
       get_area_summary: {
         Args: {
           p_area_id: string
@@ -509,7 +552,12 @@ export type Database = {
           name: string
           description: string
           created_at: string
+          updated_at: string
+          is_archived: boolean
           tags: Json
+          related_notes: Json
+          owner_id: string
+          owner_avatar_url: string
         }[]
       }
       get_area_tags: {
@@ -547,6 +595,27 @@ export type Database = {
           context: string
         }[]
       }
+      get_note_summary: {
+        Args: {
+          p_note_id: string
+        }
+        Returns: {
+          note_id: string
+          name: string
+          note_type: string
+          created_at: string
+          updated_at: string
+          project_id: string
+          area_id: string
+          resource_id: string
+          task_id: string
+          is_archived: boolean
+          tags: Json
+          related_notes: Json
+          owner_id: string
+          owner_avatar_url: string
+        }[]
+      }
       get_note_tags: {
         Args: {
           p_note_id: string
@@ -581,21 +650,6 @@ export type Database = {
           created_at: string
           updated_at: string
           tags: Json
-        }[]
-      }
-      get_notes_with_related_notes: {
-        Args: {
-          p_note_id: string
-        }
-        Returns: {
-          note_id: string
-          name: string
-          content: Json
-          note_type: string
-          created_at: string
-          updated_at: string
-          tags: Json
-          related_notes: Json
         }[]
       }
       get_overdue_tasks: {
@@ -671,9 +725,12 @@ export type Database = {
           priority: number
           due_date: string
           created_at: string
+          updated_at: string
+          is_archived: boolean
           tags: Json
-          connections: Json
-          parent_path: Json
+          related_notes: Json
+          owner_id: string
+          owner_avatar_url: string
         }[]
       }
       get_project_tags: {
@@ -711,17 +768,25 @@ export type Database = {
           tags: Json
         }[]
       }
-      get_related_notes: {
-        Args: {
-          p_note_id: string
-        }
-        Returns: {
-          related_note_id: string
-          content: Json
-          created_at: string
-          tags: Json
-        }[]
-      }
+      get_related_notes:
+        | {
+            Args: {
+              p_entity_id: string
+              p_entity_type: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_note_id: string
+            }
+            Returns: {
+              related_note_id: string
+              content: Json
+              created_at: string
+              tags: Json
+            }[]
+          }
       get_resource_summary: {
         Args: {
           p_resource_id: string
@@ -731,7 +796,12 @@ export type Database = {
           name: string
           description: string
           created_at: string
+          updated_at: string
+          is_archived: boolean
           tags: Json
+          related_notes: Json
+          owner_id: string
+          owner_avatar_url: string
         }[]
       }
       get_resource_tags: {
@@ -815,24 +885,47 @@ export type Database = {
           tags: Json
         }[]
       }
-      get_user_notes: {
-        Args: {
-          p_user_id: string
-          p_project_id?: string
-          p_area_id?: string
-          p_task_id?: string
-          p_note_type?: string
-        }
-        Returns: {
-          note_id: string
-          name: string
-          content: Json
-          note_type: string
-          created_at: string
-          updated_at: string
-          tags: Json
-        }[]
-      }
+      get_user_notes:
+        | {
+            Args: {
+              p_user_id: string
+              p_project_id?: string
+              p_area_id?: string
+              p_resource_id?: string
+              p_note_type?: string
+              p_is_archived?: boolean
+            }
+            Returns: {
+              note_id: string
+              name: string
+              note_type: string
+              created_at: string
+              updated_at: string
+              project_id: string
+              area_id: string
+              resource_id: string
+              task_id: string
+              tags: Json
+            }[]
+          }
+        | {
+            Args: {
+              p_user_id: string
+              p_project_id?: string
+              p_area_id?: string
+              p_task_id?: string
+              p_note_type?: string
+            }
+            Returns: {
+              note_id: string
+              name: string
+              content: Json
+              note_type: string
+              created_at: string
+              updated_at: string
+              tags: Json
+            }[]
+          }
       get_user_resources: {
         Args: {
           p_user_id: string
@@ -859,6 +952,47 @@ export type Database = {
           priority: string
         }[]
       }
+      insert_area: {
+        Args: {
+          p_name: string
+          p_description?: string
+          p_tags?: Json
+        }
+        Returns: string
+      }
+      insert_note: {
+        Args: {
+          p_name: string
+          p_content: Json
+          p_note_type?: string
+          p_project_id?: string
+          p_area_id?: string
+          p_resource_id?: string
+          p_task_id?: string
+          p_tags?: Json
+        }
+        Returns: string
+      }
+      insert_project: {
+        Args: {
+          p_name: string
+          p_description?: string
+          p_status?: string
+          p_priority?: number
+          p_due_date?: string
+          p_parent_project_id?: string
+          p_tags?: Json
+        }
+        Returns: string
+      }
+      insert_resource: {
+        Args: {
+          p_name: string
+          p_description?: string
+          p_tags?: Json
+        }
+        Returns: string
+      }
       move_note: {
         Args: {
           p_note_id: string
@@ -876,6 +1010,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      search_user_tags: {
+        Args: {
+          p_user_id: string
+          p_search_term: string
+        }
+        Returns: {
+          tag_id: string
+          name: string
+          description: string
+          usage_count: number
+        }[]
+      }
       tag_item: {
         Args: {
           p_taggable_id: string
@@ -884,6 +1030,51 @@ export type Database = {
           p_context?: string
         }
         Returns: undefined
+      }
+      update_area: {
+        Args: {
+          p_area_id: string
+          p_name: string
+          p_description?: string
+          p_tags?: Json
+        }
+        Returns: boolean
+      }
+      update_note: {
+        Args: {
+          p_note_id: string
+          p_name: string
+          p_content: Json
+          p_note_type?: string
+          p_project_id?: string
+          p_area_id?: string
+          p_resource_id?: string
+          p_task_id?: string
+          p_tags?: Json
+        }
+        Returns: boolean
+      }
+      update_project: {
+        Args: {
+          p_project_id: string
+          p_name: string
+          p_description?: string
+          p_status?: string
+          p_priority?: number
+          p_due_date?: string
+          p_parent_project_id?: string
+          p_tags?: Json
+        }
+        Returns: boolean
+      }
+      update_resource: {
+        Args: {
+          p_resource_id: string
+          p_name: string
+          p_description?: string
+          p_tags?: Json
+        }
+        Returns: boolean
       }
     }
     Enums: {
