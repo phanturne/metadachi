@@ -6,8 +6,6 @@ export type GetNoteTagsReturnType =
   Database["public"]["Functions"]["get_note_tags"]["Returns"];
 export type GetRelatedNotesReturnType =
   Database["public"]["Functions"]["get_related_notes"]["Returns"];
-export type GetNotesWithRelatedNotesReturnType =
-  Database["public"]["Functions"]["get_notes_with_related_notes"]["Returns"];
 export type MoveNoteReturnType =
   Database["public"]["Functions"]["move_note"]["Returns"];
 export type GetUserNotesReturnType =
@@ -39,20 +37,6 @@ export class NotesService {
     const { data, error } = await this.supabase.rpc("get_related_notes", {
       p_note_id: noteId,
     });
-
-    if (error) throw error;
-    return data;
-  }
-
-  async getNotesWithRelatedNotes(
-    noteId: string,
-  ): Promise<GetNotesWithRelatedNotesReturnType> {
-    const { data, error } = await this.supabase.rpc(
-      "get_notes_with_related_notes",
-      {
-        p_note_id: noteId,
-      },
-    );
 
     if (error) throw error;
     return data;

@@ -56,15 +56,6 @@ export const useGetRelatedNotes = (noteId: string) => {
   });
 };
 
-export const useGetNotesWithRelatedNotes = (noteId: string) => {
-  const notesService = useNotesService();
-
-  return useQuery({
-    queryKey: noteKeys.notesWithRelated(noteId),
-    queryFn: () => notesService.getNotesWithRelatedNotes(noteId),
-  });
-};
-
 export const useGetUserNotes = (
   userId: string,
   projectId?: string,

@@ -10,8 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { TablesInsert } from "@/supabase/types";
-import { useSession } from "@/hooks/use-session";
 import {
   Select,
   SelectContent,
@@ -28,6 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { useCreateProject } from "@/hooks/use-projects-service";
+import { InsertProjectParams } from "@/lib/database/projects-service";
 
 const STATUS_OPTIONS = [
   "active",
@@ -54,29 +53,24 @@ export default function CreateProjectDialog({
   onOpenChange: (open: boolean) => void;
   parentProjectId?: string | null;
 }) {
-  const { session } = useSession();
   const createProjectMutation = useCreateProject();
 
-  const initialProjectState: TablesInsert<"projects"> = {
-    user_id: session?.user?.id ?? "",
-    parent_project_id: parentProjectId,
+  const initialProjectState: InsertProjectParams = {
     name: "",
     description: "",
     status: "active",
-    is_archived: false,
     priority: 0,
-    due_date: null,
+    due_date: undefined,
+    parent_project_id: parentProjectId ?? undefined,
+    tags: [],
   };
 
   const [project, setProject] =
-    useState<TablesInsert<"projects">>(initialProjectState);
+    useState<InsertProjectParams>(initialProjectState);
 
   const handleSave = async () => {
     try {
-      await createProjectMutation.mutateAsync({
-        ...project,
-        user_id: session?.user?.id ?? "",
-      });
+      await createProjectMutation.mutateAsync(project);
       onClose();
     } catch (error) {
       console.error("Failed to save project:", error);

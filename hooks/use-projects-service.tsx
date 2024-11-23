@@ -1,11 +1,11 @@
 import { createClient } from "@/utils/supabase/client";
 import { useMemo } from "react";
 import {
+  InsertProjectParams,
   ProjectsService,
-  UpdateProjectReturnType,
+  UpdateProjectParams,
 } from "@/lib/database/projects-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { TablesInsert } from "@/supabase/types";
 
 export const useProjectService = () => {
   const supabase = createClient();
@@ -123,7 +123,7 @@ export const useCreateProject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (project: TablesInsert<"projects">) =>
+    mutationFn: (project: InsertProjectParams) =>
       projectService.insertProject(project),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -143,7 +143,7 @@ export const useUpdateProject = () => {
       updates,
     }: {
       projectId: string;
-      updates: UpdateProjectReturnType;
+      updates: UpdateProjectParams;
     }) => projectService.updateProject(projectId, updates),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

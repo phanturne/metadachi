@@ -1,32 +1,55 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { Database, TablesInsert } from "@/supabase/types";
+import { Database } from "@/supabase/types";
+import { RemovePPrefix } from "@/lib/utils";
 
+// Table Types
 export type Project = Database["public"]["Tables"]["projects"]["Row"];
-export type GetProjectTagsReturnType =
+export type Tag = Database["public"]["Tables"]["tags"]["Row"];
+
+// Function Return Types
+export type GetProjectTagsReturn =
   Database["public"]["Functions"]["get_project_tags"]["Returns"];
-export type GetConnectedProjectsReturnType =
-  Database["public"]["Functions"]["get_connected_projects"]["Returns"];
-export type GetProjectHierarchyReturnType =
-  Database["public"]["Functions"]["get_project_hierarchy"]["Returns"];
-export type GetProjectConnectionsReturnType =
-  Database["public"]["Functions"]["get_project_connections"]["Returns"];
-export type GetProjectSummaryReturnType =
+export type GetRelatedNotesReturn =
+  Database["public"]["Functions"]["get_related_notes"]["Returns"];
+export type GetProjectSummaryReturn =
   Database["public"]["Functions"]["get_project_summary"]["Returns"];
-export type MoveProjectReturnType =
+export type InsertProjectReturn =
+  Database["public"]["Functions"]["insert_project"]["Returns"];
+export type UpdateProjectReturn =
+  Database["public"]["Functions"]["update_project"]["Returns"];
+export type DeleteProjectReturn =
+  Database["public"]["Functions"]["delete_project"]["Returns"];
+export type MoveProjectReturn =
   Database["public"]["Functions"]["move_project"]["Returns"];
-export type InsertProjectReturnType =
-  Database["public"]["Tables"]["projects"]["Insert"];
-export type UpdateProjectReturnType =
-  Database["public"]["Tables"]["projects"]["Update"];
+export type GetConnectedProjectsReturn =
+  Database["public"]["Functions"]["get_connected_projects"]["Returns"];
+export type GetProjectHierarchyReturn =
+  Database["public"]["Functions"]["get_project_hierarchy"]["Returns"];
+export type GetProjectConnectionsReturn =
+  Database["public"]["Functions"]["get_project_connections"]["Returns"];
 export type GetProjectStatisticsReturnType =
   Database["public"]["Functions"]["get_project_statistics"]["Returns"];
 export type GetProjectTimelineReturnType =
   Database["public"]["Functions"]["get_project_timeline"]["Returns"];
 
+// Function Argument Types
+export type InsertProjectArgs =
+  Database["public"]["Functions"]["insert_project"]["Args"];
+export type UpdateProjectArgs =
+  Database["public"]["Functions"]["update_project"]["Args"];
+export type GetProjectTagsArgs =
+  Database["public"]["Functions"]["get_project_tags"]["Args"];
+export type GetRelatedNotesArgs =
+  Database["public"]["Functions"]["get_related_notes"]["Args"];
+
+// Interface for cleaner API without 'p_' prefix
+export type InsertProjectParams = RemovePPrefix<InsertProjectArgs>;
+export type UpdateProjectParams = RemovePPrefix<UpdateProjectArgs>;
+
 export class ProjectsService {
   constructor(private supabase: SupabaseClient<Database>) {}
 
-  async getProjectTags(projectId: string): Promise<GetProjectTagsReturnType> {
+  async getProjectTags(projectId: string): Promise<GetProjectTagsReturn> {
     const { data, error } = await this.supabase.rpc("get_project_tags", {
       p_project_id: projectId,
     });
@@ -37,7 +60,7 @@ export class ProjectsService {
 
   async getConnectedProjects(
     projectId: string,
-  ): Promise<GetConnectedProjectsReturnType> {
+  ): Promise<GetConnectedProjectsReturn> {
     const { data, error } = await this.supabase.rpc("get_connected_projects", {
       p_project_id: projectId,
     });
@@ -48,7 +71,7 @@ export class ProjectsService {
 
   async getProjectHierarchy(
     projectId: string,
-  ): Promise<GetProjectHierarchyReturnType> {
+  ): Promise<GetProjectHierarchyReturn> {
     const { data, error } = await this.supabase.rpc("get_project_hierarchy", {
       p_project_id: projectId,
     });
@@ -59,7 +82,7 @@ export class ProjectsService {
 
   async getProjectConnections(
     projectId: string,
-  ): Promise<GetProjectConnectionsReturnType> {
+  ): Promise<GetProjectConnectionsReturn> {
     const { data, error } = await this.supabase.rpc("get_project_connections", {
       p_project_id: projectId,
     });
@@ -68,9 +91,7 @@ export class ProjectsService {
     return data;
   }
 
-  async getProjectSummary(
-    projectId: string,
-  ): Promise<GetProjectSummaryReturnType> {
+  async getProjectSummary(projectId: string): Promise<GetProjectSummaryReturn> {
     const { data, error } = await this.supabase.rpc("get_project_summary", {
       p_project_id: projectId,
     });
@@ -82,7 +103,7 @@ export class ProjectsService {
   async moveProject(
     projectId: string,
     newParentId: string | undefined,
-  ): Promise<MoveProjectReturnType> {
+  ): Promise<MoveProjectReturn> {
     const { data, error } = await this.supabase.rpc("move_project", {
       p_project_id: projectId,
       p_new_parent_id: newParentId,
@@ -93,12 +114,20 @@ export class ProjectsService {
   }
 
   async insertProject(
-    project: TablesInsert<"projects">,
-  ): Promise<InsertProjectReturnType> {
-    const { data, error } = await this.supabase
-      .from("projects")
-      .insert(project)
-      .single();
+    params: InsertProjectParams,
+  ): Promise<InsertProjectReturn> {
+    // Convert from clean API to required 'p_' prefix
+    const args: InsertProjectArgs = {
+      p_name: params.name,
+      p_description: params.description,
+      p_status: params.status,
+      p_priority: params.priority,
+      p_due_date: params.due_date,
+      p_parent_project_id: params.parent_project_id,
+      p_tags: params.tags,
+    };
+
+    const { data, error } = await this.supabase.rpc("insert_project", args);
 
     if (error) throw error;
     return data;
@@ -106,27 +135,33 @@ export class ProjectsService {
 
   async updateProject(
     projectId: string,
-    project: UpdateProjectReturnType,
-  ): Promise<UpdateProjectReturnType> {
-    const { data, error } = await this.supabase
-      .from("projects")
-      .update(project)
-      .eq("project_id", projectId)
-      .single();
+    params: UpdateProjectParams,
+  ): Promise<UpdateProjectReturn> {
+    // Convert from clean API to required 'p_' prefix
+    const args: UpdateProjectArgs = {
+      p_project_id: projectId,
+      p_name: params.name,
+      p_description: params.description,
+      p_status: params.status,
+      p_priority: params.priority,
+      p_due_date: params.due_date,
+      p_parent_project_id: params.parent_project_id,
+      p_tags: params.tags,
+    };
+
+    const { data, error } = await this.supabase.rpc("update_project", args);
 
     if (error) throw error;
     return data;
   }
 
-  async deleteProject(projectId: string): Promise<null> {
-    const { error } = await this.supabase
-      .from("projects")
-      .delete()
-      .eq("project_id", projectId)
-      .single();
+  async deleteProject(projectId: string): Promise<DeleteProjectReturn> {
+    const { data, error } = await this.supabase.rpc("delete_project", {
+      p_project_id: projectId,
+    });
 
     if (error) throw error;
-    return null;
+    return data;
   }
 
   async selectProject(projectId: string): Promise<Project> {
@@ -135,6 +170,16 @@ export class ProjectsService {
       .select("*")
       .eq("project_id", projectId)
       .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async getRelatedNotes(projectId: string): Promise<GetRelatedNotesReturn> {
+    const { data, error } = await this.supabase.rpc("get_related_notes", {
+      p_entity_id: projectId,
+      p_entity_type: "project",
+    });
 
     if (error) throw error;
     return data;
