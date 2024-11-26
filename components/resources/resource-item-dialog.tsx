@@ -14,11 +14,12 @@ import { Label } from "@/components/ui/label";
 import {
   useCreateResource,
   useUpdateResource,
-  useGetResource,
+  useGetResourceSummary,
   useDeleteResource,
 } from "@/hooks/use-resources-service";
 import { UpdateResourceParams } from "@/lib/database/resources-service";
 import { toast } from "sonner";
+import { Note } from "@/lib/database/notes-service";
 
 interface ResourceItemDialogProps {
   open: boolean;
@@ -34,9 +35,11 @@ export default function ResourceItemDialog({
   const createResourceMutation = useCreateResource();
   const updateResourceMutation = useUpdateResource();
   const deleteResourceMutation = useDeleteResource();
-  const { data: existingResource, isLoading: isLoadingResource } =
-    useGetResource(resourceId ?? "");
+  const { data: resourceSummary } = useGetResourceSummary(resourceId ?? "");
   const isEditing = !!resourceId;
+
+  // Get the first item from the summary array
+  const existingResource = resourceSummary?.[0];
 
   // Form state
   const [resource, setResource] = useState<UpdateResourceParams>({
@@ -51,29 +54,34 @@ export default function ResourceItemDialog({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
 
-  // Load existing resource data
+  // Load existing resource data when dialog is opened
   useEffect(() => {
-    if (existingResource) {
+    if (open && existingResource) {
       setResource({
         resource_id: existingResource.resource_id,
         name: existingResource.name,
         description: existingResource.description ?? "",
+        tags: existingResource.tags ?? [],
       });
     }
-  }, [existingResource]);
+  }, [open, existingResource]);
 
   // Auto-save implementation
   const saveResource = async (data: UpdateResourceParams) => {
     try {
       setIsSaving(true);
-      if (isEditing) {
+      if (data.resource_id) {
         await updateResourceMutation.mutateAsync(data);
       } else {
-        await createResourceMutation.mutateAsync(data);
+        const newResourceId = await createResourceMutation.mutateAsync(data);
+        // Update local state with the new ID
+        setResource((prev) => ({
+          ...prev,
+          resource_id: newResourceId,
+        }));
       }
       setLastSavedAt(new Date());
       setIsDirty(false);
-      toast.success(isEditing ? "Resource updated" : "Resource created");
     } catch (error) {
       toast.error("Failed to save resource");
       console.error(error);
@@ -82,6 +90,7 @@ export default function ResourceItemDialog({
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSave = useCallback(
     debounce(async (data: UpdateResourceParams) => {
       await saveResource(data);
@@ -89,14 +98,26 @@ export default function ResourceItemDialog({
     [],
   );
 
-  // Handle form changes
+  // Handle form changes with smarter save triggering
   const handleChange =
     (field: keyof UpdateResourceParams) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const newResource = { ...resource, [field]: e.target.value };
+      const newValue = e.target.value;
+      const newResource = { ...resource, [field]: newValue };
+
+      // Always update local state immediately
       setResource(newResource);
-      setIsDirty(true);
-      debouncedSave(newResource);
+
+      // Only mark as dirty if value actually changed
+      if (newValue !== resource[field]) {
+        setIsDirty(true);
+
+        // Cancel any pending saves
+        debouncedSave.cancel();
+
+        // Schedule new save
+        debouncedSave(newResource);
+      }
     };
 
   // Handle close
@@ -105,6 +126,17 @@ export default function ResourceItemDialog({
       setShowUnsavedChanges(true);
     } else {
       onOpenChange(false);
+      setResource({
+        resource_id: resourceId ?? "",
+        name: "",
+        description: "",
+        tags: [],
+      });
+      setIsDirty(false);
+      setIsSaving(false);
+      setLastSavedAt(null);
+      setConfirmDelete(false);
+      setShowUnsavedChanges(false);
     }
   };
 
@@ -147,28 +179,31 @@ export default function ResourceItemDialog({
               placeholder="Enter a description..."
             />
           </div>
+          {/* Add related notes section */}
+          {existingResource?.related_notes && (
+            <div className="space-y-2">
+              <Label>Related Notes</Label>
+              <div className="rounded-md border border-input bg-background p-4">
+                {(existingResource.related_notes as Note[])?.length > 0 ? (
+                  <ul className="list-inside list-disc space-y-2">
+                    {(existingResource.related_notes as Note[]).map((note) => (
+                      <li key={note.note_id} className="text-sm">
+                        {note.name || "Untitled Note"}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No related notes
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-        <DialogFooter className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : isDirty ? (
-              <span>Unsaved changes</span>
-            ) : lastSavedAt ? (
-              <>
-                <Check className="h-4 w-4" />
-                <span>Saved {lastSavedAt.toLocaleTimeString()}</span>
-              </>
-            ) : null}
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={handleClose}>
-              Close
-            </Button>
-            {isEditing && (
+        <DialogFooter className="flex items-center !justify-between">
+          <div>
+            {resource.resource_id && (
               <Button
                 variant="destructive"
                 onClick={() => setConfirmDelete(true)}
@@ -176,6 +211,28 @@ export default function ResourceItemDialog({
                 Delete
               </Button>
             )}
+          </div>
+          <div className="flex gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : isDirty ? (
+                <span>Unsaved changes</span>
+              ) : lastSavedAt ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span>Saved {lastSavedAt.toLocaleTimeString()}</span>
+                </>
+              ) : null}
+            </div>
+            <div className="flex space-x-2">
+              <Button variant="outline" onClick={handleClose}>
+                Close
+              </Button>
+            </div>
           </div>
         </DialogFooter>
       </DialogContent>

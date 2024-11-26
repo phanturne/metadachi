@@ -620,7 +620,11 @@ export type Database = {
         Args: {
           p_note_id: string
         }
-        Returns: Json
+        Returns: {
+          tag_id: string
+          name: string
+          context: string
+        }[]
       }
       get_notes_for_project: {
         Args: {
