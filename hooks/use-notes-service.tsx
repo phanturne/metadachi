@@ -183,6 +183,7 @@ export const useCreateNote = () => {
 export const useUpdateNote = () => {
   const notesService = useNotesService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
     mutationFn: ({
@@ -192,19 +193,25 @@ export const useUpdateNote = () => {
       noteId: string;
       updates: UpdateNoteReturnType;
     }) => notesService.updateNote(noteId, updates),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: noteKeys.note(variables.noteId),
-      });
-      if (data.project_id) {
+    onSuccess: async (data, variables) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
         queryClient.invalidateQueries({
-          queryKey: noteKeys.projectNotes(data.project_id),
+          queryKey: noteKeys.note(variables.noteId),
         });
-      }
-      if (data.task_id) {
         queryClient.invalidateQueries({
-          queryKey: noteKeys.taskNotes(data.task_id),
+          queryKey: noteKeys.userNotes(session.user.id),
         });
+        if (data.project_id) {
+          queryClient.invalidateQueries({
+            queryKey: noteKeys.projectNotes(data.project_id),
+          });
+        }
+        if (data.task_id) {
+          queryClient.invalidateQueries({
+            queryKey: noteKeys.taskNotes(data.task_id),
+          });
+        }
       }
     },
   });

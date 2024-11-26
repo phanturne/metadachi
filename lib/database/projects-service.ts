@@ -134,12 +134,11 @@ export class ProjectsService {
   }
 
   async updateProject(
-    projectId: string,
     params: UpdateProjectParams,
   ): Promise<UpdateProjectReturn> {
     // Convert from clean API to required 'p_' prefix
     const args: UpdateProjectArgs = {
-      p_project_id: projectId,
+      p_project_id: params.project_id,
       p_name: params.name,
       p_description: params.description,
       p_status: params.status,

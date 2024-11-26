@@ -136,19 +136,20 @@ export const useCreateProject = () => {
 export const useUpdateProject = () => {
   const projectService = useProjectService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
-    mutationFn: ({
-      projectId,
-      updates,
-    }: {
-      projectId: string;
-      updates: UpdateProjectParams;
-    }) => projectService.updateProject(projectId, updates),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: projectKeys.project(variables.projectId),
-      });
+    mutationFn: (updates: UpdateProjectParams) => projectService.updateProject(updates),
+    onSuccess: async (_, variables) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        queryClient.invalidateQueries({
+          queryKey: projectKeys.project(variables.project_id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: projectKeys.all,
+        });
+      }
     },
   });
 };

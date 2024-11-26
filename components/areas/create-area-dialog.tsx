@@ -1,18 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { TablesInsert } from "@/supabase/types";
-import { useSession } from "@/hooks/use-session";
 import { useCreateArea } from "@/hooks/use-areas-service";
+import { InsertAreaParams } from "@/lib/database/areas-service";
 import { toast } from "sonner";
 
 export default function CreateAreaDialog({
@@ -22,31 +15,26 @@ export default function CreateAreaDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { session } = useSession();
   const createAreaMutation = useCreateArea();
 
-  const initialAreaState: TablesInsert<"areas"> = {
-    user_id: session?.user?.id ?? "",
+  const initialAreaState: InsertAreaParams = {
     name: "",
     description: "",
-    is_archived: false,
+    tags: [],
   };
 
-  const [area, setArea] = useState<TablesInsert<"areas">>(initialAreaState);
+  const [area, setArea] = useState<InsertAreaParams>(initialAreaState);
 
   const handleSave = async () => {
     try {
-      await createAreaMutation.mutateAsync({
-        ...area,
-        user_id: session?.user?.id ?? "",
-      });
+      await createAreaMutation.mutateAsync(area);
       toast.success("Area created successfully!");
       onClose();
     } catch (error) {
       if (error instanceof Error) {
-        toast.error("Failed to save area: " + error.message);
+        toast.error("Failed to create area: " + error.message);
       } else {
-        toast.error("Failed to save area: An unknown error occurred");
+        toast.error("Failed to create area");
       }
     }
   };

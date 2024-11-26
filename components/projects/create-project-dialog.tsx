@@ -27,6 +27,7 @@ import {
 import { format } from "date-fns";
 import { useCreateProject } from "@/hooks/use-projects-service";
 import { InsertProjectParams } from "@/lib/database/projects-service";
+import { toast } from "sonner";
 
 const STATUS_OPTIONS = [
   "active",
@@ -71,9 +72,14 @@ export default function CreateProjectDialog({
   const handleSave = async () => {
     try {
       await createProjectMutation.mutateAsync(project);
+      toast.success("Project created successfully!");
       onClose();
     } catch (error) {
-      console.error("Failed to save project:", error);
+      if (error instanceof Error) {
+        toast.error("Failed to create project: " + error.message);
+      } else {
+        toast.error("Failed to create project");
+      }
     }
   };
 

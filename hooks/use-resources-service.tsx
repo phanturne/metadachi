@@ -2,10 +2,10 @@ import { createClient } from "@/utils/supabase/client";
 import { useMemo } from "react";
 import {
   ResourcesService,
-  UpdateResourceReturnType,
+  InsertResourceParams,
+  UpdateResourceParams,
 } from "@/lib/database/resources-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { TablesInsert } from "@/supabase/types";
 
 export const useResourcesService = () => {
   const supabase = createClient();
@@ -68,17 +68,12 @@ export const useCreateResource = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (resource: TablesInsert<"resources">) =>
+    mutationFn: (resource: InsertResourceParams) =>
       resourcesService.insertResource(resource),
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: resourceKeys.all,
       });
-      if (data.user_id) {
-        queryClient.invalidateQueries({
-          queryKey: resourceKeys.userResources(data.user_id),
-        });
-      }
     },
   });
 };
@@ -86,22 +81,21 @@ export const useCreateResource = () => {
 export const useUpdateResource = () => {
   const resourcesService = useResourcesService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
-    mutationFn: ({
-      resourceId,
-      updates,
-    }: {
-      resourceId: string;
-      updates: UpdateResourceReturnType;
-    }) => resourcesService.updateResource(resourceId, updates),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: resourceKeys.resource(variables.resourceId),
-      });
-      if (data.user_id) {
+    mutationFn: (updates: UpdateResourceParams) =>
+      resourcesService.updateResource(updates),
+    onSuccess: async (_, variables) => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
         queryClient.invalidateQueries({
-          queryKey: resourceKeys.userResources(data.user_id),
+          queryKey: resourceKeys.resource(variables.resource_id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: resourceKeys.userResources(session.user.id),
         });
       }
     },
@@ -134,11 +128,6 @@ export const useArchiveResource = () => {
       queryClient.invalidateQueries({
         queryKey: resourceKeys.resource(resourceId),
       });
-      if (data.user_id) {
-        queryClient.invalidateQueries({
-          queryKey: resourceKeys.userResources(data.user_id),
-        });
-      }
     },
   });
 };
@@ -154,11 +143,6 @@ export const useUnarchiveResource = () => {
       queryClient.invalidateQueries({
         queryKey: resourceKeys.resource(resourceId),
       });
-      if (data.user_id) {
-        queryClient.invalidateQueries({
-          queryKey: resourceKeys.userResources(data.user_id),
-        });
-      }
     },
   });
 };

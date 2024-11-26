@@ -4,17 +4,13 @@ import { Bookmark } from "lucide-react";
 import ResourceItemDialog from "@/components/resources/resource-item-dialog";
 import { Resource } from "@/lib/database/resources-service";
 
-export default function ResourceItem({
-  resource,
-}: {
-  resource: Partial<Resource>;
-}) {
+export default function ResourceItem({ resource }: { resource: Partial<Resource> }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Card
-        className="transform transition-transform hover:scale-105"
+        className="transform cursor-pointer transition-transform hover:scale-105"
         onClick={() => setOpen(true)}
       >
         <CardContent className="p-4">
@@ -27,7 +23,7 @@ export default function ResourceItem({
       <ResourceItemDialog
         open={open}
         onOpenChange={setOpen}
-        resourceId={resource.resource_id ?? ""}
+        resourceId={resource.resource_id}
       />
     </>
   );

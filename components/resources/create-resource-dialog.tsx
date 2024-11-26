@@ -10,9 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { TablesInsert } from "@/supabase/types";
-import { useSession } from "@/hooks/use-session";
 import { useCreateResource } from "@/hooks/use-resources-service";
+import { InsertResourceParams } from "@/lib/database/resources-service";
 import { toast } from "sonner";
 
 export default function CreateResourceDialog({
@@ -22,18 +21,16 @@ export default function CreateResourceDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { session } = useSession();
   const createResourceMutation = useCreateResource();
 
-  const initialResourceState: TablesInsert<"resources"> = {
-    user_id: session?.user?.id ?? "",
+  const initialResourceState: InsertResourceParams = {
     name: "",
     description: "",
-    is_archived: false,
+    tags: [],
   };
 
   const [resource, setResource] =
-    useState<TablesInsert<"resources">>(initialResourceState);
+    useState<InsertResourceParams>(initialResourceState);
 
   const handleSave = async () => {
     try {
@@ -42,10 +39,7 @@ export default function CreateResourceDialog({
         return;
       }
 
-      await createResourceMutation.mutateAsync({
-        ...resource,
-        user_id: session?.user?.id ?? "",
-      });
+      await createResourceMutation.mutateAsync(resource);
       toast.success("Resource created successfully!");
       onClose();
     } catch (error) {
@@ -108,9 +102,7 @@ export default function CreateResourceDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!resource.name.trim()}>
-            Create Resource
-          </Button>
+          <Button onClick={handleSave}>Create Resource</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

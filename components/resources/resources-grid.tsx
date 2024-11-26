@@ -1,12 +1,12 @@
 import { AlertCircle, Bookmark, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React, { useEffect, useState } from "react";
-import CreateResourceDialog from "@/components/resources/create-resource-dialog";
+import { useEffect, useState } from "react";
 import ResourceItem from "@/components/resources/resource-item";
 import { useGetUserResources } from "@/hooks/use-resources-service";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import ResourceItemDialog from "./resource-item-dialog";
 
 export function ResourcesGrid() {
   const [open, setOpen] = useState(false);
@@ -95,7 +95,7 @@ export function ResourcesGrid() {
           </Button>
         </div>
       </div>
-      <CreateResourceDialog open={open} onOpenChange={setOpen} />
+      <ResourceItemDialog open={open} onOpenChange={setOpen} />
     </>
   );
 }

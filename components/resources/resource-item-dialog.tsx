@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import debounce from "lodash/debounce";
+import { Loader2, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,156 +11,176 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { motion } from "framer-motion";
-import { TablesUpdate } from "@/supabase/types";
-import { useSession } from "@/hooks/use-session";
 import {
-  useDeleteResource,
-  useGetResource,
+  useCreateResource,
   useUpdateResource,
+  useGetResource,
+  useDeleteResource,
 } from "@/hooks/use-resources-service";
+import { UpdateResourceParams } from "@/lib/database/resources-service";
 import { toast } from "sonner";
+
+interface ResourceItemDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  resourceId?: string;
+}
 
 export default function ResourceItemDialog({
   open,
   onOpenChange,
   resourceId,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  resourceId: string;
-}) {
-  const { session } = useSession();
+}: ResourceItemDialogProps) {
+  const createResourceMutation = useCreateResource();
   const updateResourceMutation = useUpdateResource();
   const deleteResourceMutation = useDeleteResource();
-  const { data: resourceData, isLoading } = useGetResource(resourceId);
+  const { data: existingResource, isLoading: isLoadingResource } =
+    useGetResource(resourceId ?? "");
+  const isEditing = !!resourceId;
 
-  const initialResourceState: TablesUpdate<"resources"> = {
-    user_id: session?.user?.id ?? "",
+  // Form state
+  const [resource, setResource] = useState<UpdateResourceParams>({
+    resource_id: resourceId ?? "",
     name: "",
     description: "",
-    is_archived: false,
-  };
-
-  const [resource, setResource] =
-    useState<TablesUpdate<"resources">>(initialResourceState);
+    tags: [],
+  });
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
 
+  // Load existing resource data
   useEffect(() => {
-    if (resourceData) {
-      setResource(resourceData);
-    }
-  }, [resourceData]);
-
-  const handleSave = async () => {
-    try {
-      if (!resource.name?.trim()) {
-        toast.error("Resource name is required");
-        return;
-      }
-
-      await updateResourceMutation.mutateAsync({
-        resourceId,
-        updates: resource,
+    if (existingResource) {
+      setResource({
+        resource_id: existingResource.resource_id,
+        name: existingResource.name,
+        description: existingResource.description ?? "",
       });
-      toast.success("Resource updated successfully!");
-      onClose();
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error("Failed to update resource: " + error.message);
+    }
+  }, [existingResource]);
+
+  // Auto-save implementation
+  const saveResource = async (data: UpdateResourceParams) => {
+    try {
+      setIsSaving(true);
+      if (isEditing) {
+        await updateResourceMutation.mutateAsync(data);
       } else {
-        toast.error("Failed to update resource: An unknown error occurred");
+        await createResourceMutation.mutateAsync(data);
       }
+      setLastSavedAt(new Date());
+      setIsDirty(false);
+      toast.success(isEditing ? "Resource updated" : "Resource created");
+    } catch (error) {
+      toast.error("Failed to save resource");
+      console.error(error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
+  const debouncedSave = useCallback(
+    debounce(async (data: UpdateResourceParams) => {
+      await saveResource(data);
+    }, 1000),
+    [],
+  );
+
+  // Handle form changes
+  const handleChange =
+    (field: keyof UpdateResourceParams) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const newResource = { ...resource, [field]: e.target.value };
+      setResource(newResource);
+      setIsDirty(true);
+      debouncedSave(newResource);
+    };
+
+  // Handle close
+  const handleClose = () => {
+    if (isDirty) {
+      setShowUnsavedChanges(true);
+    } else {
+      onOpenChange(false);
+    }
+  };
+
+  // Handle delete
   const handleDelete = async () => {
     try {
-      await deleteResourceMutation.mutateAsync(resourceId);
-      toast.success("Resource deleted successfully!");
-      onClose();
+      await deleteResourceMutation.mutateAsync(resourceId!);
+      setConfirmDelete(false);
+      onOpenChange(false);
+      toast.success("Resource deleted");
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error("Failed to delete resource: " + error.message);
-      } else {
-        toast.error("Failed to delete resource: An unknown error occurred");
-      }
+      toast.error("Failed to delete resource");
+      console.error(error);
     }
   };
 
-  const onClose = () => {
-    onOpenChange(false);
-    setResource(initialResourceState);
-  };
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px]">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>Edit Resource</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit" : "Create"} Resource</DialogTitle>
         </DialogHeader>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.3 }}
-          className="grid gap-6 py-4"
-        >
+        <div className="space-y-6 py-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Resource Name</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
               id="name"
-              placeholder="Enter resource name"
-              maxLength={100}
               value={resource.name}
-              onChange={(e) =>
-                setResource((prev) => ({ ...prev, name: e.target.value }))
-              }
+              onChange={handleChange("name")}
+              className="w-full"
             />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <textarea
               id="description"
-              placeholder="Write resource description here..."
-              value={resource?.description ?? ""}
-              onChange={(e) =>
-                setResource((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              className="min-h-[50px] w-full rounded-md border border-input bg-background px-3 py-2"
+              value={resource.description}
+              onChange={handleChange("description")}
+              className="min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2"
+              placeholder="Enter a description..."
             />
           </div>
-        </motion.div>
-        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
-          <Button
-            variant="destructive"
-            onClick={() => setConfirmDelete(true)}
-            className="mt-3 sm:mt-0"
-          >
-            Delete
-          </Button>
-          <div className="flex flex-col-reverse sm:flex-row sm:space-x-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="mt-3 sm:mt-0"
-            >
-              Cancel
+        </div>
+        <DialogFooter className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : isDirty ? (
+              <span>Unsaved changes</span>
+            ) : lastSavedAt ? (
+              <>
+                <Check className="h-4 w-4" />
+                <span>Saved {lastSavedAt.toLocaleTimeString()}</span>
+              </>
+            ) : null}
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={handleClose}>
+              Close
             </Button>
-            <Button onClick={handleSave} disabled={!resource.name?.trim()}>
-              Update Resource
-            </Button>
+            {isEditing && (
+              <Button
+                variant="destructive"
+                onClick={() => setConfirmDelete(true)}
+              >
+                Delete
+              </Button>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent>
           <DialogHeader>
@@ -171,6 +193,34 @@ export default function ResourceItemDialog({
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unsaved Changes Dialog */}
+      <Dialog open={showUnsavedChanges} onOpenChange={setShowUnsavedChanges}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unsaved Changes</DialogTitle>
+          </DialogHeader>
+          <p>You have unsaved changes. Do you want to discard them?</p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowUnsavedChanges(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setShowUnsavedChanges(false);
+                setIsDirty(false);
+                onOpenChange(false);
+              }}
+            >
+              Discard Changes
             </Button>
           </DialogFooter>
         </DialogContent>
