@@ -139,7 +139,7 @@ export class NotesService {
     const { data, error } = await this.supabase
       .from("notes")
       .update(note)
-      .eq("id", noteId)
+      .eq("note_id", noteId)
       .single();
 
     if (error) throw error;
@@ -150,7 +150,7 @@ export class NotesService {
     const { error } = await this.supabase
       .from("notes")
       .delete()
-      .eq("id", noteId)
+      .eq("note_id", noteId)
       .single();
 
     if (error) throw error;
@@ -161,7 +161,7 @@ export class NotesService {
     const { data, error } = await this.supabase
       .from("notes")
       .select("*")
-      .eq("id", noteId)
+      .eq("note_id", noteId)
       .single();
 
     if (error) throw error;

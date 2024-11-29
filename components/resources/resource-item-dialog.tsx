@@ -20,6 +20,7 @@ import {
 import { UpdateResourceParams } from "@/lib/database/resources-service";
 import { toast } from "sonner";
 import { Note } from "@/lib/database/notes-service";
+import RelatedNotes from "./related-notes";
 
 interface ResourceItemDialogProps {
   open: boolean;
@@ -181,24 +182,9 @@ export default function ResourceItemDialog({
           </div>
           {/* Add related notes section */}
           {existingResource?.related_notes && (
-            <div className="space-y-2">
-              <Label>Related Notes</Label>
-              <div className="rounded-md border border-input bg-background p-4">
-                {(existingResource.related_notes as Note[])?.length > 0 ? (
-                  <ul className="list-inside list-disc space-y-2">
-                    {(existingResource.related_notes as Note[]).map((note) => (
-                      <li key={note.note_id} className="text-sm">
-                        {note.name || "Untitled Note"}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No related notes
-                  </p>
-                )}
-              </div>
-            </div>
+            <RelatedNotes
+              relatedNotes={existingResource.related_notes as Note[]}
+            />
           )}
         </div>
         <DialogFooter className="flex items-center !justify-between">
