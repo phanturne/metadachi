@@ -1,21 +1,76 @@
 "use client";
 
-import {
-  Briefcase,
-  DollarSign,
-  Heart,
-  LandPlot,
-  Languages,
-  Plane,
-  Plus,
-  User,
-} from "lucide-react";
+import { LandPlot, Plus, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React from "react";
-import CreateAreaDialog from "@/components/areas/create-area-dialog";
+import React, { useEffect, useState } from "react";
+import AreasItem from "@/components/areas/areas-item";
+import { useGetUserAreas } from "@/hooks/use-areas-service";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import AreasItemDialog from "./areas-item-dialog";
 
 export function AreasGrid() {
   const [open, setOpen] = React.useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const supabase = createClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        router.push("/sign-in");
+      } else {
+        setUserId(session.user.id);
+      }
+      setIsLoadingSession(false);
+    };
+    loadSession();
+  }, [supabase, router]);
+
+  const { data: userAreas, isLoading, error } = useGetUserAreas(userId || "");
+
+  if (isLoadingSession || isLoading) {
+    return (
+      <Card className="flex h-[50vh] items-center justify-center">
+        <CardContent className="flex flex-col items-center justify-center p-4 text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-lg font-medium text-muted-foreground">
+            Loading areas...
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="flex h-[50vh] items-center justify-center bg-destructive/5">
+        <CardContent className="p-4 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
+          <CardTitle className="mt-4 text-xl text-destructive">
+            Error loading areas
+          </CardTitle>
+          <p className="mt-2 text-destructive-foreground">
+            {error instanceof Error
+              ? error.message
+              : "An unexpected error occurred."}
+          </p>
+          <Button
+            className="mt-6"
+            variant="outline"
+            onClick={() => window.location.reload()}
+          >
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -24,23 +79,9 @@ export function AreasGrid() {
           <LandPlot className="mr-2 h-4 w-4" />
           Areas
         </h2>
-        <div className="grid flex-grow grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {[
-            { name: "Personal", icon: User },
-            { name: "Health & Fitness", icon: Heart },
-            { name: "Side Hustle", icon: Briefcase },
-            { name: "Travel", icon: Plane },
-            { name: "Language Learning", icon: Languages },
-            { name: "Investing", icon: DollarSign },
-          ].map((area, index) => (
-            <div
-              key={index}
-              className="group relative flex transform flex-col items-center justify-center rounded-xl bg-card p-4 shadow-md transition-transform hover:scale-105"
-            >
-              <area.icon className="mb-2 h-8 w-8 text-black transition-transform group-hover:scale-110 dark:text-white" />
-              <span className="text-black dark:text-white">{area.name}</span>
-              <div className="absolute inset-0 rounded-xl bg-card opacity-0 transition-opacity group-hover:opacity-30"></div>
-            </div>
+        <div className="grid max-h-40 flex-grow grid-cols-1 gap-4 overflow-y-auto md:grid-cols-3 lg:grid-cols-4">
+          {userAreas?.map((area) => (
+            <AreasItem key={area.area_id} area={area} />
           ))}
           <Button
             variant="ghost"
@@ -52,7 +93,7 @@ export function AreasGrid() {
           </Button>
         </div>
       </div>
-      <CreateAreaDialog open={open} onOpenChange={setOpen} />
+      <AreasItemDialog open={open} onOpenChange={setOpen} />
     </>
   );
 }

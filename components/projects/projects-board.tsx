@@ -104,7 +104,7 @@ export const ProjectsBoard = () => {
           <FolderOpenDot className="mr-2 h-4 w-4" />
           Projects
         </h2>
-        <div className="grid h-72 flex-grow grid-cols-1 gap-4 overflow-y-auto md:grid-cols-3">
+        <div className="grid max-h-72 flex-grow grid-cols-1 gap-4 overflow-y-auto md:grid-cols-3">
           {columns.map((column, index) => (
             <div key={index} className="rounded-xl bg-card p-6 shadow-md">
               <div className="mb-4 flex items-center space-x-2">

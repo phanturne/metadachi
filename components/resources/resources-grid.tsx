@@ -81,7 +81,7 @@ export function ResourcesGrid() {
           <Bookmark className="mr-2 h-4 w-4" />
           Resources
         </h2>
-        <div className="grid flex-grow grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid max-h-40 flex-grow grid-cols-1 gap-4 overflow-y-auto md:grid-cols-3 lg:grid-cols-4">
           {resources?.map((resource, index) => (
             <ResourceItem key={index} resource={resource} />
           ))}
