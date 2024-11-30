@@ -1,14 +1,10 @@
 "use client";
 
-import React from "react";
 import {
-  Calendar,
-  CalendarIcon,
   Clock,
   FolderOpenDot,
   Inbox,
   ListChecks,
-  MoreHorizontal,
   Plus,
   StickyNote,
 } from "lucide-react";
@@ -17,6 +13,8 @@ import { useNoteDialog } from "@/providers/note-dialog-provider";
 import { ProjectsBoard } from "@/components/projects/projects-board";
 import { AreasGrid } from "@/components/areas/areas-grid";
 import { ResourcesGrid } from "@/components/resources/resources-grid";
+import { UpcomingEvents } from "@/components/tasks/upcoming-events";
+import { UpcomingTasks } from "@/components/tasks/upcoming-tasks";
 
 const RecentlyVisited = () => (
   <div className="flex h-full flex-col">
@@ -43,135 +41,6 @@ const RecentlyVisited = () => (
           </p>
         </div>
       ))}
-    </div>
-  </div>
-);
-
-const events = [
-  { id: 1, title: "Team Meeting", time: "09:00 AM", date: 22 },
-  { id: 2, title: "Project Deadline", time: "11:30 AM", date: 22 },
-  { id: 7, title: "Product Demo", time: "10:00 AM", date: 23 },
-  { id: 8, title: "Strategy Meeting", time: "02:00 PM", date: 24 },
-  { id: 9, title: "Client Call", time: "11:00 AM", date: 25 },
-  { id: 10, title: "Team Lunch", time: "12:30 PM", date: 26 },
-];
-
-const CalendarComponent = () => {
-  const [selectedDate, setSelectedDate] = React.useState(22);
-
-  return (
-    <div className="flex h-full rounded-xl bg-card p-4 shadow-md">
-      <div className="w-2/5 border-r border-gray-600 pr-3">
-        <div className="mb-3 text-center">
-          <h3 className="text-base font-semibold text-black dark:text-white">
-            May 2024
-          </h3>
-        </div>
-        <div className="grid grid-cols-7 gap-0.5">
-          {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-            <div
-              key={day}
-              className="mb-1 text-center text-[10px] text-gray-400"
-            >
-              {day}
-            </div>
-          ))}
-          {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
-            <Button
-              key={date}
-              variant="ghost"
-              className={`h-6 w-full p-0 text-xs ${
-                date === selectedDate
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-300 hover:text-white"
-              }`}
-              onClick={() => setSelectedDate(date)}
-            >
-              {date}
-            </Button>
-          ))}
-        </div>
-      </div>
-      <div className="w-3/5 pl-3">
-        <h4 className="mb-3 text-base font-semibold text-black dark:text-white">
-          Events for May {selectedDate}
-        </h4>
-        <div className="max-h-[400px] space-y-2 overflow-y-auto pr-2">
-          {events
-            .filter((event) => event.date === selectedDate)
-            .map((event) => (
-              <div
-                key={event.id}
-                className="rounded-lg bg-gray-200 p-2.5 shadow-md dark:bg-gray-800"
-              >
-                <h5 className="mb-1.5 text-xs font-medium text-black dark:text-white">
-                  {event.title}
-                </h5>
-                <div className="flex items-center justify-between text-xs text-gray-400">
-                  <span className="flex items-center">
-                    <CalendarIcon className="mr-1 h-3 w-3" />
-                    May {event.date}, 2024
-                  </span>
-                  <span className="flex items-center">
-                    <Clock className="mr-1 h-3 w-3" />
-                    {event.time}
-                  </span>
-                </div>
-              </div>
-            ))}
-          {events.filter((event) => event.date === selectedDate).length ===
-            0 && (
-            <p className="text-xs text-gray-400">No events for this date.</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const UpcomingEvents = () => (
-  <div className="flex h-full flex-col">
-    <div className="mb-2 flex items-center justify-between">
-      <h2 className="flex items-center text-sm text-gray-400">
-        <Calendar className="mr-2 h-4 w-4" />
-        Upcoming events
-      </h2>
-      <Button variant="ghost" size="sm" className="text-gray-400">
-        <MoreHorizontal className="h-4 w-4" />
-      </Button>
-    </div>
-    <div className="flex-grow">
-      <CalendarComponent />
-    </div>
-  </div>
-);
-
-const UpcomingTasks = () => (
-  <div className="flex h-full flex-col">
-    <div className="mb-2 flex items-center justify-between">
-      <h2 className="flex items-center text-sm text-gray-400">
-        <ListChecks className="mr-2 h-4 w-4" />
-        Upcoming tasks
-      </h2>
-      <Button variant="ghost" size="sm" className="text-gray-400">
-        <MoreHorizontal className="h-4 w-4" />
-      </Button>
-    </div>
-    <div className="flex-grow overflow-y-auto rounded-xl bg-card p-6 shadow-md">
-      <ul className="space-y-3">
-        {[
-          { title: "Team Meeting", date: "Today, 2:00 PM" },
-          { title: "Project Deadline", date: "Tomorrow, 5:00 PM" },
-          { title: "Client Presentation", date: "May 25, 10:00 AM" },
-          { title: "Weekly Review", date: "May 26, 9:00 AM" },
-          { title: "Product Launch", date: "May 30, 3:00 PM" },
-        ].map((task, index) => (
-          <li key={index} className="flex items-center justify-between">
-            <span>{task.title}</span>
-            <span className="text-sm text-gray-400">{task.date}</span>
-          </li>
-        ))}
-      </ul>
     </div>
   </div>
 );
