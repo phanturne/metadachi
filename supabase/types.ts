@@ -603,6 +603,7 @@ export type Database = {
           note_id: string
           name: string
           note_type: string
+          content: Json
           created_at: string
           updated_at: string
           project_id: string
@@ -620,11 +621,7 @@ export type Database = {
         Args: {
           p_note_id: string
         }
-        Returns: {
-          tag_id: string
-          name: string
-          context: string
-        }[]
+        Returns: Json
       }
       get_notes_for_project: {
         Args: {
@@ -889,47 +886,28 @@ export type Database = {
           tags: Json
         }[]
       }
-      get_user_notes:
-        | {
-            Args: {
-              p_user_id: string
-              p_project_id?: string
-              p_area_id?: string
-              p_resource_id?: string
-              p_note_type?: string
-              p_is_archived?: boolean
-            }
-            Returns: {
-              note_id: string
-              name: string
-              note_type: string
-              created_at: string
-              updated_at: string
-              project_id: string
-              area_id: string
-              resource_id: string
-              task_id: string
-              tags: Json
-            }[]
-          }
-        | {
-            Args: {
-              p_user_id: string
-              p_project_id?: string
-              p_area_id?: string
-              p_task_id?: string
-              p_note_type?: string
-            }
-            Returns: {
-              note_id: string
-              name: string
-              content: Json
-              note_type: string
-              created_at: string
-              updated_at: string
-              tags: Json
-            }[]
-          }
+      get_user_notes: {
+        Args: {
+          p_user_id: string
+          p_project_id?: string
+          p_area_id?: string
+          p_resource_id?: string
+          p_note_type?: string
+          p_is_archived?: boolean
+        }
+        Returns: {
+          note_id: string
+          name: string
+          note_type: string
+          created_at: string
+          updated_at: string
+          project_id: string
+          area_id: string
+          resource_id: string
+          task_id: string
+          tags: Json
+        }[]
+      }
       get_user_projects: {
         Args: {
           p_user_id: string

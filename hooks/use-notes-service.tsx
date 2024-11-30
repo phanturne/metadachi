@@ -2,10 +2,10 @@ import { createClient } from "@/utils/supabase/client";
 import { useMemo } from "react";
 import {
   NotesService,
-  UpdateNoteReturnType,
+  InsertNoteParams,
+  UpdateNoteParams,
 } from "@/lib/database/notes-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { TablesInsert } from "@/supabase/types";
 
 export const useNotesService = () => {
   const supabase = createClient();
@@ -27,6 +27,8 @@ export const noteKeys = {
   taskNotes: (taskId: string) => [...noteKeys.all, "task", taskId] as const,
   recentNotes: (userId?: string, projectId?: string) =>
     [...noteKeys.all, "recent", userId || "all", projectId || "all"] as const,
+  noteSummary: (noteId: string) =>
+    [...noteKeys.note(noteId), "summary"] as const,
 };
 
 export const useGetNote = (noteId: string) => {
@@ -60,8 +62,9 @@ export const useGetUserNotes = (
   userId: string,
   projectId?: string,
   areaId?: string,
-  taskId?: string,
+  resourceId?: string,
   noteType?: string,
+  isArchived: boolean = false,
 ) => {
   const notesService = useNotesService();
 
@@ -70,11 +73,19 @@ export const useGetUserNotes = (
       ...noteKeys.userNotes(userId),
       projectId,
       areaId,
-      taskId,
+      resourceId,
       noteType,
+      isArchived,
     ],
     queryFn: () =>
-      notesService.getUserNotes(userId, projectId, areaId, taskId, noteType),
+      notesService.getUserNotes(
+        userId,
+        projectId,
+        areaId,
+        resourceId,
+        noteType,
+        isArchived,
+      ),
   });
 };
 
@@ -161,21 +172,11 @@ export const useCreateNote = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (note: TablesInsert<"notes">) => notesService.insertNote(note),
-    onSuccess: (data) => {
+    mutationFn: (note: InsertNoteParams) => notesService.insertNote(note),
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: noteKeys.all,
       });
-      if (data.project_id) {
-        queryClient.invalidateQueries({
-          queryKey: noteKeys.projectNotes(data.project_id),
-        });
-      }
-      if (data.task_id) {
-        queryClient.invalidateQueries({
-          queryKey: noteKeys.taskNotes(data.task_id),
-        });
-      }
     },
   });
 };
@@ -186,44 +187,18 @@ export const useUpdateNote = () => {
   const supabase = createClient();
 
   return useMutation({
-    mutationFn: ({
-      noteId,
-      updates,
-    }: {
-      noteId: string;
-      updates: UpdateNoteReturnType;
-    }) => notesService.updateNote(noteId, updates),
+    mutationFn: (updates: UpdateNoteParams) => notesService.updateNote(updates),
     onSuccess: async (data, variables) => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       if (session) {
         queryClient.invalidateQueries({
-          queryKey: noteKeys.note(variables.noteId),
+          queryKey: noteKeys.note(variables.note_id),
         });
         queryClient.invalidateQueries({
           queryKey: noteKeys.userNotes(session.user.id),
         });
-        if (data?.project_id) {
-          queryClient.invalidateQueries({
-            queryKey: noteKeys.projectNotes(data.project_id),
-          });
-        }
-        if (data?.area_id) {
-          queryClient.invalidateQueries({
-            queryKey: noteKeys.projectNotes(data.area_id),
-          });
-        }
-        if (data?.resource_id) {
-          queryClient.invalidateQueries({
-            queryKey: noteKeys.projectNotes(data.resource_id),
-          });
-        }
-        if (data?.task_id) {
-          queryClient.invalidateQueries({
-            queryKey: noteKeys.taskNotes(data.task_id),
-          });
-        }
       }
     },
   });
@@ -240,5 +215,14 @@ export const useDeleteNote = () => {
         queryKey: noteKeys.all,
       });
     },
+  });
+};
+
+export const useGetNoteSummary = (noteId: string) => {
+  const notesService = useNotesService();
+
+  return useQuery({
+    queryKey: noteKeys.noteSummary(noteId),
+    queryFn: () => notesService.getNoteSummary(noteId),
   });
 };

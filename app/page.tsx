@@ -15,6 +15,7 @@ import { AreasGrid } from "@/components/areas/areas-grid";
 import { ResourcesGrid } from "@/components/resources/resources-grid";
 import { UpcomingEvents } from "@/components/tasks/upcoming-events";
 import { UpcomingTasks } from "@/components/tasks/upcoming-tasks";
+import { NotesGrid } from "@/components/notes/notes-grid";
 
 const RecentlyVisited = () => (
   <div className="flex h-full flex-col">
@@ -102,41 +103,6 @@ const InboxComponent = () => (
   </div>
 );
 
-const Notes = () => (
-  <div className="flex h-full flex-col">
-    <h2 className="mb-4 flex items-center text-sm text-gray-400">
-      <StickyNote className="mr-2 h-4 w-4" />
-      Notes
-    </h2>
-    <div className="grid flex-grow grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
-      {[
-        { name: "Meeting Notes", date: "2024-05-22" },
-        { name: "Project Ideas", date: "2024-05-21" },
-        { name: "Daily Journal", date: "2024-05-20" },
-        { name: "Research Notes", date: "2024-05-19" },
-      ].map((note, index) => (
-        <div
-          key={index}
-          className="transform rounded-lg bg-card p-4 shadow-md transition-transform hover:scale-105"
-        >
-          <div className="mb-2 flex items-center justify-between">
-            <span>{note.name}</span>
-            <StickyNote className="h-4 w-4" />
-          </div>
-          <div className="text-xs text-gray-400">{note.date}</div>
-        </div>
-      ))}
-      <Button
-        variant="ghost"
-        className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600 transition-transform hover:scale-105"
-      >
-        <Plus className="mb-2 h-6 w-6 text-gray-400 transition-transform hover:scale-110" />
-        <span className="text-gray-400">New note</span>
-      </Button>
-    </div>
-  </div>
-);
-
 const QuickActions = () => {
   const { setOpen } = useNoteDialog();
 
@@ -171,7 +137,7 @@ export default function DashboardPage() {
         <ProjectsBoard />
         <AreasGrid />
         <ResourcesGrid />
-        <Notes />
+        <NotesGrid />
       </div>
       <QuickActions />
     </>

@@ -97,15 +97,13 @@ export class AreasService {
     return null;
   }
 
-  async selectArea(areaId: string): Promise<Area> {
-    const { data, error } = await this.supabase
-      .from("areas")
-      .select("*")
-      .eq("area_id", areaId)
-      .single();
+  async selectArea(areaId: string): Promise<null> {
+    const { error } = await this.supabase.rpc("delete_area", {
+      p_area_id: areaId,
+    });
 
     if (error) throw error;
-    return data;
+    return null;
   }
 
   async archiveArea(areaId: string): Promise<UpdateAreaReturn> {
