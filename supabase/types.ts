@@ -930,6 +930,22 @@ export type Database = {
               tags: Json
             }[]
           }
+      get_user_projects: {
+        Args: {
+          p_user_id: string
+          p_status?: string
+        }
+        Returns: {
+          project_id: string
+          name: string
+          description: string
+          status: string
+          complete_tasks: number
+          total_tasks: number
+          created_at: string
+          tags: Json
+        }[]
+      }
       get_user_resources: {
         Args: {
           p_user_id: string

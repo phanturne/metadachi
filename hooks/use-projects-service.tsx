@@ -98,6 +98,15 @@ export const useGetProjectTimeline = (projectId: string) => {
   });
 };
 
+export const useGetProjectsByStatus = (userId: string, status: string) => {
+  const projectService = useProjectService();
+
+  return useQuery({
+    queryKey: ["projects", userId, status],
+    queryFn: () => projectService.getProjectsByStatus(userId, status),
+  });
+};
+
 export const useMoveProject = () => {
   const projectService = useProjectService();
   const queryClient = useQueryClient();
