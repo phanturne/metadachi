@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import nesting from 'tailwindcss/nesting';
 
 const config = {
   darkMode: ["class"],
@@ -96,7 +97,11 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [
+    nesting,
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography")
+  ],
 } satisfies Config;
 
 export default config;
