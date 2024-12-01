@@ -1,7 +1,7 @@
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import * as React from "react";
-import AppSidebar from "@/components/app-sidebar";
+import AppSidebar from "@/components/dashboard/app-sidebar";
 import AppHeader from "@/components/app-header";
 import { SidebarInset } from "@/components/ui/sidebar";
 import AppProviders from "@/components/app-providers";

@@ -8,8 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Bell, LogOut, Settings, User } from "lucide-react";
 import { Routes } from "@/utils/constants";
-import * as React from "react";
-import { UserInfoCard } from "@/components/app-sidebar";
+import { UserInfoCard } from "@/components/dashboard/app-sidebar";
 
 export function ProfileMenu() {
   const router = useRouter();
