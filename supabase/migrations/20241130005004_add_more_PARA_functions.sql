@@ -132,3 +132,7 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Update notes table to have a default value for user_id
+ALTER TABLE notes
+ALTER COLUMN user_id SET DEFAULT auth.uid();

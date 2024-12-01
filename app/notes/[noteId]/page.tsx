@@ -1,66 +1,55 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useGetNote, useUpdateNote } from "@/hooks/use-notes-service";
+import { useGetNote } from "@/hooks/use-notes-service";
 import { Loader2, Check } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { NoteEditor } from "@/components/notes/editor";
-import debounce from "lodash/debounce";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { useSaveNote } from "@/hooks/use-save-note";
+import { UpdateNoteParams } from "@/lib/database/notes-service";
 
 export default function NotePage({ params }: { params: { noteId: string } }) {
   const router = useRouter();
   const { noteId } = params;
   const { data: note, isLoading, error } = useGetNote(noteId);
-  const updateNoteMutation = useUpdateNote();
-  const [content, setContent] = useState<string>("");
+  const [noteState, setNoteState] = useState<UpdateNoteParams>({
+    note_id: noteId,
+    name: "",
+    content: {},
+  });
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
+  const { debouncedSaveNote } = useSaveNote({
+    setIsSaving,
+    setLastSavedAt,
+    setIsDirty,
+  });
 
   useEffect(() => {
     if (!noteId) {
       router.push("/");
     } else if (note) {
-      setContent(note.content as string);
+      setNoteState({
+        note_id: noteId,
+        name: note.name,
+        content: note.content,
+      });
     }
   }, [noteId, note, router]);
 
-  const saveNote = async (content: string) => {
-    try {
-      setIsSaving(true);
-      await updateNoteMutation.mutateAsync({
-        noteId,
-        updates: { content },
-      });
-      setLastSavedAt(new Date());
-      setIsDirty(false);
-    } catch (error) {
-      toast.error("Failed to save note");
-      console.error(error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedSave = useCallback(
-    debounce(async (content: string) => {
-      await saveNote(content);
-    }, 1000),
-    [],
-  );
-
   const handleContentChange = (newContent: string) => {
-    setContent(newContent);
+    const updatedNote = { ...noteState, content: newContent };
+    setNoteState(updatedNote);
     setIsDirty(true);
-    debouncedSave(newContent);
+    debouncedSaveNote(updatedNote);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex h-full items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
@@ -72,11 +61,16 @@ export default function NotePage({ params }: { params: { noteId: string } }) {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold">{note?.name || "Untitled Note"}</h1>
+      <h1 className="text-2xl font-bold">
+        {noteState.name || "Untitled Note"}
+      </h1>
       <div className="mt-4">
-        <NoteEditor content={content} onUpdate={handleContentChange} />
+        <NoteEditor
+          content={noteState.content as string}
+          onUpdate={handleContentChange}
+        />
       </div>
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
+      <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
         {isSaving ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -91,7 +85,7 @@ export default function NotePage({ params }: { params: { noteId: string } }) {
           </>
         ) : null}
       </div>
-      <div className="flex space-x-2 mt-4">
+      <div className="mt-4 flex space-x-2">
         <Button variant="outline" onClick={() => router.back()}>
           Close
         </Button>

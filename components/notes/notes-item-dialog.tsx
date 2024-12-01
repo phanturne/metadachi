@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import debounce from "lodash/debounce";
 import { Loader2, Check } from "lucide-react";
 import {
   Dialog,
@@ -11,15 +10,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  useCreateNote,
-  useUpdateNote,
-  useDeleteNote,
-  useGetNoteSummary,
-} from "@/hooks/use-notes-service";
+import { useDeleteNote, useGetNoteSummary } from "@/hooks/use-notes-service";
 import { toast } from "sonner";
 import { NoteEditor } from "./editor";
 import { UpdateNoteParams } from "@/lib/database/notes-service";
+import { useSaveNote } from "@/hooks/use-save-note"; // Import the new hook
 
 interface NotesItemDialogProps {
   open: boolean;
@@ -32,8 +27,6 @@ export default function NotesItemDialog({
   onOpenChange,
   noteId,
 }: NotesItemDialogProps) {
-  const createNoteMutation = useCreateNote();
-  const updateNoteMutation = useUpdateNote();
   const deleteNoteMutation = useDeleteNote();
   const { data: noteData } = useGetNoteSummary(noteId ?? "");
   const isEditing = !!noteId;
@@ -53,6 +46,12 @@ export default function NotesItemDialog({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showUnsavedChanges, setShowUnsavedChanges] = useState(false);
 
+  const { debouncedSaveNote } = useSaveNote({
+    setIsSaving,
+    setLastSavedAt,
+    setIsDirty,
+  });
+
   useEffect(() => {
     if (open) {
       if (existingNote) {
@@ -65,36 +64,6 @@ export default function NotesItemDialog({
     }
   }, [open, existingNote]);
 
-  const saveNote = async (data: UpdateNoteParams) => {
-    try {
-      setIsSaving(true);
-      if (data.note_id) {
-        await updateNoteMutation.mutateAsync(data);
-      } else {
-        const newNoteId = await createNoteMutation.mutateAsync(data);
-        setNote((prev) => ({
-          ...prev,
-          note_id: newNoteId,
-        }));
-      }
-      setLastSavedAt(new Date());
-      setIsDirty(false);
-    } catch (error) {
-      toast.error("Failed to save note");
-      console.error(error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedSave = useCallback(
-    debounce(async (data: UpdateNoteParams) => {
-      await saveNote(data);
-    }, 1000),
-    [],
-  );
-
   const handleChange =
     (field: keyof UpdateNoteParams) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -105,8 +74,8 @@ export default function NotesItemDialog({
 
       if (newValue !== note[field]) {
         setIsDirty(true);
-        debouncedSave.cancel();
-        debouncedSave(newNote);
+        debouncedSaveNote.cancel();
+        debouncedSaveNote(newNote);
       }
     };
 
@@ -153,7 +122,6 @@ export default function NotesItemDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
             <NoteEditor
               content={note.content as string}
               onUpdate={(content) => setNote((prev) => ({ ...prev, content }))}

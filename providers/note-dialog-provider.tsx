@@ -1,6 +1,6 @@
 "use client";
-import React, { createContext, ReactNode, useContext, useState } from "react";
-import CreateNoteDialog from "@/components/notes/create-note-dialog";
+import { createContext, ReactNode, useContext, useState } from "react";
+import NotesItemDialog from "@/components/notes/notes-item-dialog";
 
 interface NoteDialogProvider {
   open: boolean;
@@ -16,7 +16,7 @@ export const NoteDialogProvider = ({ children }: { children: ReactNode }) => {
   return (
     <NoteDialogContext.Provider value={{ open, setOpen }}>
       {children}
-      <CreateNoteDialog />
+      <NotesItemDialog open={open} onOpenChange={setOpen} />
     </NoteDialogContext.Provider>
   );
 };
