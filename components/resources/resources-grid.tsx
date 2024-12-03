@@ -81,17 +81,17 @@ export function ResourcesGrid() {
           <Bookmark className="mr-2 h-4 w-4" />
           Resources
         </h2>
-        <div className="grid max-h-40 flex-grow grid-cols-1 gap-4 overflow-y-auto md:grid-cols-3 lg:grid-cols-4">
+        <div className="-m-1 grid max-h-40 flex-grow grid-cols-1 gap-2 overflow-y-auto md:grid-cols-3 lg:grid-cols-4">
           {resources?.map((resource, index) => (
             <ResourceItem key={index} resource={resource} />
           ))}
           <Button
-            variant="outline"
-            className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed transition-transform hover:scale-105"
+            variant="ghost"
+            className="m-1 flex h-16 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-600 transition-all duration-200 hover:scale-[1.02]"
             onClick={() => setOpen(true)}
           >
-            <Plus className="mb-2 h-6 w-6 text-muted-foreground transition-transform hover:scale-110" />
-            <span className="text-muted-foreground">New resource</span>
+            <Plus className="mb-2 h-6 w-6 text-gray-400" />
+            <span className="text-gray-400">New resource</span>
           </Button>
         </div>
       </div>

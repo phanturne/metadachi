@@ -79,16 +79,16 @@ export function NotesGrid() {
           <FileText className="mr-2 h-4 w-4" />
           Notes
         </h2>
-        <div className="grid max-h-40 flex-grow grid-cols-1 gap-4 overflow-y-auto md:grid-cols-3 lg:grid-cols-4">
+        <div className="-m-1 grid max-h-40 flex-grow grid-cols-1 gap-2 overflow-y-auto md:grid-cols-3 lg:grid-cols-4">
           {userNotes?.map((note) => (
             <NotesItem key={note.note_id} note={note} />
           ))}
           <Button
             variant="ghost"
-            className="flex h-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-600 transition-transform hover:scale-105"
+            className="m-1 flex h-16 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-600 transition-all duration-200 hover:scale-[1.02]"
             onClick={() => setOpen(true)}
           >
-            <Plus className="mb-2 h-6 w-6 text-gray-400 transition-transform hover:scale-110" />
+            <Plus className="mb-2 h-6 w-6 text-gray-400" />
             <span className="text-gray-400">New note</span>
           </Button>
         </div>

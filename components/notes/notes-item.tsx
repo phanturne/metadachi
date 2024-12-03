@@ -14,7 +14,7 @@ export default function NotesItem({ note }: NotesItemProps) {
   return (
     <>
       <Card
-        className="transform cursor-pointer bg-nested-card-background transition-transform hover:scale-105"
+        className="m-1 transform cursor-pointer bg-nested-card-background transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
         onClick={() => setOpen(true)}
       >
         <CardContent className="p-4">
