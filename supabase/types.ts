@@ -66,7 +66,7 @@ export type Database = {
           resource_id?: string | null
           task_id?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string
         }
         Update: {
           area_id?: string | null
@@ -752,6 +752,19 @@ export type Database = {
           start_date: string
           due_date: string
           completion_percentage: number
+        }[]
+      }
+      get_recent_items: {
+        Args: {
+          p_user_id: string
+          p_limit?: number
+        }
+        Returns: {
+          item_id: string
+          item_type: string
+          name: string
+          created_at: string
+          updated_at: string
         }[]
       }
       get_recent_notes: {

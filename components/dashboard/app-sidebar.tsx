@@ -46,10 +46,11 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import * as React from "react";
 import { useSearchDialog } from "@/providers/search-dialog-provider";
 import { ProfileMenu } from "@/components/profile/profile-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSession } from "@/hooks/use-session";
+import { useGetProfile } from "@/hooks/use-profile-service";
+import { UserInfoCard } from "@/components/shared/user-info-card";
 
 const data = {
   user: {
@@ -446,6 +447,9 @@ function NavTools() {
 }
 
 function AppFooter() {
+  const { session } = useSession();
+  const { data: profile } = useGetProfile(session?.user.id || "");
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -455,7 +459,11 @@ function AppFooter() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <UserInfoCard />
+              <UserInfoCard
+                avatar={profile?.avatar_url}
+                name={profile?.display_name || ""}
+                email={session?.user.email || ""}
+              />
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -463,20 +471,5 @@ function AppFooter() {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  );
-}
-
-export function UserInfoCard() {
-  return (
-    <>
-      <Avatar className="h-8 w-8 rounded-lg">
-        <AvatarImage src={data.user.avatar} alt={data.user.name} />
-        <AvatarFallback className="rounded-lg">KD</AvatarFallback>
-      </Avatar>
-      <div className="grid flex-1 text-left text-sm leading-tight">
-        <span className="truncate font-semibold">{data.user.name}</span>
-        <span className="truncate text-xs">{data.user.email}</span>
-      </div>
-    </>
   );
 }
