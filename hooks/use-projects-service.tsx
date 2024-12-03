@@ -6,6 +6,7 @@ import {
   UpdateProjectParams,
 } from "@/lib/database/projects-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { paraKeys } from "@/hooks/use-para-service";
 
 export const useProjectService = () => {
   const supabase = createClient();
@@ -130,14 +131,21 @@ export const useMoveProject = () => {
 export const useCreateProject = () => {
   const projectService = useProjectService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
     mutationFn: (project: InsertProjectParams) =>
       projectService.insertProject(project),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: projectKeys.all,
-      });
+    onSuccess: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        queryClient.invalidateQueries({
+          queryKey: projectKeys.all,
+        });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
+      }
     },
   });
 };
@@ -158,6 +166,9 @@ export const useUpdateProject = () => {
         queryClient.invalidateQueries({
           queryKey: projectKeys.all,
         });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
       }
     },
   });
@@ -166,13 +177,20 @@ export const useUpdateProject = () => {
 export const useDeleteProject = () => {
   const projectService = useProjectService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
     mutationFn: (projectId: string) => projectService.deleteProject(projectId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: projectKeys.all,
-      });
+    onSuccess: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        queryClient.invalidateQueries({
+          queryKey: projectKeys.all,
+        });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
+      }
     },
   });
 };

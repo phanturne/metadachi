@@ -1,5 +1,7 @@
 /* CSS from TipTap's next-block-editor-app template */
 .ProseMirror {
+  @apply text-neutral-900 dark:text-neutral-50;
+
   .is-empty::before {
     @apply text-neutral-500 dark:text-neutral-400;
   }
@@ -87,8 +89,7 @@
   }
 
   [data-type='blockquoteFigure'] > blockquote {
-    @apply text-lg text-black;
-    @apply dark:text-white;
+    @apply text-lg text-neutral-900 dark:text-neutral-50;
   }
 
   [data-type='blockquoteFigure'] figcaption {

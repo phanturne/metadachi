@@ -33,6 +33,8 @@ export type InsertNoteArgs =
 export type UpdateNoteArgs =
   Database["public"]["Functions"]["update_note"]["Args"];
 
+export type NoteStatus = "inbox" | "active" | "deleted";
+
 // Interface for cleaner API without 'p_' prefix
 export type InsertNoteParams = RemovePPrefix<InsertNoteArgs>;
 export type UpdateNoteParams = RemovePPrefix<UpdateNoteArgs>;
@@ -149,6 +151,7 @@ export class NotesService {
       p_resource_id: params.resource_id,
       p_task_id: params.task_id,
       p_tags: params.tags,
+      p_status: params.status,
     };
 
     const { data, error } = await this.supabase.rpc("insert_note", args);
@@ -168,6 +171,7 @@ export class NotesService {
       p_resource_id: params.resource_id,
       p_task_id: params.task_id,
       p_tags: params.tags,
+      p_status: params.status,
     };
 
     const { data, error } = await this.supabase.rpc("update_note", args);
@@ -200,6 +204,20 @@ export class NotesService {
     const { data, error } = await this.supabase.rpc("get_note_summary", {
       p_note_id: noteId,
     });
+
+    if (error) throw error;
+    return data;
+  }
+
+  async getNotesByStatus(userId: string | null, status: NoteStatus) {
+    if (!userId) return [];
+
+    const { data, error } = await this.supabase
+      .from("notes")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", status)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data;

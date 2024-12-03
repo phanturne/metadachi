@@ -16,6 +16,7 @@ export type Database = {
           description: string | null
           is_archived: boolean | null
           name: string
+          status: string
           updated_at: string | null
           user_id: string
         }
@@ -25,6 +26,7 @@ export type Database = {
           description?: string | null
           is_archived?: boolean | null
           name: string
+          status?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -34,6 +36,7 @@ export type Database = {
           description?: string | null
           is_archived?: boolean | null
           name?: string
+          status?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -50,6 +53,7 @@ export type Database = {
           note_type: string | null
           project_id: string | null
           resource_id: string | null
+          status: string
           task_id: string | null
           updated_at: string | null
           user_id: string
@@ -64,6 +68,7 @@ export type Database = {
           note_type?: string | null
           project_id?: string | null
           resource_id?: string | null
+          status?: string
           task_id?: string | null
           updated_at?: string | null
           user_id?: string
@@ -78,6 +83,7 @@ export type Database = {
           note_type?: string | null
           project_id?: string | null
           resource_id?: string | null
+          status?: string
           task_id?: string | null
           updated_at?: string | null
           user_id?: string
@@ -290,6 +296,7 @@ export type Database = {
           is_archived: boolean | null
           name: string
           resource_id: string
+          status: string
           updated_at: string | null
           user_id: string
         }
@@ -299,6 +306,7 @@ export type Database = {
           is_archived?: boolean | null
           name: string
           resource_id?: string
+          status?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -308,6 +316,7 @@ export type Database = {
           is_archived?: boolean | null
           name?: string
           resource_id?: string
+          status?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -551,6 +560,7 @@ export type Database = {
           area_id: string
           name: string
           description: string
+          status: string
           created_at: string
           updated_at: string
           is_archived: boolean
@@ -604,6 +614,7 @@ export type Database = {
           name: string
           note_type: string
           content: Json
+          status: string
           created_at: string
           updated_at: string
           project_id: string
@@ -809,6 +820,7 @@ export type Database = {
           resource_id: string
           name: string
           description: string
+          status: string
           created_at: string
           updated_at: string
           is_archived: boolean
@@ -968,6 +980,7 @@ export type Database = {
           p_name: string
           p_description?: string
           p_tags?: Json
+          p_status?: string
         }
         Returns: string
       }
@@ -981,6 +994,7 @@ export type Database = {
           p_resource_id?: string
           p_task_id?: string
           p_tags?: Json
+          p_status?: string
         }
         Returns: string
       }
@@ -1001,6 +1015,7 @@ export type Database = {
           p_name: string
           p_description?: string
           p_tags?: Json
+          p_status?: string
         }
         Returns: string
       }
@@ -1048,6 +1063,7 @@ export type Database = {
           p_name: string
           p_description?: string
           p_tags?: Json
+          p_status?: string
         }
         Returns: boolean
       }
@@ -1062,6 +1078,7 @@ export type Database = {
           p_resource_id?: string
           p_task_id?: string
           p_tags?: Json
+          p_status?: string
         }
         Returns: boolean
       }
@@ -1084,6 +1101,7 @@ export type Database = {
           p_name: string
           p_description?: string
           p_tags?: Json
+          p_status?: string
         }
         Returns: boolean
       }

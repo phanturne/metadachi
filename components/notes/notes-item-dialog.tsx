@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import debounce from "lodash/debounce";
 import { Loader2, Check } from "lucide-react";
 import {
   Dialog,
@@ -13,19 +14,29 @@ import { Label } from "@/components/ui/label";
 import { useDeleteNote, useGetNoteSummary } from "@/hooks/use-notes-service";
 import { toast } from "sonner";
 import { NoteEditor } from "./editor";
-import { UpdateNoteParams } from "@/lib/database/notes-service";
-import { useSaveNote } from "@/hooks/use-save-note"; // Import the new hook
+import { UpdateNoteParams, NoteStatus } from "@/lib/database/notes-service";
+import { useSaveNote } from "@/hooks/use-save-note";
+import { JSONContent } from "@tiptap/react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface NotesItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   noteId?: string;
+  defaultStatus?: NoteStatus;
 }
 
 export default function NotesItemDialog({
   open,
   onOpenChange,
   noteId,
+  defaultStatus = "active",
 }: NotesItemDialogProps) {
   const deleteNoteMutation = useDeleteNote();
   const { data: noteData } = useGetNoteSummary(noteId ?? "");
@@ -37,6 +48,7 @@ export default function NotesItemDialog({
     note_id: noteId ?? "",
     name: "",
     content: {},
+    status: defaultStatus,
   };
 
   const [note, setNote] = useState<UpdateNoteParams>(initialNoteState);
@@ -59,14 +71,41 @@ export default function NotesItemDialog({
           note_id: existingNote.note_id,
           name: existingNote.name,
           content: existingNote.content,
+          status: existingNote.status as NoteStatus,
         });
       }
     }
   }, [open, existingNote]);
 
+  const saveNote = async (data: UpdateNoteParams) => {
+    try {
+      setIsSaving(true);
+      await debouncedSaveNote(data);
+      setLastSavedAt(new Date());
+      setIsDirty(false);
+    } catch (error) {
+      toast.error("Failed to save note");
+      console.error(error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedSave = useCallback(
+    debounce(async (data: UpdateNoteParams) => {
+      await saveNote(data);
+    }, 1000),
+    [],
+  );
+
   const handleChange =
     (field: keyof UpdateNoteParams) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >,
+    ) => {
       const newValue = e.target.value;
       const newNote = { ...note, [field]: newValue };
 
@@ -74,10 +113,31 @@ export default function NotesItemDialog({
 
       if (newValue !== note[field]) {
         setIsDirty(true);
-        debouncedSaveNote.cancel();
-        debouncedSaveNote(newNote);
+        debouncedSave.cancel();
+        debouncedSave(newNote);
       }
     };
+
+  const handleNoteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
+    const newNote = { ...note, name: newValue };
+
+    setNote(newNote);
+
+    if (newValue !== note.name) {
+      setIsDirty(true);
+      debouncedSave.cancel();
+      debouncedSave(newNote);
+    }
+  };
+
+  const handleContentChange = (newContent: string | JSONContent) => {
+    const newNote = { ...note, content: newContent };
+    setNote(newNote);
+    setIsDirty(true);
+    debouncedSave.cancel();
+    debouncedSave(newNote);
+  };
 
   const handleClose = () => {
     if (isDirty) {
@@ -117,14 +177,34 @@ export default function NotesItemDialog({
             <Input
               id="name"
               value={note.name}
-              onChange={handleChange("name")}
+              onChange={handleNoteChange}
               className="w-full"
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={note.status}
+              onValueChange={(value) =>
+                handleChange("status")({
+                  target: { value } as unknown as HTMLSelectElement,
+                } as React.ChangeEvent<HTMLSelectElement>)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="inbox">Inbox</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="deleted">Deleted</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <NoteEditor
               content={note.content as string}
-              onUpdate={(content) => setNote((prev) => ({ ...prev, content }))}
+              onUpdate={handleContentChange}
             />
           </div>
         </div>

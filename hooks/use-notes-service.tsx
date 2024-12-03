@@ -4,8 +4,10 @@ import {
   NotesService,
   InsertNoteParams,
   UpdateNoteParams,
+  NoteStatus,
 } from "@/lib/database/notes-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { paraKeys } from "@/hooks/use-para-service";
 
 export const useNotesService = () => {
   const supabase = createClient();
@@ -170,13 +172,20 @@ export const useMoveNote = () => {
 export const useCreateNote = () => {
   const notesService = useNotesService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
     mutationFn: (note: InsertNoteParams) => notesService.insertNote(note),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: noteKeys.all,
-      });
+    onSuccess: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        queryClient.invalidateQueries({
+          queryKey: noteKeys.all,
+        });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
+      }
     },
   });
 };
@@ -199,6 +208,9 @@ export const useUpdateNote = () => {
         queryClient.invalidateQueries({
           queryKey: noteKeys.userNotes(session.user.id),
         });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
       }
     },
   });
@@ -207,13 +219,20 @@ export const useUpdateNote = () => {
 export const useDeleteNote = () => {
   const notesService = useNotesService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
     mutationFn: (noteId: string) => notesService.deleteNote(noteId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: noteKeys.all,
-      });
+    onSuccess: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        queryClient.invalidateQueries({
+          queryKey: noteKeys.all,
+        });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
+      }
     },
   });
 };
@@ -224,5 +243,15 @@ export const useGetNoteSummary = (noteId: string) => {
   return useQuery({
     queryKey: noteKeys.noteSummary(noteId),
     queryFn: () => notesService.getNoteSummary(noteId),
+  });
+};
+
+export const useNotesByStatus = (userId: string | null, status: NoteStatus) => {
+  const notesService = useNotesService();
+
+  return useQuery({
+    queryKey: ["notesByStatus", userId, status],
+    queryFn: () => notesService.getNotesByStatus(userId, status),
+    enabled: !!userId,
   });
 };

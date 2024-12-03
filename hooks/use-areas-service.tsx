@@ -6,6 +6,7 @@ import {
   UpdateAreaParams,
 } from "@/lib/database/areas-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { paraKeys } from "@/hooks/use-para-service";
 
 export const useAreasService = () => {
   const supabase = createClient();
@@ -61,13 +62,20 @@ export const useGetUserAreas = (userId: string) => {
 export const useCreateArea = () => {
   const areasService = useAreasService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
     mutationFn: (area: InsertAreaParams) => areasService.insertArea(area),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: areaKeys.all,
-      });
+    onSuccess: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        queryClient.invalidateQueries({
+          queryKey: areaKeys.all,
+        });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
+      }
     },
   });
 };
@@ -88,6 +96,9 @@ export const useUpdateArea = () => {
         queryClient.invalidateQueries({
           queryKey: areaKeys.userAreas(session.user.id),
         });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
       }
     },
   });
@@ -96,13 +107,20 @@ export const useUpdateArea = () => {
 export const useDeleteArea = () => {
   const areasService = useAreasService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
     mutationFn: (areaId: string) => areasService.deleteArea(areaId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: areaKeys.all,
-      });
+    onSuccess: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        queryClient.invalidateQueries({
+          queryKey: areaKeys.all,
+        });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
+      }
     },
   });
 };

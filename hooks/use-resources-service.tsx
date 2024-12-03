@@ -6,6 +6,7 @@ import {
   UpdateResourceParams,
 } from "@/lib/database/resources-service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { paraKeys } from "@/hooks/use-para-service";
 
 export const useResourcesService = () => {
   const supabase = createClient();
@@ -66,14 +67,21 @@ export const useGetUserResources = (userId: string) => {
 export const useCreateResource = () => {
   const resourcesService = useResourcesService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
     mutationFn: (resource: InsertResourceParams) =>
       resourcesService.insertResource(resource),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: resourceKeys.all,
-      });
+    onSuccess: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        queryClient.invalidateQueries({
+          queryKey: resourceKeys.all,
+        });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
+      }
     },
   });
 };
@@ -97,6 +105,9 @@ export const useUpdateResource = () => {
         queryClient.invalidateQueries({
           queryKey: resourceKeys.userResources(session.user.id),
         });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
       }
     },
   });
@@ -105,14 +116,21 @@ export const useUpdateResource = () => {
 export const useDeleteResource = () => {
   const resourcesService = useResourcesService();
   const queryClient = useQueryClient();
+  const supabase = createClient();
 
   return useMutation({
     mutationFn: (resourceId: string) =>
       resourcesService.deleteResource(resourceId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: resourceKeys.all,
-      });
+    onSuccess: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        queryClient.invalidateQueries({
+          queryKey: resourceKeys.all,
+        });
+        queryClient.invalidateQueries({
+          queryKey: paraKeys.recentItems(session.user.id),
+        });
+      }
     },
   });
 };
