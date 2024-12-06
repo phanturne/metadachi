@@ -1,9 +1,6 @@
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import * as React from "react";
-import AppSidebar from "@/components/dashboard/app-sidebar";
-import AppHeader from "@/components/app-header";
-import { SidebarInset } from "@/components/ui/sidebar";
 import AppProviders from "@/components/app-providers";
 
 const defaultUrl = process.env.NEXT_PUBLIC_VERCEL_URL
@@ -24,13 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
-        <AppProviders>
-          <AppSidebar />
-          <SidebarInset>
-            <AppHeader />
-            {children}
-          </SidebarInset>
-        </AppProviders>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );
