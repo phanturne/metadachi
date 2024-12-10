@@ -108,6 +108,15 @@ export const useGetProjectsByStatus = (userId: string, status: string) => {
   });
 };
 
+export const useGetUserProjects = (userId: string) => {
+  const projectService = useProjectService();
+
+  return useQuery({
+    queryKey: ["userProjects", userId],
+    queryFn: () => projectService.getUserProjects(userId),
+  });
+};
+
 export const useMoveProject = () => {
   const projectService = useProjectService();
   const queryClient = useQueryClient();

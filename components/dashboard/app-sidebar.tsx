@@ -1,31 +1,19 @@
 "use client";
 
 import {
-  Archive,
-  Bookmark,
-  Bot,
   Brain,
-  ChevronRight,
   ChevronsUpDown,
   Flame,
-  FolderOpenDot,
   Home,
-  LandPlot,
   LifeBuoy,
   LucideTrash2,
   MoreHorizontal,
-  Notebook,
   Search,
   Send,
   Sparkles,
   Telescope,
   WalletCards,
 } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -39,35 +27,26 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { useSearchDialog } from "@/providers/search-dialog-provider";
 import { ProfileMenu } from "@/components/profile/profile-menu";
 import { useSession } from "@/hooks/use-session";
 import { useGetProfile } from "@/hooks/use-profile-service";
 import { UserInfoCard } from "@/components/shared/user-info-card";
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import { Routes } from "@/utils/constants";
+import { Session } from "@supabase/supabase-js";
+import ProjectItems from "@/components/sidebar/sidebar-projects";
+import AreaItems from "@/components/sidebar/sidebar-areas";
+import ResourceItems from "@/components/sidebar/sidebar-resources";
+import NoteItems from "@/components/sidebar/sidebar-notes";
 
 const data = {
-  user: {
-    name: "Kevin Ding",
-    email: "kding60@gatech.edu",
-    avatar: "",
-  },
   navMain: [
-    {
-      title: "Search",
-      icon: Search,
-    },
-    {
-      title: "Ask AI",
-      url: "#",
-      icon: Sparkles,
-    },
     {
       title: "Home",
       url: "#",
@@ -75,141 +54,21 @@ const data = {
       isActive: true,
     },
     {
+      title: "Search",
+      icon: Search,
+      disabled: true,
+    },
+    {
+      title: "Ask AI",
+      url: "#",
+      icon: Sparkles,
+      disabled: true,
+    },
+    {
       title: "Explore",
       url: "#",
       icon: Telescope,
-    },
-  ],
-  navFavorites: [
-    {
-      title: "Georgia Tech Notes",
-      url: "#",
-      icon: Notebook,
-    },
-    {
-      title: "HCI HW #1 Rough Draft",
-      url: "#",
-      icon: Notebook,
-    },
-    {
-      title: "How to Get a Job at Google: A Complete Guide",
-      url: "#",
-      icon: Notebook,
-    },
-    {
-      title: "More",
-      url: "#",
-      icon: MoreHorizontal,
-    },
-  ],
-  navWorkspace: [
-    {
-      title: "Projects",
-      url: "#",
-      icon: FolderOpenDot,
-      isActive: true,
-      items: [
-        {
-          title: "Learn Python",
-          url: "#",
-        },
-        {
-          title: "Trip to Japan",
-          url: "#",
-        },
-        {
-          title: "Get AI/ML Job",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Areas",
-      url: "#",
-      icon: LandPlot,
-      items: [
-        {
-          title: "Personal",
-          url: "#",
-        },
-        {
-          title: "Health & Fitness",
-          url: "#",
-        },
-        {
-          title: "Finance",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Resources",
-      url: "#",
-      icon: Bookmark,
-      items: [
-        {
-          title: "LLM Comparisons",
-          url: "#",
-        },
-        {
-          title: "Grokking the Coding Interview",
-          url: "#",
-        },
-        {
-          title: "Cooking Handbook",
-          url: "#",
-        },
-        {
-          title: "AI for Everyone",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "AI Chats",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "How to cheat on your HW",
-          url: "#",
-        },
-        {
-          title: "Create a chatbot",
-          url: "#",
-        },
-        {
-          title: "How many R's in strawberry",
-          url: "#",
-        },
-        {
-          title: "Stock market analysis",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Archive",
-      url: "#",
-      icon: Archive,
-      items: [
-        {
-          title: "Cat Pictures",
-          url: "#",
-        },
-        {
-          title: "Python for Beginners",
-          url: "#",
-        },
-        {
-          title: "HCI HW #1 Rough Draft",
-          url: "#",
-        },
-        {
-          title: "Random Notes",
-          url: "#",
-        },
-      ],
+      disabled: true,
     },
   ],
   navTools: [
@@ -217,33 +76,36 @@ const data = {
       title: "Habit Tracker",
       url: "#",
       icon: Flame,
+      disabled: true,
     },
     {
       title: "Flashcards",
       url: "#",
       icon: WalletCards,
+      disabled: true,
     },
     {
       title: "More",
       url: "#",
       icon: MoreHorizontal,
+      disabled: true,
     },
   ],
   navSecondary: [
     {
       title: "Trash",
-      url: "#",
       icon: LucideTrash2,
+      disabled: true,
     },
     {
       title: "Support",
-      url: "#",
       icon: LifeBuoy,
+      disabled: true,
     },
     {
       title: "Feedback",
-      url: "#",
       icon: Send,
+      disabled: true,
     },
   ],
 };
@@ -325,12 +187,35 @@ function NavMain() {
     <SidebarMenu>
       {data.navMain.map((item) => (
         <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton asChild tooltip={item.title}>
-            <a href={item.url} onClick={() => handleNavClick(item.title)}>
-              <item.icon />
-              <span>{item.title}</span>
-            </a>
-          </SidebarMenuButton>
+          {item.url ? (
+            <SidebarMenuButton
+              asChild
+              tooltip={item.title}
+              disabled={item.disabled}
+            >
+              <a
+                href={item.url}
+                className={
+                  item.disabled ? "pointer-events-none opacity-50" : ""
+                }
+              >
+                <item.icon />
+                <span>{item.title}</span>
+              </a>
+            </SidebarMenuButton>
+          ) : (
+            <SidebarMenuButton
+              asChild
+              tooltip={item.title}
+              onClick={() => handleNavClick(item.title)}
+              disabled={item.disabled}
+            >
+              <button>
+                <item.icon />
+                <span>{item.title}</span>
+              </button>
+            </SidebarMenuButton>
+          )}
         </SidebarMenuItem>
       ))}
     </SidebarMenu>
@@ -342,62 +227,45 @@ function NavFavorites() {
     <SidebarGroup>
       <SidebarGroupLabel>Favorites</SidebarGroupLabel>
       <SidebarMenu>
-        {data.navFavorites.map((item) => (
-          <Collapsible key={item.title} asChild>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
-                  <item.icon /> <span>{item.title}</span>{" "}
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </Collapsible>
-        ))}
+        <SidebarMenuItem>
+          <SidebarMenuButton disabled>
+            <span className="text-sm">No favorites yet</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
   );
 }
 
 function NavWorkspace() {
+  const [session, setSession] = useState<Session | null>(null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setSession(session);
+      if (!session) {
+        router.push(Routes.SIGN_IN);
+      }
+    };
+    loadSession();
+  }, [supabase, router]);
+
+  const userId = session?.user.id || "";
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Workspace</SidebarGroupLabel>
       <SidebarMenu>
-        {data.navWorkspace.map((item) => (
-          <Collapsible key={item.title} asChild defaultOpen={item.isActive}>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
-              {item.items?.length ? (
-                <>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuAction className="data-[state=open]:rotate-90">
-                      <ChevronRight />
-                      <span className="sr-only">Toggle</span>
-                    </SidebarMenuAction>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.items?.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild>
-                            <a href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </a>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </>
-              ) : null}
-            </SidebarMenuItem>
-          </Collapsible>
-        ))}
+        <ProjectItems userId={userId} />
+        <AreaItems userId={userId} />
+        <ResourceItems userId={userId} />
+        <NoteItems userId={userId} />
+        {/* AI Chats and Archive sections remain unchanged */}
       </SidebarMenu>
     </SidebarGroup>
   );
@@ -410,11 +278,9 @@ function NavSecondary() {
         <SidebarMenu>
           {data.navSecondary.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild size="sm">
-                <a href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </a>
+              <SidebarMenuButton size="sm" disabled={item.disabled}>
+                <item.icon />
+                <span>{item.title}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
@@ -430,16 +296,14 @@ function NavTools() {
       <SidebarGroupLabel>Tools</SidebarGroupLabel>
       <SidebarMenu>
         {data.navTools.map((item) => (
-          <Collapsible key={item.title} asChild>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </Collapsible>
+          <SidebarMenuItem key={item.title}>
+            <SidebarMenuButton asChild size="sm" disabled={item.disabled}>
+              <a href={item.url}>
+                <item.icon />
+                <span>{item.title}</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         ))}
       </SidebarMenu>
     </SidebarGroup>

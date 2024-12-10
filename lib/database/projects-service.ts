@@ -33,6 +33,8 @@ export type GetProjectTimelineReturnType =
   Database["public"]["Functions"]["get_project_timeline"]["Returns"];
 export type GetProjectsByStatusReturn =
   Database["public"]["Functions"]["get_user_projects"]["Returns"];
+export type GetUserProjectsReturn =
+  Database["public"]["Functions"]["get_user_projects"]["Returns"];
 
 // Function Argument Types
 export type InsertProjectArgs =
@@ -257,6 +259,15 @@ export class ProjectsService {
     const { data, error } = await this.supabase.rpc("get_user_projects", {
       p_user_id: userId,
       p_status: status,
+    });
+
+    if (error) throw error;
+    return data;
+  }
+
+  async getUserProjects(userId: string): Promise<GetUserProjectsReturn> {
+    const { data, error } = await this.supabase.rpc("get_user_projects", {
+      p_user_id: userId,
     });
 
     if (error) throw error;
