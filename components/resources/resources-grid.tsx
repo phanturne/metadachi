@@ -1,40 +1,19 @@
-import { AlertCircle, Bookmark, Loader2, Plus } from "lucide-react";
+"use client";
+
+import { Book, Plus, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import React from "react";
 import ResourceItem from "@/components/resources/resource-item";
 import { useGetUserResources } from "@/hooks/use-resources-service";
-import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import ResourceItemDialog from "./resource-item-dialog";
+import { useAuth } from "@/hooks/use-auth";
 
 export function ResourcesGrid() {
-  const [open, setOpen] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const supabase = createClient();
-  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const { userId, isLoading: isLoadingSession } = useAuth();
 
-  useEffect(() => {
-    const loadSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/sign-in");
-      } else {
-        setUserId(session.user.id);
-      }
-      setIsLoadingSession(false);
-    };
-    loadSession();
-  }, [supabase, router]);
-
-  const {
-    data: resources,
-    isLoading,
-    error,
-  } = useGetUserResources(userId || "");
+  const { data: userResources, isLoading, error } = useGetUserResources(userId || "");
 
   if (isLoadingSession || isLoading) {
     return (
@@ -77,20 +56,20 @@ export function ResourcesGrid() {
   return (
     <>
       <div className="flex h-full flex-col">
-        <h2 className="mb-4 flex items-center text-sm text-muted-foreground">
-          <Bookmark className="mr-2 h-4 w-4" />
+        <h2 className="mb-4 flex items-center text-sm text-gray-400">
+          <Book className="mr-2 h-4 w-4" />
           Resources
         </h2>
         <div className="-m-1 grid max-h-40 flex-grow grid-cols-1 gap-2 overflow-y-auto md:grid-cols-3 lg:grid-cols-4">
-          {resources?.map((resource, index) => (
-            <ResourceItem key={index} resource={resource} />
+          {userResources?.map((resource) => (
+            <ResourceItem key={resource.resource_id} resource={resource} />
           ))}
           <Button
             variant="ghost"
             className="m-1 flex h-16 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-600 transition-all duration-200 hover:scale-[1.02]"
             onClick={() => setOpen(true)}
           >
-            <Plus className="mb-2 h-6 w-6 text-gray-400" />
+            <Plus className="h-6 w-6 text-gray-400" />
             <span className="text-gray-400">New resource</span>
           </Button>
         </div>

@@ -2,35 +2,16 @@
 
 import { LandPlot, Plus, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import AreasItem from "@/components/areas/areas-item";
 import { useGetUserAreas } from "@/hooks/use-areas-service";
-import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import AreasItemDialog from "./areas-item-dialog";
+import { useAuth } from "@/hooks/use-auth";
 
 export function AreasGrid() {
   const [open, setOpen] = React.useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const supabase = createClient();
-  const router = useRouter();
-
-  useEffect(() => {
-    const loadSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/sign-in");
-      } else {
-        setUserId(session.user.id);
-      }
-      setIsLoadingSession(false);
-    };
-    loadSession();
-  }, [supabase, router]);
+  const { userId, isLoading: isLoadingSession } = useAuth();
 
   const { data: userAreas, isLoading, error } = useGetUserAreas(userId || "");
 

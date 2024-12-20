@@ -1,58 +1,21 @@
-import { FolderOpenDot, Plus, Loader2, AlertCircle } from "lucide-react";
+"use client";
+
+import { FolderGit2, Plus, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import ProjectItemDialog from "./project-item-dialog";
-import { useGetProjectsByStatus } from "@/hooks/use-projects-service";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import React from "react";
 import ProjectItem from "./project-item";
+import { useGetUserProjects } from "@/hooks/use-projects-service";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import ProjectItemDialog from "./project-item-dialog";
+import { useAuth } from "@/hooks/use-auth";
 
-export const ProjectsBoard = () => {
-  const [open, setOpen] = useState(false);
-  const [defaultStatus, setDefaultStatus] = useState<string>("active");
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const supabase = createClient();
-  const router = useRouter();
+export function ProjectsBoard() {
+  const [open, setOpen] = React.useState(false);
+  const { userId, isLoading: isLoadingSession } = useAuth();
 
-  useEffect(() => {
-    const loadSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/sign-in");
-      } else {
-        setUserId(session.user.id);
-      }
-      setIsLoadingSession(false);
-    };
-    loadSession();
-  }, [supabase, router]);
+  const { data: userProjects, isLoading, error } = useGetUserProjects(userId || "");
 
-  const {
-    data: onHoldProjects,
-    isLoading: isLoadingOnHold,
-    error: errorOnHold,
-  } = useGetProjectsByStatus(userId || "", "on hold");
-  const {
-    data: activeProjects,
-    isLoading: isLoadingActive,
-    error: errorActive,
-  } = useGetProjectsByStatus(userId || "", "active");
-  const {
-    data: completedProjects,
-    isLoading: isLoadingCompleted,
-    error: errorCompleted,
-  } = useGetProjectsByStatus(userId || "", "completed");
-
-  if (
-    isLoadingSession ||
-    isLoadingOnHold ||
-    isLoadingActive ||
-    isLoadingCompleted
-  ) {
+  if (isLoadingSession || isLoading) {
     return (
       <Card className="flex h-[50vh] items-center justify-center">
         <CardContent className="flex flex-col items-center justify-center p-4 text-center">
@@ -65,7 +28,7 @@ export const ProjectsBoard = () => {
     );
   }
 
-  if (errorOnHold || errorActive || errorCompleted) {
+  if (error) {
     return (
       <Card className="flex h-[50vh] items-center justify-center bg-destructive/5">
         <CardContent className="p-4 text-center">
@@ -74,10 +37,9 @@ export const ProjectsBoard = () => {
             Error loading projects
           </CardTitle>
           <p className="mt-2 text-destructive-foreground">
-            {errorOnHold?.message ||
-              errorActive?.message ||
-              errorCompleted?.message ||
-              "An unexpected error occurred."}
+            {error instanceof Error
+              ? error.message
+              : "An unexpected error occurred."}
           </p>
           <Button
             className="mt-6"
@@ -91,52 +53,28 @@ export const ProjectsBoard = () => {
     );
   }
 
-  const columns = [
-    { status: "On Hold", color: "bg-yellow-600", projects: onHoldProjects },
-    { status: "Active", color: "bg-blue-600", projects: activeProjects },
-    { status: "Completed", color: "bg-green-600", projects: completedProjects },
-  ];
-
   return (
     <>
       <div className="flex h-full flex-col">
         <h2 className="mb-4 flex items-center text-sm text-gray-400">
-          <FolderOpenDot className="mr-2 h-4 w-4" />
+          <FolderGit2 className="mr-2 h-4 w-4" />
           Projects
         </h2>
-        <div className="grid max-h-72 flex-grow grid-cols-1 gap-4 overflow-y-auto md:grid-cols-3">
-          {columns.map((column, index) => (
-            <div key={index} className="rounded-xl bg-card p-6 shadow-md">
-              <div className="mb-4 flex items-center space-x-2">
-                <span className={`h-2 w-2 rounded-full ${column.color}`}></span>
-                <span>{column.status}</span>
-                <span className="text-gray-400">{column.projects?.length}</span>
-              </div>
-              <div className="space-y-4">
-                {column.projects?.map((project, projectIndex) => (
-                  <ProjectItem key={projectIndex} project={project} />
-                ))}
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-gray-400"
-                  onClick={() => {
-                    setDefaultStatus(column.status.toLowerCase());
-                    setOpen(true);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  New project
-                </Button>
-              </div>
-            </div>
+        <div className="-m-1 grid max-h-40 flex-grow grid-cols-1 gap-2 overflow-y-auto md:grid-cols-3 lg:grid-cols-4">
+          {userProjects?.map((project) => (
+            <ProjectItem key={project.project_id} project={project} />
           ))}
+          <Button
+            variant="ghost"
+            className="m-1 flex h-16 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-gray-600 transition-all duration-200 hover:scale-[1.02]"
+            onClick={() => setOpen(true)}
+          >
+            <Plus className="h-6 w-6 text-gray-400" />
+            <span className="text-gray-400">New project</span>
+          </Button>
         </div>
       </div>
-      <ProjectItemDialog
-        open={open}
-        onOpenChange={setOpen}
-        defaultStatus={defaultStatus}
-      />
+      <ProjectItemDialog open={open} onOpenChange={setOpen} />
     </>
   );
-};
+}
