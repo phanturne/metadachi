@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   Brain,
   ChevronsUpDown,
@@ -30,7 +31,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useSearchDialog } from "@/providers/search-dialog-provider";
 import { ProfileMenu } from "@/components/profile/profile-menu";
 import { useSession } from "@/hooks/use-session";
 import { useGetProfile } from "@/hooks/use-profile-service";
@@ -44,6 +44,7 @@ import ProjectItems from "@/components/sidebar/sidebar-projects";
 import AreaItems from "@/components/sidebar/sidebar-areas";
 import ResourceItems from "@/components/sidebar/sidebar-resources";
 import NoteItems from "@/components/sidebar/sidebar-notes";
+import dynamic from "next/dynamic";
 
 const data = {
   navMain: [
@@ -56,7 +57,6 @@ const data = {
     {
       title: "Search",
       icon: Search,
-      disabled: true,
     },
     {
       title: "Ask AI",
@@ -111,11 +111,17 @@ const data = {
 };
 
 export default function AppSidebar() {
+  const [isSearchDialogOpen, setIsSearchDialogOpen] = React.useState(false);
+  const SearchDialog = React.useMemo(
+    () => dynamic(() => import("@/components/search-dialog")),
+    []
+  );
+
   return (
     <Sidebar variant="floating">
       <SidebarHeader>
         <AppSidebarMenu />
-        <NavMain />
+        <NavMain setIsSearchDialogOpen={setIsSearchDialogOpen} />
       </SidebarHeader>
 
       <SidebarContent>
@@ -127,6 +133,9 @@ export default function AppSidebar() {
       <SidebarFooter>
         <AppFooter />
       </SidebarFooter>
+      {isSearchDialogOpen && (
+        <SearchDialog open={isSearchDialogOpen} setOpen={setIsSearchDialogOpen} />
+      )}
     </Sidebar>
   );
 }
@@ -174,12 +183,10 @@ function AppSidebarMenu() {
   );
 }
 
-function NavMain() {
-  const { setOpen } = useSearchDialog();
-
+function NavMain({ setIsSearchDialogOpen }: { setIsSearchDialogOpen: (open: boolean) => void }) {
   const handleNavClick = (title: string) => {
     if (title === "Search") {
-      setOpen(true);
+      setIsSearchDialogOpen(true);
     }
   };
 

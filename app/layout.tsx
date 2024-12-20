@@ -1,7 +1,7 @@
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import * as React from "react";
-import AppProviders from "@/components/app-providers";
+import AppProviders from "@/providers/app-providers";
 
 const defaultUrl = process.env.NEXT_PUBLIC_VERCEL_URL
   ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
