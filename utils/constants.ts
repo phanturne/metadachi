@@ -7,4 +7,5 @@ export const Routes = {
   PROFILE: "/profile",
   SETTINGS: "/settings",
   NOT_FOUND: "/404",
+  CHAT: "/chat",
 };

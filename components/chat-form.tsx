@@ -12,6 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AutoResizeTextarea } from "@/components/autoresize-textarea";
+import Image from "next/image";
 
 export function ChatForm({
   className,
@@ -35,19 +36,11 @@ export function ChatForm({
   };
 
   const header = (
-    <header className="m-auto flex max-w-96 flex-col gap-5 text-center">
-      <h1 className="text-2xl font-semibold leading-none tracking-tight">
-        Basic AI Chatbot Template
+    <header className="flex grow flex-col items-center justify-center gap-8">
+      <Image src="/metadachi.svg" alt="Metadachi Icon" width={75} height={75} />
+      <h1 className="text-2xl leading-none tracking-tight">
+        How can I help you today?
       </h1>
-      <p className="text-sm text-muted-foreground">
-        This is an AI chatbot app template built with{" "}
-        <span className="text-foreground">Next.js</span>, the{" "}
-        <span className="text-foreground">Vercel AI SDK</span>, and{" "}
-        <span className="text-foreground">Vercel KV</span>.
-      </p>
-      <p className="text-sm text-muted-foreground">
-        Connect an API Key from your provider and send a message to get started.
-      </p>
     </header>
   );
 

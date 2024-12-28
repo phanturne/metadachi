@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  Brain,
   ChevronsUpDown,
   Flame,
   Home,
@@ -45,12 +44,13 @@ import AreaItems from "@/components/sidebar/sidebar-areas";
 import ResourceItems from "@/components/sidebar/sidebar-resources";
 import NoteItems from "@/components/sidebar/sidebar-notes";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 
 const data = {
   navMain: [
     {
       title: "Home",
-      url: "#",
+      url: Routes.HOME,
       icon: Home,
       isActive: true,
     },
@@ -60,9 +60,8 @@ const data = {
     },
     {
       title: "Ask AI",
-      url: "#",
+      url: Routes.CHAT,
       icon: Sparkles,
-      disabled: true,
     },
     {
       title: "Explore",
@@ -114,7 +113,7 @@ export default function AppSidebar() {
   const [isSearchDialogOpen, setIsSearchDialogOpen] = React.useState(false);
   const SearchDialog = React.useMemo(
     () => dynamic(() => import("@/components/search-dialog")),
-    []
+    [],
   );
 
   return (
@@ -134,7 +133,10 @@ export default function AppSidebar() {
         <AppFooter />
       </SidebarFooter>
       {isSearchDialogOpen && (
-        <SearchDialog open={isSearchDialogOpen} setOpen={setIsSearchDialogOpen} />
+        <SearchDialog
+          open={isSearchDialogOpen}
+          setOpen={setIsSearchDialogOpen}
+        />
       )}
     </Sidebar>
   );
@@ -149,9 +151,12 @@ function AppSidebarMenu() {
         <SidebarMenuButton size="lg" asChild>
           <a href="#" className="flex w-full items-center justify-between">
             <div className="flex items-center">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Brain className="size-5" />
-              </div>
+              <Image
+                src="/metadachi.svg"
+                alt="Metadachi Icon"
+                width={30}
+                height={30}
+              />
               <div className="ml-3 grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Metadachi</span>
               </div>
@@ -183,7 +188,11 @@ function AppSidebarMenu() {
   );
 }
 
-function NavMain({ setIsSearchDialogOpen }: { setIsSearchDialogOpen: (open: boolean) => void }) {
+function NavMain({
+  setIsSearchDialogOpen,
+}: {
+  setIsSearchDialogOpen: (open: boolean) => void;
+}) {
   const handleNavClick = (title: string) => {
     if (title === "Search") {
       setIsSearchDialogOpen(true);
