@@ -1,4 +1,4 @@
-import { cn, generateUUID } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { ClockRewind, CopyIcon, PlayIcon, RedoIcon, UndoIcon } from './icons';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
@@ -13,6 +13,7 @@ import {
   useCallback,
   useState,
 } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface BlockActionsProps {
   block: UIBlock;
@@ -55,7 +56,7 @@ export function RunCodeButton({
   );
 
   const loadAndRunPython = useCallback(async () => {
-    const runId = generateUUID();
+    const runId = uuidv4();
 
     setConsoleOutputs((consoleOutputs) => [
       ...consoleOutputs,
