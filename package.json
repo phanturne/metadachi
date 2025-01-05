@@ -1,6 +1,6 @@
 {
-  "name": "ai-chatbot",
-  "version": "0.1.0",
+  "name": "metadachit",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
