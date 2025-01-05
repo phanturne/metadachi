@@ -1,3 +1,5 @@
+import { cookies } from 'next/headers';
+import { getUserServer } from '@/utils/getUser';
 import {
   type Message,
   convertToCoreMessages,
@@ -7,7 +9,6 @@ import {
 } from 'ai';
 import { z } from 'zod';
 
-import { auth } from '@/app/(auth)/auth';
 import { customModel } from '@/lib/ai';
 import { models } from '@/lib/ai/models';
 import {
@@ -59,9 +60,9 @@ export async function POST(request: Request) {
   }: { id: string; messages: Array<Message>; modelId: string } =
     await request.json();
 
-  const session = await auth();
+  const { user: sessionUser } = await getUserServer();
 
-  if (!session || !session.user || !session.user.id) {
+  if (!sessionUser || !sessionUser.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
 
   if (!chat) {
     const title = await generateTitleFromUserMessage({ message: userMessage });
-    await saveChat({ id, userId: session.user.id, title });
+    await saveChat({ id, userId: sessionUser.id, title });
   }
 
   const userMessageId = generateUUID();
@@ -207,13 +208,13 @@ export async function POST(request: Request) {
                 dataStream.writeData({ type: 'finish', content: '' });
               }
 
-              if (session.user?.id) {
+              if (sessionUser.id) {
                 await saveDocument({
                   id,
                   title,
                   kind,
                   content: draftText,
-                  userId: session.user.id,
+                  userId: sessionUser.id,
                 });
               }
 
@@ -312,13 +313,13 @@ export async function POST(request: Request) {
                 dataStream.writeData({ type: 'finish', content: '' });
               }
 
-              if (session.user?.id) {
+              if (sessionUser.id) {
                 await saveDocument({
                   id,
                   title: document.title,
                   content: draftText,
                   kind: document.kind,
-                  userId: session.user.id,
+                  userId: sessionUser.id,
                 });
               }
 
@@ -387,8 +388,8 @@ export async function POST(request: Request) {
                 suggestions.push(suggestion);
               }
 
-              if (session.user?.id) {
-                const userId = session.user.id;
+              if (sessionUser.id) {
+                const userId = sessionUser.id;
 
                 await saveSuggestions({
                   suggestions: suggestions.map((suggestion) => ({
@@ -410,7 +411,7 @@ export async function POST(request: Request) {
           },
         },
         onFinish: async ({ response }) => {
-          if (session.user?.id) {
+          if (sessionUser.id) {
             try {
               const responseMessagesWithoutIncompleteToolCalls =
                 sanitizeResponseMessages(response.messages);
@@ -460,16 +461,17 @@ export async function DELETE(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const session = await auth();
+  const cookieStore = await cookies();
+  const { user: sessionUser } = await getUserServer();
 
-  if (!session || !session.user) {
+  if (!sessionUser) {
     return new Response('Unauthorized', { status: 401 });
   }
 
   try {
     const chat = await getChatById({ id });
 
-    if (chat.userId !== session.user.id) {
+    if (chat.userId !== sessionUser.id) {
       return new Response('Unauthorized', { status: 401 });
     }
 

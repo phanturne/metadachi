@@ -1,4 +1,5 @@
-import { auth } from '@/app/(auth)/auth';
+import { cookies } from 'next/headers';
+import { getUserServer } from '@/utils/getUser';
 import { getSuggestionsByDocumentId } from '@/lib/db/queries';
 
 export async function GET(request: Request) {
@@ -9,9 +10,10 @@ export async function GET(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const session = await auth();
+  const cookieStore = await cookies();
+  const { user: sessionUser } = await getUserServer();
 
-  if (!session || !session.user) {
+  if (!sessionUser) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -25,7 +27,7 @@ export async function GET(request: Request) {
     return Response.json([], { status: 200 });
   }
 
-  if (suggestion.userId !== session.user.id) {
+  if (suggestion.userId !== sessionUser.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 

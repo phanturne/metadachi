@@ -1,5 +1,6 @@
-import { auth } from '@/app/(auth)/auth';
-import { BlockKind } from '@/components/block';
+import { cookies } from 'next/headers';
+import { getUserServer } from '@/utils/getUser';
+import type { BlockKind } from '@/components/block';
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,
@@ -14,9 +15,10 @@ export async function GET(request: Request) {
     return new Response('Missing id', { status: 400 });
   }
 
-  const session = await auth();
+  const cookieStore = await cookies();
+  const { user: sessionUser } = await getUserServer();
 
-  if (!session || !session.user) {
+  if (!sessionUser) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -28,7 +30,7 @@ export async function GET(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  if (document.userId !== session.user.id) {
+  if (document.userId !== sessionUser.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -43,9 +45,10 @@ export async function POST(request: Request) {
     return new Response('Missing id', { status: 400 });
   }
 
-  const session = await auth();
+  const cookieStore = await cookies();
+  const { user: sessionUser } = await getUserServer();
 
-  if (!session) {
+  if (!sessionUser) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -55,13 +58,13 @@ export async function POST(request: Request) {
     kind,
   }: { content: string; title: string; kind: BlockKind } = await request.json();
 
-  if (session.user?.id) {
+  if (sessionUser.id) {
     const document = await saveDocument({
       id,
       content,
       title,
       kind,
-      userId: session.user.id,
+      userId: sessionUser.id,
     });
 
     return Response.json(document, { status: 200 });
@@ -79,9 +82,10 @@ export async function PATCH(request: Request) {
     return new Response('Missing id', { status: 400 });
   }
 
-  const session = await auth();
+  const cookieStore = await cookies();
+  const { user: sessionUser } = await getUserServer();
 
-  if (!session || !session.user) {
+  if (!sessionUser) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -89,7 +93,7 @@ export async function PATCH(request: Request) {
 
   const [document] = documents;
 
-  if (document.userId !== session.user.id) {
+  if (document.userId !== sessionUser.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
