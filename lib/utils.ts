@@ -8,7 +8,11 @@ import type {
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-import type { Message as DBMessage, Document } from '@/lib/db/schema';
+import type {
+  Message as DBMessage,
+  Document,
+  MessageContent,
+} from '@/supabase/queries/chat';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -80,9 +84,15 @@ export function convertToUIMessages(
   messages: Array<DBMessage>,
 ): Array<Message> {
   return messages.reduce((chatMessages: Array<Message>, message) => {
+    // Deserialize the content if it's a JSON string
+    let content: MessageContent | null = null;
+    if (typeof message.content === 'string') {
+      content = JSON.parse(message.content);
+    }
+
     if (message.role === 'tool') {
       return addToolMessageToChat({
-        toolMessage: message as CoreToolMessage,
+        toolMessage: { ...message, content } as CoreToolMessage,
         messages: chatMessages,
       });
     }
@@ -90,18 +100,18 @@ export function convertToUIMessages(
     let textContent = '';
     const toolInvocations: Array<ToolInvocation> = [];
 
-    if (typeof message.content === 'string') {
-      textContent = message.content;
-    } else if (Array.isArray(message.content)) {
-      for (const content of message.content) {
-        if (content.type === 'text') {
-          textContent += content.text;
-        } else if (content.type === 'tool-call') {
+    if (typeof content === 'string') {
+      textContent = content;
+    } else if (Array.isArray(content)) {
+      for (const item of content) {
+        if (item.type === 'text') {
+          textContent += item.text;
+        } else if (item.type === 'tool-call') {
           toolInvocations.push({
             state: 'call',
-            toolCallId: content.toolCallId,
-            toolName: content.toolName,
-            args: content.args,
+            toolCallId: item.toolCallId,
+            toolName: item.toolName,
+            args: item.args,
           });
         }
       }
@@ -202,7 +212,7 @@ export function getDocumentTimestampByIndex(
   if (!documents) return new Date();
   if (index > documents.length) return new Date();
 
-  return documents[index].createdAt;
+  return documents[index].created_at;
 }
 
 export function getMessageIdFromAnnotations(message: Message) {

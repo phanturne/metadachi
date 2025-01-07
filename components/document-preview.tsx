@@ -11,7 +11,7 @@ import {
 import type { UIBlock } from './block';
 import { FileIcon, FullscreenIcon, LoaderIcon } from './icons';
 import { cn, fetcher } from '@/lib/utils';
-import type { Document } from '@/lib/db/schema';
+import type { Document } from '@/supabase/queries/document';
 import { InlineDocumentSkeleton } from './document-skeleton';
 import useSWR from 'swr';
 import { Editor } from './editor';
@@ -60,7 +60,12 @@ export function DocumentPreview({
       return (
         <DocumentToolResult
           type="create"
-          result={{ id: result.id, title: result.title, kind: result.kind }}
+          result={{
+            id: result.id,
+            title: result.title,
+            kind: result.kind,
+            chatId: result.chatId,
+          }}
           isReadonly={isReadonly}
         />
       );
@@ -70,7 +75,7 @@ export function DocumentPreview({
       return (
         <DocumentToolCall
           type="create"
-          args={{ title: args.title }}
+          args={{ title: args.title, chatId: args.chatId }}
           isReadonly={isReadonly}
         />
       );
@@ -89,8 +94,9 @@ export function DocumentPreview({
           kind: block.kind,
           content: block.content,
           id: block.documentId,
-          createdAt: new Date(),
-          userId: 'noop',
+          user_id: 'noop',
+          chat_id: args?.chatId || result?.chatId,
+          created_at: new Date().toISOString(),
         }
       : null;
 

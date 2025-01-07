@@ -6,7 +6,7 @@ import { useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 
 import { ChatHeader } from '@/components/chat-header';
-import type { Vote } from '@/lib/db/schema';
+import type { Vote } from '@/supabase/queries/chat';
 import { fetcher } from '@/lib/utils';
 
 import { Block } from './block';

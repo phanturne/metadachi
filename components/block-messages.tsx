@@ -1,6 +1,6 @@
 import { PreviewMessage } from './message';
 import { useScrollToBottom } from './use-scroll-to-bottom';
-import type { Vote } from '@/lib/db/schema';
+import type { Vote } from '@/supabase/queries/chat';
 import type { ChatRequestOptions, Message } from 'ai';
 import { memo } from 'react';
 import equal from 'fast-deep-equal';
@@ -46,7 +46,7 @@ function PureBlockMessages({
           isLoading={isLoading && index === messages.length - 1}
           vote={
             votes
-              ? votes.find((vote) => vote.messageId === message.id)
+              ? votes.find((vote) => vote.message_id === message.id)
               : undefined
           }
           setMessages={setMessages}

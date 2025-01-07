@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
-import { getUserServer } from '@/utils/getUser';
-import { getVotesByChatId, voteMessage } from '@/lib/db/queries';
+import { getUser } from '@/supabase/queries/user';
+import { getVotesByChatId, voteMessage } from '@/supabase/queries/chat';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   }
 
   const cookieStore = await cookies();
-  const { user: sessionUser } = await getUserServer();
+  const { user: sessionUser } = await getUser();
 
   if (!sessionUser || !sessionUser.email) {
     return new Response('Unauthorized', { status: 401 });
@@ -34,8 +34,7 @@ export async function PATCH(request: Request) {
     return new Response('messageId and type are required', { status: 400 });
   }
 
-  const cookieStore = await cookies();
-  const { user: sessionUser } = await getUserServer();
+  const { user: sessionUser } = await getUser();
 
   if (!sessionUser || !sessionUser.email) {
     return new Response('Unauthorized', { status: 401 });
@@ -45,6 +44,7 @@ export async function PATCH(request: Request) {
     chatId,
     messageId,
     type: type,
+    userId: sessionUser.id,
   });
 
   return new Response('Message voted', { status: 200 });

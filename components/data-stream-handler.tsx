@@ -3,7 +3,7 @@
 import { useChat } from 'ai/react';
 import { useEffect, useRef } from 'react';
 import type { BlockKind } from './block';
-import type { Suggestion } from '@/lib/db/schema';
+import type { Suggestion } from '@/supabase/queries/chat';
 import { initialBlockData, useBlock } from '@/hooks/use-block';
 import { useUserMessageId } from '@/hooks/use-user-message-id';
 

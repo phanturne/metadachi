@@ -1,11 +1,10 @@
-import { cookies } from 'next/headers';
-import { getUserServer } from '@/utils/getUser';
+import { getUser } from '@/supabase/queries/user';
 import type { BlockKind } from '@/components/block';
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,
   saveDocument,
-} from '@/lib/db/queries';
+} from '@/supabase/queries/document';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,23 +14,12 @@ export async function GET(request: Request) {
     return new Response('Missing id', { status: 400 });
   }
 
-  const cookieStore = await cookies();
-  const { user: sessionUser } = await getUserServer();
-
-  if (!sessionUser) {
-    return new Response('Unauthorized', { status: 401 });
-  }
-
   const documents = await getDocumentsById({ id });
 
   const [document] = documents;
 
   if (!document) {
     return new Response('Not Found', { status: 404 });
-  }
-
-  if (document.userId !== sessionUser.id) {
-    return new Response('Unauthorized', { status: 401 });
   }
 
   return Response.json(documents, { status: 200 });
@@ -45,8 +33,7 @@ export async function POST(request: Request) {
     return new Response('Missing id', { status: 400 });
   }
 
-  const cookieStore = await cookies();
-  const { user: sessionUser } = await getUserServer();
+  const { user: sessionUser } = await getUser();
 
   if (!sessionUser) {
     return new Response('Unauthorized', { status: 401 });
@@ -56,7 +43,9 @@ export async function POST(request: Request) {
     content,
     title,
     kind,
-  }: { content: string; title: string; kind: BlockKind } = await request.json();
+    chatId,
+  }: { content: string; title: string; kind: BlockKind; chatId: string } =
+    await request.json();
 
   if (sessionUser.id) {
     const document = await saveDocument({
@@ -65,6 +54,7 @@ export async function POST(request: Request) {
       title,
       kind,
       userId: sessionUser.id,
+      chatId,
     });
 
     return Response.json(document, { status: 200 });
@@ -82,8 +72,7 @@ export async function PATCH(request: Request) {
     return new Response('Missing id', { status: 400 });
   }
 
-  const cookieStore = await cookies();
-  const { user: sessionUser } = await getUserServer();
+  const { user: sessionUser } = await getUser();
 
   if (!sessionUser) {
     return new Response('Unauthorized', { status: 401 });
@@ -93,13 +82,13 @@ export async function PATCH(request: Request) {
 
   const [document] = documents;
 
-  if (document.userId !== sessionUser.id) {
+  if (document.user_id !== sessionUser.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
   await deleteDocumentsByIdAfterTimestamp({
     id,
-    timestamp: new Date(timestamp),
+    timestamp,
   });
 
   return new Response('Deleted', { status: 200 });

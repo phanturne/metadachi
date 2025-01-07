@@ -1,5 +1,5 @@
-import { cookies } from 'next/headers';
-import { getUserServer } from '@/utils/getUser';
+
+import { getUser } from '@/supabase/queries/user';
 import {
   type Message,
   convertToCoreMessages,
@@ -17,15 +17,16 @@ import {
   updateDocumentPrompt,
 } from '@/lib/ai/prompts';
 import {
+  saveChat,
+  saveMessages,
   deleteChatById,
   getChatById,
+} from '@/supabase/queries/chat';
+import {
   getDocumentById,
-  saveChat,
   saveDocument,
-  saveMessages,
   saveSuggestions,
-} from '@/lib/db/queries';
-import type { Suggestion } from '@/lib/db/schema';
+} from '@/supabase/queries/document';
 import {
   getMostRecentUserMessage,
   sanitizeResponseMessages,
@@ -33,6 +34,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 import { generateTitleFromUserMessage } from '../../actions';
+import type { TablesInsert } from '@/supabase/types';
 
 export const maxDuration = 60;
 
@@ -60,7 +62,7 @@ export async function POST(request: Request) {
   }: { id: string; messages: Array<Message>; modelId: string } =
     await request.json();
 
-  const { user: sessionUser } = await getUserServer();
+  const { user: sessionUser } = await getUser();
 
   if (!sessionUser || !sessionUser.id) {
     return new Response('Unauthorized', { status: 401 });
@@ -79,18 +81,29 @@ export async function POST(request: Request) {
     return new Response('No user message found', { status: 400 });
   }
 
-  const chat = await getChatById({ id });
+  let chat = await getChatById({ id });
 
   if (!chat) {
     const title = await generateTitleFromUserMessage({ message: userMessage });
     await saveChat({ id, userId: sessionUser.id, title });
+    chat = await getChatById({ id });
+  }
+
+  if (!chat) {
+    return new Response('Failed to create or retrieve chat', { status: 500 });
   }
 
   const userMessageId = uuidv4();
 
   await saveMessages({
     messages: [
-      { ...userMessage, id: userMessageId, createdAt: new Date(), chatId: id },
+      {
+        ...userMessage,
+        content: JSON.stringify(userMessage.content),
+        id: userMessageId,
+        chat_id: id,
+        user_id: sessionUser.id,
+      },
     ],
   });
 
@@ -215,6 +228,7 @@ export async function POST(request: Request) {
                   kind,
                   content: draftText,
                   userId: sessionUser.id,
+                  chatId: chat.id,
                 });
               }
 
@@ -222,6 +236,7 @@ export async function POST(request: Request) {
                 id,
                 title,
                 kind,
+                chatId: chat.id,
                 content:
                   'A document was created and is now visible to the user.',
               };
@@ -320,6 +335,7 @@ export async function POST(request: Request) {
                   content: draftText,
                   kind: document.kind,
                   userId: sessionUser.id,
+                  chatId: document.chat_id,
                 });
               }
 
@@ -327,6 +343,7 @@ export async function POST(request: Request) {
                 id,
                 title: document.title,
                 kind: document.kind,
+                chatId: document.chat_id,
                 content: 'The document has been updated successfully.',
               };
             },
@@ -347,9 +364,7 @@ export async function POST(request: Request) {
                 };
               }
 
-              const suggestions: Array<
-                Omit<Suggestion, 'userId' | 'createdAt' | 'documentCreatedAt'>
-              > = [];
+              const suggestions: Array<TablesInsert<'suggestion'>> = [];
 
               const { elementStream } = streamObject({
                 model: customModel(model.apiIdentifier),
@@ -372,12 +387,13 @@ export async function POST(request: Request) {
 
               for await (const element of elementStream) {
                 const suggestion = {
-                  originalText: element.originalSentence,
-                  suggestedText: element.suggestedSentence,
+                  original_text: element.originalSentence,
+                  suggested_text: element.suggestedSentence,
                   description: element.description,
-                  id: uuidv4(),
-                  documentId: documentId,
-                  isResolved: false,
+                  document_id: documentId,
+                  is_resolved: false,
+                  user_id: sessionUser.id,
+                  document_created_at: document.created_at,
                 };
 
                 dataStream.writeData({
@@ -389,15 +405,8 @@ export async function POST(request: Request) {
               }
 
               if (sessionUser.id) {
-                const userId = sessionUser.id;
-
                 await saveSuggestions({
-                  suggestions: suggestions.map((suggestion) => ({
-                    ...suggestion,
-                    userId,
-                    createdAt: new Date(),
-                    documentCreatedAt: document.createdAt,
-                  })),
+                  suggestions: suggestions,
                 });
               }
 
@@ -405,6 +414,7 @@ export async function POST(request: Request) {
                 id: documentId,
                 title: document.title,
                 kind: document.kind,
+                chatId: document.chat_id,
                 message: 'Suggestions have been added to the document',
               };
             },
@@ -429,10 +439,10 @@ export async function POST(request: Request) {
 
                     return {
                       id: messageId,
-                      chatId: id,
+                      chat_id: id,
                       role: message.role,
-                      content: message.content,
-                      createdAt: new Date(),
+                      content: JSON.stringify(message.content),
+                      user_id: sessionUser.id,
                     };
                   },
                 ),
@@ -461,8 +471,7 @@ export async function DELETE(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const cookieStore = await cookies();
-  const { user: sessionUser } = await getUserServer();
+  const { user: sessionUser } = await getUser();
 
   if (!sessionUser) {
     return new Response('Unauthorized', { status: 401 });
@@ -471,7 +480,7 @@ export async function DELETE(request: Request) {
   try {
     const chat = await getChatById({ id });
 
-    if (chat.userId !== sessionUser.id) {
+    if (chat?.user_id !== sessionUser.id) {
       return new Response('Unauthorized', { status: 401 });
     }
 

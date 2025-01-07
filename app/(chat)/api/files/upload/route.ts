@@ -1,9 +1,7 @@
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-
-import { cookies } from 'next/headers';
-import { getUserServer } from '@/utils/getUser';
+import { getUser } from '@/supabase/queries/user';
 
 // Use Blob instead of File since File is not available in Node.js environment
 const FileSchema = z.object({
@@ -19,8 +17,7 @@ const FileSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const cookieStore = await cookies();
-  const { user: sessionUser } = await getUserServer();
+  const { user: sessionUser } = await getUser();
 
   if (!sessionUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

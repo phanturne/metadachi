@@ -45,9 +45,10 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import type { Chat } from '@/lib/db/schema';
+import type { Chat } from '@/supabase/queries/chat';
 import { fetcher } from '@/lib/utils';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
+import type { VisibilityType } from './visibility-selector';
 
 type GroupedChats = {
   today: Chat[];
@@ -70,7 +71,7 @@ const PureChatItem = ({
 }) => {
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId: chat.id,
-    initialVisibility: chat.visibility,
+    initialVisibility: chat.visibility as VisibilityType,
   });
 
   return (
@@ -252,7 +253,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 
     return chats.reduce(
       (groups, chat) => {
-        const chatDate = new Date(chat.createdAt);
+        const chatDate = new Date(chat.created_at);
 
         if (isToday(chatDate)) {
           groups.today.push(chat);

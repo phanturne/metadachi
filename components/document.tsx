@@ -25,7 +25,7 @@ const getActionText = (
 
 interface DocumentToolResultProps {
   type: 'create' | 'update' | 'request-suggestions';
-  result: { id: string; title: string; kind: BlockKind };
+  result: { id: string; title: string; kind: BlockKind; chatId: string };
   isReadonly: boolean;
 }
 
@@ -88,7 +88,7 @@ export const DocumentToolResult = memo(PureDocumentToolResult, () => true);
 
 interface DocumentToolCallProps {
   type: 'create' | 'update' | 'request-suggestions';
-  args: { title: string };
+  args: { title: string, chatId: string };
   isReadonly: boolean;
 }
 

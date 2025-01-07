@@ -1,10 +1,8 @@
-import { cookies } from 'next/headers';
-import { getUserServer } from '@/utils/getUser';
-import { getChatsByUserId } from '@/lib/db/queries';
+import { getUser } from '@/supabase/queries/user';
+import { getChatsByUserId } from '@/supabase/queries/chat';
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const { user: sessionUser } = await getUserServer();
+  const { user: sessionUser } = await getUser();
 
   if (!sessionUser) {
     return Response.json('Unauthorized!', { status: 401 });

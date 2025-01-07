@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
 
-import type { Vote } from '@/lib/db/schema';
+import type { Vote } from '@/supabase/queries/chat';
 import { getMessageIdFromAnnotations } from '@/lib/utils';
 
 import { CopyIcon, ThumbDownIcon, ThumbUpIcon } from './icons';
@@ -16,6 +16,8 @@ import {
 } from './ui/tooltip';
 import { memo } from 'react';
 import equal from 'fast-deep-equal';
+import type { TablesInsert } from '@/supabase/types';
+import { useSession } from '@/hooks/use-session';
 
 export function PureMessageActions({
   chatId,
@@ -30,6 +32,7 @@ export function PureMessageActions({
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
+  const { session } = useSession();
 
   if (isLoading) return null;
   if (message.role === 'user') return null;
@@ -59,9 +62,12 @@ export function PureMessageActions({
           <TooltipTrigger asChild>
             <Button
               className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
-              disabled={vote?.isUpvoted}
+              disabled={vote?.is_upvoted}
               variant="outline"
               onClick={async () => {
+                if (!session?.user?.id) {
+                  return new Response('Unauthorized', { status: 401 });
+                }
                 const messageId = getMessageIdFromAnnotations(message);
 
                 const upvote = fetch('/api/vote', {
@@ -76,21 +82,27 @@ export function PureMessageActions({
                 toast.promise(upvote, {
                   loading: 'Upvoting Response...',
                   success: () => {
-                    mutate<Array<Vote>>(
+                    mutate<Array<TablesInsert<'vote'>>>(
                       `/api/vote?chatId=${chatId}`,
                       (currentVotes) => {
                         if (!currentVotes) return [];
 
-                        const votesWithoutCurrent = currentVotes.filter(
-                          (vote) => vote.messageId !== message.id,
-                        );
+                        const votesWithoutCurrent = currentVotes
+                          .filter((vote) => vote.message_id !== message.id)
+                          .map((vote) => ({
+                            chat_id: vote.chat_id,
+                            message_id: vote.message_id,
+                            is_upvoted: vote.is_upvoted,
+                            user_id: vote.user_id,
+                          }));
 
                         return [
                           ...votesWithoutCurrent,
                           {
-                            chatId,
-                            messageId: message.id,
-                            isUpvoted: true,
+                            chat_id: chatId,
+                            message_id: message.id,
+                            is_upvoted: true,
+                            user_id: session.user.id,
                           },
                         ];
                       },
@@ -114,8 +126,12 @@ export function PureMessageActions({
             <Button
               className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
               variant="outline"
-              disabled={vote && !vote.isUpvoted}
+              disabled={vote && !vote.is_upvoted}
               onClick={async () => {
+                if (!session?.user?.id) {
+                  return new Response('Unauthorized', { status: 401 });
+                }
+
                 const messageId = getMessageIdFromAnnotations(message);
 
                 const downvote = fetch('/api/vote', {
@@ -130,21 +146,27 @@ export function PureMessageActions({
                 toast.promise(downvote, {
                   loading: 'Downvoting Response...',
                   success: () => {
-                    mutate<Array<Vote>>(
+                    mutate<Array<TablesInsert<'vote'>>>(
                       `/api/vote?chatId=${chatId}`,
                       (currentVotes) => {
                         if (!currentVotes) return [];
 
-                        const votesWithoutCurrent = currentVotes.filter(
-                          (vote) => vote.messageId !== message.id,
-                        );
+                        const votesWithoutCurrent = currentVotes
+                          .filter((vote) => vote.message_id !== message.id)
+                          .map((vote) => ({
+                            chat_id: vote.chat_id,
+                            message_id: vote.message_id,
+                            is_upvoted: vote.is_upvoted,
+                            user_id: vote.user_id,
+                          }));
 
                         return [
                           ...votesWithoutCurrent,
                           {
-                            chatId,
-                            messageId: message.id,
-                            isUpvoted: false,
+                            chat_id: chatId,
+                            message_id: message.id,
+                            is_upvoted: false,
+                            user_id: session.user.id,
                           },
                         ];
                       },

@@ -1,6 +1,7 @@
-import { cookies } from 'next/headers';
-import { getUserServer } from '@/utils/getUser';
-import { getSuggestionsByDocumentId } from '@/lib/db/queries';
+
+import { getUser } from '@/supabase/queries/user';
+import { getSuggestionsByDocumentId } from '@/supabase/queries/document';
+import type { Suggestion } from '@/supabase/queries/chat';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,14 +11,13 @@ export async function GET(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const cookieStore = await cookies();
-  const { user: sessionUser } = await getUserServer();
+  const { user: sessionUser } = await getUser();
 
   if (!sessionUser) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const suggestions = await getSuggestionsByDocumentId({
+  const suggestions: Suggestion[] = await getSuggestionsByDocumentId({
     documentId,
   });
 
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     return Response.json([], { status: 200 });
   }
 
-  if (suggestion.userId !== sessionUser.id) {
+  if (suggestion.user_id !== sessionUser.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 

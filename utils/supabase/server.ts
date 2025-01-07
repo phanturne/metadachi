@@ -1,10 +1,11 @@
+import type { Database } from '@/supabase/types';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export const createClient = async () => {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  return createServerClient<Database>(
     // biome-ignore lint: Forbidden non-null assertion.
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     // biome-ignore lint: Forbidden non-null assertion.

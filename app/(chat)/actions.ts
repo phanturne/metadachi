@@ -7,8 +7,8 @@ import { customModel } from '@/lib/ai';
 import {
   deleteMessagesByChatIdAfterTimestamp,
   getMessageById,
-  updateChatVisiblityById,
-} from '@/lib/db/queries';
+  updateChatVisibilityById,
+} from '@/supabase/queries/chat';
 import type { VisibilityType } from '@/components/visibility-selector';
 
 export async function saveModelId(model: string) {
@@ -38,8 +38,8 @@ export async function deleteTrailingMessages({ id }: { id: string }) {
   const [message] = await getMessageById({ id });
 
   await deleteMessagesByChatIdAfterTimestamp({
-    chatId: message.chatId,
-    timestamp: message.createdAt,
+    chatId: message.chat_id,
+    timestamp: message.created_at,
   });
 }
 
@@ -50,5 +50,5 @@ export async function updateChatVisibility({
   chatId: string;
   visibility: VisibilityType;
 }) {
-  await updateChatVisiblityById({ chatId, visibility });
+  await updateChatVisibilityById({ chatId, visibility });
 }
