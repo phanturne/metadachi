@@ -3,7 +3,6 @@
 import { isToday, isYesterday, subMonths, subWeeks } from 'date-fns';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import type { User } from 'next-auth';
 import { memo, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import useSWR from 'swr';
@@ -48,7 +47,8 @@ import {
 import type { Chat } from '@/supabase/queries/chat';
 import { fetcher } from '@/lib/utils';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
-import type { VisibilityType } from './visibility-selector';
+import type { VisibilityType } from '../visibility-selector';
+import type { User } from '@supabase/supabase-js';
 
 type GroupedChats = {
   today: Chat[];
@@ -149,7 +149,7 @@ export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
   return true;
 });
 
-export function SidebarHistory({ user }: { user: User | undefined }) {
+export function SidebarHistory({ user }: { user: User | null }) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
   const pathname = usePathname();

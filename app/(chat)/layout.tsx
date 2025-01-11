@@ -1,21 +1,14 @@
-import { cookies } from 'next/headers';
-
-import { AppSidebar } from '@/components/app-sidebar';
+import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-
 import { getUser } from '@/supabase/queries/user';
 import Script from 'next/script';
-
-export const experimental_ppr = true;
 
 export default async function Layout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const { user: sessionUser } = await getUser();
-  const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
+  const user = await getUser();
 
   return (
     <>
@@ -23,9 +16,32 @@ export default async function Layout({
         src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"
         strategy="beforeInteractive"
       />
-      <SidebarProvider defaultOpen={!isCollapsed}>
-        <AppSidebar user={sessionUser ?? undefined} />
-        <SidebarInset>{children}</SidebarInset>
+      <SidebarProvider
+        style={
+          {
+            '--sidebar-width': '350px',
+          } as React.CSSProperties
+        }
+      >
+        <AppSidebar user={user} />
+        <SidebarInset>
+          {/* <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">All Inboxes</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Inbox</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </header> */}
+          {children}
+        </SidebarInset>
       </SidebarProvider>
     </>
   );
