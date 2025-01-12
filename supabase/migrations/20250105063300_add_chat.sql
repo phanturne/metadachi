@@ -193,3 +193,11 @@ ALTER TABLE suggestion
 
 ALTER TABLE vote
   ADD COLUMN created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL;
+
+-- Drop the existing foreign key constraint
+ALTER TABLE document
+  DROP CONSTRAINT document_chat_id_fkey;
+
+-- Add the foreign key constraint with ON DELETE CASCADE
+ALTER TABLE document
+  ADD CONSTRAINT document_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES chat(id) ON DELETE CASCADE;
