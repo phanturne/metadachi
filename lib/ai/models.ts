@@ -5,6 +5,7 @@ export interface Model {
   label: string;
   apiIdentifier: string;
   description: string;
+  disabled?: boolean;
 }
 
 export const models: Array<Model> = [
@@ -19,6 +20,7 @@ export const models: Array<Model> = [
     label: 'GPT 4o',
     apiIdentifier: 'gpt-4o',
     description: 'For complex, multi-step tasks',
+    disabled: true,
   },
 ] as const;
 

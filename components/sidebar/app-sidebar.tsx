@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import {
+  Bot,
   FileText,
   Folder,
   HeartIcon,
@@ -9,12 +10,11 @@ import {
   Library,
   LifeBuoy,
   LucideTrash2,
+  MessageCircleMore,
   PlusIcon,
   Search,
   Send,
-  Sparkles,
-  Tag,
-  Telescope,
+  Shapes,
 } from 'lucide-react';
 
 import { NavUser } from '@/components/nav-user';
@@ -67,14 +67,14 @@ const data = {
       disabled: true,
     },
     {
-      title: 'Ask AI',
+      title: 'AI Chat',
       url: ROUTES.CHAT,
-      icon: Sparkles,
+      icon: MessageCircleMore,
     },
     {
       title: 'Explore',
       url: '#',
-      icon: Telescope,
+      icon: Shapes,
       disabled: true,
     },
   ],
@@ -100,8 +100,8 @@ const data = {
       disabled: true,
     },
     {
-      title: 'Tags',
-      icon: Tag,
+      title: 'Assistants',
+      icon: Bot,
       disabled: true,
     },
   ],

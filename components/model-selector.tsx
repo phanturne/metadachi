@@ -58,6 +58,7 @@ export function ModelSelector({
             }}
             className="gap-4 group/item flex flex-row justify-between items-center"
             data-active={model.id === optimisticModelId}
+            disabled={model.disabled}
           >
             <div className="flex flex-col gap-1 items-start">
               {model.label}
