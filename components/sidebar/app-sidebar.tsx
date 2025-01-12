@@ -38,6 +38,7 @@ import type { GetUserReturn } from '@/supabase/queries/user';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Button } from '../ui/button';
 import dynamic from 'next/dynamic';
+import { useEffect } from 'react';
 
 type AppSidebarMenuItemType = {
   title: string;
@@ -131,9 +132,14 @@ export function AppSidebar({ user }: { user: GetUserReturn }) {
     [],
   );
 
-  const [activeItem, setActiveItem] = React.useState<AppSidebarMenuItemType>(
-    data.navMain[0],
-  );
+  const { setOpen } = useSidebar();
+  const pathname = usePathname();
+
+  // TODO: This method causes a slight delay when toggling the sidebar
+  const shouldOpen = pagesWithDoubleSidebar.includes(pathname);
+  useEffect(() => {
+    setOpen(shouldOpen);
+  }, [shouldOpen, setOpen]);
 
   return (
     <>
@@ -145,7 +151,7 @@ export function AppSidebar({ user }: { user: GetUserReturn }) {
           user={user}
           setIsSearchDialogOpen={setIsSearchDialogOpen}
         />
-        <SecondSidebar user={user} />
+        {shouldOpen && <SecondSidebar user={user} />}
       </Sidebar>
 
       {isSearchDialogOpen && (
@@ -170,11 +176,11 @@ const FirstSidebarMenuItem = ({
   const pathname = usePathname();
 
   const handleNavClick = (item: AppSidebarMenuItemType) => {
-    if (pagesWithDoubleSidebar.includes(item.url ?? '')) {
-      setOpen(true);
-    } else if (item.url) {
-      setOpen(false);
-    }
+    // if (pagesWithDoubleSidebar.includes(item.url ?? '')) {
+    //   setOpen(true);
+    // } else if (item.url) {
+    //   setOpen(false);
+    // }
 
     if (item.title === 'Search') {
       setIsSearchDialogOpen(true);
@@ -216,8 +222,6 @@ function FirstSidebar({
   user: GetUserReturn;
   setIsSearchDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const pathname = usePathname();
-
   return (
     <Sidebar collapsible="none" className="!w-[50px] border-r">
       <SidebarHeader>
@@ -324,7 +328,7 @@ function SecondSidebar({ user }: { user: GetUserReturn }) {
       <SidebarHeader className="gap-3.5 border-b p-4">
         <div className="flex w-full items-center justify-between">
           <div className="text-base font-medium text-foreground">
-            {pageTitle ? pageTitles[pageTitle] : pathname}
+            {pageTitle ? pageTitles[pageTitle] : ''}
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
