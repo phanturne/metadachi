@@ -3,21 +3,18 @@
 import * as React from 'react';
 import {
   FileText,
-  Flame,
   Folder,
   HeartIcon,
   Home,
   Library,
   LifeBuoy,
   LucideTrash2,
-  MoreHorizontal,
   PlusIcon,
   Search,
   Send,
   Sparkles,
   Tag,
   Telescope,
-  WalletCards,
 } from 'lucide-react';
 
 import { NavUser } from '@/components/nav-user';
@@ -28,7 +25,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
-  SidebarInput,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -50,7 +46,7 @@ type AppSidebarMenuItemType = {
   disabled?: boolean;
 };
 
-const pagesWithDoubleSidebar = [ROUTES.CHAT, ROUTES.HOME];
+const pagesWithDoubleSidebar = [ROUTES.CHAT];
 
 const data = {
   user: {
@@ -85,43 +81,26 @@ const data = {
     {
       title: 'Favorites',
       icon: HeartIcon,
-      url: ROUTES.HOME,
-      disabled: false,
+      disabled: true,
     },
     {
       title: 'Documents',
       icon: FileText,
+      disabled: true,
     },
     {
       title: 'Folders',
       icon: Folder,
+      disabled: true,
     },
     {
       title: 'Libraries',
       icon: Library,
+      disabled: true,
     },
     {
       title: 'Tags',
       icon: Tag,
-    },
-  ],
-  navTools: [
-    {
-      title: 'Habit Tracker',
-      url: '#',
-      icon: Flame,
-      disabled: true,
-    },
-    {
-      title: 'Flashcards',
-      url: '#',
-      icon: WalletCards,
-      disabled: true,
-    },
-    {
-      title: 'More',
-      url: '#',
-      icon: MoreHorizontal,
       disabled: true,
     },
   ],
@@ -206,6 +185,11 @@ const FirstSidebarMenuItem = ({
     }
   };
 
+  const isActive =
+    !!item.url &&
+    ((item.url === ROUTES.HOME && pathname === ROUTES.HOME) ||
+      (item.url !== ROUTES.HOME && pathname.startsWith(item.url)));
+
   return (
     <SidebarMenuItem key={item.title}>
       <SidebarMenuButton
@@ -214,7 +198,7 @@ const FirstSidebarMenuItem = ({
           hidden: false,
         }}
         disabled={item.disabled}
-        isActive={pathname === item.url}
+        isActive={isActive}
         className="px-2.5 md:px-2"
         onClick={() => handleNavClick(item)}
       >
@@ -235,10 +219,7 @@ function FirstSidebar({
   const pathname = usePathname();
 
   return (
-    <Sidebar
-      collapsible="none"
-      className="!w-[calc(var(--sidebar-width-icon)_+_1px)] border-r"
-    >
+    <Sidebar collapsible="none" className="!w-[50px] border-r">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -317,30 +298,34 @@ function FirstSidebar({
   );
 }
 
+const pageTitles: { [key: string]: string } = {
+  [ROUTES.CHAT]: 'Chat',
+};
+
 function SecondSidebar({ user }: { user: GetUserReturn }) {
   const pathname = usePathname();
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
 
   const renderComponent = () => {
-    switch (pathname) {
-      case ROUTES.HOME:
-        return <p>Home</p>;
-      case ROUTES.CHAT:
-        return <SidebarHistory user={user.user} />;
-      default:
-        return;
+    if (pathname.startsWith(ROUTES.CHAT)) {
+      return <SidebarHistory user={user.user} />;
+    } else {
+      return;
     }
   };
 
+  const pageTitle = Object.keys(pageTitles).find((key) =>
+    pathname.startsWith(key),
+  );
+
   return (
-    <Sidebar collapsible="none" className="hidden flex-1 md:flex">
+    <Sidebar collapsible="none" className="hidden flex-1 md:flex w-[300px]">
       <SidebarHeader className="gap-3.5 border-b p-4">
         <div className="flex w-full items-center justify-between">
           <div className="text-base font-medium text-foreground">
-            {pathname}
+            {pageTitle ? pageTitles[pageTitle] : pathname}
           </div>
-
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -359,10 +344,9 @@ function SecondSidebar({ user }: { user: GetUserReturn }) {
             <TooltipContent align="end">New Chat</TooltipContent>
           </Tooltip>
         </div>
-        <SidebarInput placeholder="Type to search..." />
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup className="px-0">
+        <SidebarGroup>
           <SidebarGroupContent>{renderComponent()}</SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
