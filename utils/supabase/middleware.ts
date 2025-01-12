@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
-import { PROTECTED_ROUTES, ROUTES } from '@/utils/constants';
+import { AUTH_ROUTES, PROTECTED_ROUTES, ROUTES } from '@/utils/constants';
 
 export const updateSession = async (request: NextRequest) => {
   // This `try/catch` block is only here for the interactive tutorial.
@@ -48,6 +48,15 @@ export const updateSession = async (request: NextRequest) => {
 
     if (user.error && isProtectedRoute) {
       return NextResponse.redirect(new URL(ROUTES.LOGIN, request.url));
+    }
+
+    // If the user is logged in,
+    const isAuthPage = AUTH_ROUTES.some((page) =>
+      request.nextUrl.pathname.startsWith(page),
+    );
+
+    if (user && isAuthPage) {
+      return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
     }
 
     return response;
