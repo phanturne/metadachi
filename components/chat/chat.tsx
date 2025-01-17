@@ -5,13 +5,13 @@ import { useChat } from 'ai/react';
 import { useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 
-import { ChatHeader } from '@/components/chat-header';
+import { ChatHeader } from '@/components/chat/chat-header';
 import type { Vote } from '@/supabase/queries/chat';
 import { fetcher } from '@/lib/utils';
 
-import { Block } from './block';
+import { Block } from '../block/block';
 import { MultimodalInput } from './multimodal-input';
-import { Messages } from './messages';
+import { Messages } from '../message/messages';
 import type { VisibilityType } from './visibility-selector';
 import { useBlockSelector } from '@/hooks/use-block';
 

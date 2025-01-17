@@ -2,12 +2,12 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { getUser } from '@/supabase/queries/user';
-import { Chat } from '@/components/chat';
+import { Chat } from '@/components/chat/chat';
 import { DEFAULT_MODEL_NAME, models } from '@/lib/ai/models';
 import { getChatById, getMessagesByChatId } from '@/supabase/queries/chat';
 import { convertToUIMessages } from '@/lib/utils';
-import { DataStreamHandler } from '@/components/data-stream-handler';
-import type { VisibilityType } from '@/components/visibility-selector';
+import { DataStreamHandler } from '@/components/chat/data-stream-handler';
+import type { VisibilityType } from '@/components/chat/visibility-selector';
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;

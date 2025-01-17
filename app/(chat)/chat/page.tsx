@@ -1,9 +1,9 @@
 import { cookies } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Chat } from '@/components/chat';
+import { Chat } from '@/components/chat/chat';
 import { DEFAULT_MODEL_NAME, models } from '@/lib/ai/models';
-import { DataStreamHandler } from '@/components/data-stream-handler';
+import { DataStreamHandler } from '@/components/chat/data-stream-handler';
 
 export default async function ChatPage() {
   const id = uuidv4();

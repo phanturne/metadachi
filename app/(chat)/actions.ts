@@ -9,7 +9,7 @@ import {
   getMessageById,
   updateChatVisibilityById,
 } from '@/supabase/queries/chat';
-import type { VisibilityType } from '@/components/visibility-selector';
+import type { VisibilityType } from '@/components/chat/visibility-selector';
 
 export async function saveModelId(model: string) {
   const cookieStore = await cookies();

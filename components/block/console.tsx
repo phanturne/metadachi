@@ -1,5 +1,5 @@
-import { TerminalWindowIcon, LoaderIcon, CrossSmallIcon } from './icons';
-import { Button } from './ui/button';
+import { TerminalWindowIcon, LoaderIcon, CrossSmallIcon } from '../icons';
+import { Button } from '../ui/button';
 import {
   type Dispatch,
   type SetStateAction,

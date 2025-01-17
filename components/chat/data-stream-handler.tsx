@@ -2,22 +2,22 @@
 
 import { useChat } from 'ai/react';
 import { useEffect, useRef } from 'react';
-import type { BlockKind } from './block';
+import type { BlockKind } from '../block/block';
 import type { Suggestion } from '@/supabase/queries/chat';
 import { initialBlockData, useBlock } from '@/hooks/use-block';
 import { useUserMessageId } from '@/hooks/use-user-message-id';
 
 type DataStreamDelta = {
   type:
-    | 'text-delta'
-    | 'code-delta'
-    | 'title'
-    | 'id'
-    | 'suggestion'
-    | 'clear'
-    | 'finish'
-    | 'user-message-id'
-    | 'kind';
+  | 'text-delta'
+  | 'code-delta'
+  | 'title'
+  | 'id'
+  | 'suggestion'
+  | 'clear'
+  | 'finish'
+  | 'user-message-id'
+  | 'kind';
   content: string | Suggestion;
 };
 
@@ -72,8 +72,8 @@ export function DataStreamHandler({ id }: { id: string }) {
               content: draftBlock.content + (delta.content as string),
               isVisible:
                 draftBlock.status === 'streaming' &&
-                draftBlock.content.length > 400 &&
-                draftBlock.content.length < 450
+                  draftBlock.content.length > 400 &&
+                  draftBlock.content.length < 450
                   ? true
                   : draftBlock.isVisible,
               status: 'streaming',
@@ -85,8 +85,8 @@ export function DataStreamHandler({ id }: { id: string }) {
               content: delta.content as string,
               isVisible:
                 draftBlock.status === 'streaming' &&
-                draftBlock.content.length > 300 &&
-                draftBlock.content.length < 310
+                  draftBlock.content.length > 300 &&
+                  draftBlock.content.length < 310
                   ? true
                   : draftBlock.isVisible,
               status: 'streaming',

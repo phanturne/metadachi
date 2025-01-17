@@ -1,7 +1,7 @@
 'use client';
 
 import { updateChatVisibility } from '@/app/(chat)/actions';
-import type { VisibilityType } from '@/components/visibility-selector';
+import type { VisibilityType } from '@/components/chat/visibility-selector';
 import type { Chat } from '@/supabase/queries/chat';
 import { useMemo } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
@@ -39,14 +39,14 @@ export function useChatVisibility({
       (history) => {
         return history
           ? history.map((chat) => {
-              if (chat.id === chatId) {
-                return {
-                  ...chat,
-                  visibility: updatedVisibilityType,
-                };
-              }
-              return chat;
-            })
+            if (chat.id === chatId) {
+              return {
+                ...chat,
+                visibility: updatedVisibilityType,
+              };
+            }
+            return chat;
+          })
           : [];
       },
       { revalidate: false },

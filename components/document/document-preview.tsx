@@ -8,15 +8,15 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import type { UIBlock } from './block';
-import { FileIcon, FullscreenIcon, LoaderIcon } from './icons';
+import type { UIBlock } from '../block/block';
+import { FileIcon, FullscreenIcon, LoaderIcon } from '../icons';
 import { cn, fetcher } from '@/lib/utils';
 import type { Document } from '@/supabase/queries/document';
 import { InlineDocumentSkeleton } from './document-skeleton';
 import useSWR from 'swr';
-import { Editor } from './editor';
+import { Editor } from '../editor';
 import { DocumentToolCall, DocumentToolResult } from './document';
-import { CodeEditor } from './code-editor';
+import { CodeEditor } from '../code-editor';
 import { useBlock } from '@/hooks/use-block';
 import equal from 'fast-deep-equal';
 
@@ -90,14 +90,14 @@ export function DocumentPreview({
     ? previewDocument
     : block.status === 'streaming'
       ? {
-          title: block.title,
-          kind: block.kind,
-          content: block.content,
-          id: block.documentId,
-          user_id: 'noop',
-          chat_id: args?.chatId || result?.chatId,
-          created_at: new Date().toISOString(),
-        }
+        title: block.title,
+        kind: block.kind,
+        content: block.content,
+        id: block.documentId,
+        user_id: 'noop',
+        chat_id: args?.chatId || result?.chatId,
+        created_at: new Date().toISOString(),
+      }
       : null;
 
   if (!document) return <LoadingSkeleton />;
@@ -150,17 +150,17 @@ const PureHitboxLayer = ({
         block.status === 'streaming'
           ? { ...block, isVisible: true }
           : {
-              ...block,
-              documentId: result.id,
-              kind: result.kind,
-              isVisible: true,
-              boundingBox: {
-                left: boundingBox.x,
-                top: boundingBox.y,
-                width: boundingBox.width,
-                height: boundingBox.height,
-              },
+            ...block,
+            documentId: result.id,
+            kind: result.kind,
+            isVisible: true,
+            boundingBox: {
+              left: boundingBox.x,
+              top: boundingBox.y,
+              width: boundingBox.width,
+              height: boundingBox.height,
             },
+          },
       );
     },
     [setBlock, result],
@@ -235,7 +235,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
     isCurrentVersion: true,
     currentVersionIndex: 0,
     status: block.status,
-    saveContent: () => {},
+    saveContent: () => { },
     suggestions: [],
   };
 

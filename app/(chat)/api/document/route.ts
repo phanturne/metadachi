@@ -1,5 +1,5 @@
 import { getUser } from '@/supabase/queries/user';
-import type { BlockKind } from '@/components/block';
+import type { BlockKind } from '@/components/block/block';
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,

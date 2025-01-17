@@ -1,7 +1,7 @@
 import { memo } from 'react';
 
-import type { BlockKind } from './block';
-import { FileIcon, LoaderIcon, MessageIcon, PencilEditIcon } from './icons';
+import type { BlockKind } from '../block/block';
+import { FileIcon, LoaderIcon, MessageIcon, PencilEditIcon } from '../icons';
 import { toast } from 'sonner';
 import { useBlock } from '@/hooks/use-block';
 

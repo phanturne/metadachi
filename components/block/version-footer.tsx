@@ -8,8 +8,8 @@ import { useWindowSize } from 'usehooks-ts';
 
 import type { Document } from '@/supabase/queries/document';
 import { getDocumentTimestampByIndex } from '@/lib/utils';
-import { LoaderIcon } from './icons';
-import { Button } from './ui/button';
+import { LoaderIcon } from '../icons';
+import { Button } from '../ui/button';
 import { useBlock } from '@/hooks/use-block';
 
 interface VersionFooterProps {
@@ -68,18 +68,18 @@ export const VersionFooter = ({
               {
                 optimisticData: documents
                   ? [
-                      ...documents.filter((document) =>
-                        isAfter(
-                          new Date(document.created_at),
-                          new Date(
-                            getDocumentTimestampByIndex(
-                              documents,
-                              currentVersionIndex,
-                            ),
+                    ...documents.filter((document) =>
+                      isAfter(
+                        new Date(document.created_at),
+                        new Date(
+                          getDocumentTimestampByIndex(
+                            documents,
+                            currentVersionIndex,
                           ),
                         ),
                       ),
-                    ]
+                    ),
+                  ]
                   : [],
               },
             );
