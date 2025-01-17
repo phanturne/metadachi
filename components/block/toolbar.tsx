@@ -34,17 +34,17 @@ import {
   PenIcon,
   StopIcon,
   SummarizeIcon,
-} from './icons';
+} from '../icons';
 import type { BlockKind } from './block';
 
 type ToolProps = {
   type:
-    | 'final-polish'
-    | 'request-suggestions'
-    | 'adjust-reading-level'
-    | 'code-review'
-    | 'add-comments'
-    | 'add-logs';
+  | 'final-polish'
+  | 'request-suggestions'
+  | 'adjust-reading-level'
+  | 'code-review'
+  | 'add-comments'
+  | 'add-logs';
   description: string;
   icon: JSX.Element;
   selectedTool: string | null;
@@ -286,12 +286,12 @@ const toolsByBlockKind: Record<
   BlockKind,
   Array<{
     type:
-      | 'final-polish'
-      | 'request-suggestions'
-      | 'adjust-reading-level'
-      | 'code-review'
-      | 'add-comments'
-      | 'add-logs';
+    | 'final-polish'
+    | 'request-suggestions'
+    | 'adjust-reading-level'
+    | 'code-review'
+    | 'add-comments'
+    | 'add-logs';
     description: string;
     icon: JSX.Element;
   }>
@@ -458,19 +458,19 @@ const PureToolbar = ({
           isToolbarVisible
             ? selectedTool === 'adjust-reading-level'
               ? {
-                  opacity: 1,
-                  y: 0,
-                  height: 6 * 43,
-                  transition: { delay: 0 },
-                  scale: 0.95,
-                }
+                opacity: 1,
+                y: 0,
+                height: 6 * 43,
+                transition: { delay: 0 },
+                scale: 0.95,
+              }
               : {
-                  opacity: 1,
-                  y: 0,
-                  height: toolsByBlockKind[blockKind].length * 50,
-                  transition: { delay: 0 },
-                  scale: 1,
-                }
+                opacity: 1,
+                y: 0,
+                height: toolsByBlockKind[blockKind].length * 50,
+                transition: { delay: 0 },
+                scale: 1,
+              }
             : { opacity: 1, y: 0, height: 54, transition: { delay: 0 } }
         }
         exit={{ opacity: 0, y: -20, transition: { duration: 0.1 } }}

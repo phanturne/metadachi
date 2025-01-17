@@ -1,6 +1,6 @@
 'use client';
 
-import type { UIBlock } from '@/components/block';
+import type { UIBlock } from '@/components/block/block';
 import { useCallback, useMemo } from 'react';
 import useSWR from 'swr';
 

@@ -22,17 +22,17 @@ import type { Suggestion, Vote } from '@/supabase/queries/chat';
 import { cn, fetcher } from '@/lib/utils';
 
 import { DiffView } from './diffview';
-import { DocumentSkeleton } from './document-skeleton';
-import { Editor } from './editor';
-import { MultimodalInput } from './multimodal-input';
+import { DocumentSkeleton } from '../document/document-skeleton';
+import { Editor } from '../editor';
+import { MultimodalInput } from '../chat/multimodal-input';
 import { Toolbar } from './toolbar';
 import { VersionFooter } from './version-footer';
 import { BlockActions } from './block-actions';
 import { BlockCloseButton } from './block-close-button';
 import { BlockMessages } from './block-messages';
-import { CodeEditor } from './code-editor';
+import { CodeEditor } from '../code-editor';
 import { Console } from './console';
-import { useSidebar } from './ui/sidebar';
+import { useSidebar } from '../ui/sidebar';
 import { useBlock } from '@/hooks/use-block';
 import equal from 'fast-deep-equal';
 
@@ -357,56 +357,56 @@ function PureBlock({
             initial={
               isMobile
                 ? {
-                    opacity: 1,
-                    x: block.boundingBox.left,
-                    y: block.boundingBox.top,
-                    height: block.boundingBox.height,
-                    width: block.boundingBox.width,
-                    borderRadius: 50,
-                  }
+                  opacity: 1,
+                  x: block.boundingBox.left,
+                  y: block.boundingBox.top,
+                  height: block.boundingBox.height,
+                  width: block.boundingBox.width,
+                  borderRadius: 50,
+                }
                 : {
-                    opacity: 1,
-                    x: block.boundingBox.left,
-                    y: block.boundingBox.top,
-                    height: block.boundingBox.height,
-                    width: block.boundingBox.width,
-                    borderRadius: 50,
-                  }
+                  opacity: 1,
+                  x: block.boundingBox.left,
+                  y: block.boundingBox.top,
+                  height: block.boundingBox.height,
+                  width: block.boundingBox.width,
+                  borderRadius: 50,
+                }
             }
             animate={
               isMobile
                 ? {
-                    opacity: 1,
-                    x: 0,
-                    y: 0,
-                    height: windowHeight,
-                    width: windowWidth ? windowWidth : 'calc(100dvw)',
-                    borderRadius: 0,
-                    transition: {
-                      delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                      duration: 5000,
-                    },
-                  }
+                  opacity: 1,
+                  x: 0,
+                  y: 0,
+                  height: windowHeight,
+                  width: windowWidth ? windowWidth : 'calc(100dvw)',
+                  borderRadius: 0,
+                  transition: {
+                    delay: 0,
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 30,
+                    duration: 5000,
+                  },
+                }
                 : {
-                    opacity: 1,
-                    x: 400,
-                    y: 0,
-                    height: windowHeight,
-                    width: windowWidth
-                      ? windowWidth - 400
-                      : 'calc(100dvw-400px)',
-                    borderRadius: 0,
-                    transition: {
-                      delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                      duration: 5000,
-                    },
-                  }
+                  opacity: 1,
+                  x: 400,
+                  y: 0,
+                  height: windowHeight,
+                  width: windowWidth
+                    ? windowWidth - 400
+                    : 'calc(100dvw-400px)',
+                  borderRadius: 0,
+                  transition: {
+                    delay: 0,
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 30,
+                    duration: 5000,
+                  },
+                }
             }
             exit={{
               opacity: 0,

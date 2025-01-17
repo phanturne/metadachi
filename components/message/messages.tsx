@@ -1,12 +1,11 @@
-import { PreviewMessage } from './message';
-import { useScrollToBottom } from './use-scroll-to-bottom';
-import type { Vote } from '@/supabase/queries/chat';
 import type { ChatRequestOptions, Message } from 'ai';
+import { PreviewMessage, ThinkingMessage } from './message';
+import { useScrollToBottom } from '../../hooks/use-scroll-to-bottom';
 import { memo } from 'react';
+import type { Vote } from '@/supabase/queries/chat';
 import equal from 'fast-deep-equal';
-import type { UIBlock } from './block';
 
-interface BlockMessagesProps {
+interface MessagesProps {
   chatId: string;
   isLoading: boolean;
   votes: Array<Vote> | undefined;
@@ -18,10 +17,10 @@ interface BlockMessagesProps {
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
-  blockStatus: UIBlock['status'];
+  isBlockVisible: boolean;
 }
 
-function PureBlockMessages({
+function PureMessages({
   chatId,
   isLoading,
   votes,
@@ -29,21 +28,23 @@ function PureBlockMessages({
   setMessages,
   reload,
   isReadonly,
-}: BlockMessagesProps) {
+}: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
   return (
     <div
       ref={messagesContainerRef}
-      className="flex flex-col gap-4 h-full items-center overflow-y-scroll px-4 pt-20"
+      className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
+      {/* {messages.length === 0 && <Overview />} */}
+
       {messages.map((message, index) => (
         <PreviewMessage
-          chatId={chatId}
           key={message.id}
+          chatId={chatId}
           message={message}
-          isLoading={isLoading && index === messages.length - 1}
+          isLoading={isLoading && messages.length - 1 === index}
           vote={
             votes
               ? votes.find((vote) => vote.message_id === message.id)
@@ -55,6 +56,10 @@ function PureBlockMessages({
         />
       ))}
 
+      {isLoading &&
+        messages.length > 0 &&
+        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+
       <div
         ref={messagesEndRef}
         className="shrink-0 min-w-[24px] min-h-[24px]"
@@ -63,15 +68,8 @@ function PureBlockMessages({
   );
 }
 
-function areEqual(
-  prevProps: BlockMessagesProps,
-  nextProps: BlockMessagesProps,
-) {
-  if (
-    prevProps.blockStatus === 'streaming' &&
-    nextProps.blockStatus === 'streaming'
-  )
-    return true;
+export const Messages = memo(PureMessages, (prevProps, nextProps) => {
+  if (prevProps.isBlockVisible && nextProps.isBlockVisible) return true;
 
   if (prevProps.isLoading !== nextProps.isLoading) return false;
   if (prevProps.isLoading && nextProps.isLoading) return false;
@@ -79,6 +77,4 @@ function areEqual(
   if (!equal(prevProps.votes, nextProps.votes)) return false;
 
   return true;
-}
-
-export const BlockMessages = memo(PureBlockMessages, areEqual);
+});

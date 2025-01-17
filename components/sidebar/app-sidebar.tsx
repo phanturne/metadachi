@@ -17,7 +17,7 @@ import {
   Shapes,
 } from 'lucide-react';
 
-import { NavUser } from '@/components/nav-user';
+import { NavUser } from '@/components/user/nav-user';
 import {
   Sidebar,
   SidebarContent,

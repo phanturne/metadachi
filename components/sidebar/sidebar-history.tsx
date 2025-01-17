@@ -45,7 +45,7 @@ import {
 import type { Chat } from '@/supabase/queries/chat';
 import { fetcher } from '@/lib/utils';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
-import type { VisibilityType } from '../visibility-selector';
+import type { VisibilityType } from '../chat/visibility-selector';
 import type { User } from '@supabase/supabase-js';
 
 type GroupedChats = {

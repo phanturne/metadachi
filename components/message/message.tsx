@@ -7,18 +7,18 @@ import { memo, useState } from 'react';
 
 import type { Vote } from '@/supabase/queries/chat';
 
-import { DocumentToolCall, DocumentToolResult } from './document';
-import { PencilEditIcon, SparklesIcon } from './icons';
-import { Markdown } from './markdown';
+import { DocumentToolCall, DocumentToolResult } from '../document/document';
+import { PencilEditIcon, SparklesIcon } from '../icons';
+import { Markdown } from '../markdown';
 import { MessageActions } from './message-actions';
-import { PreviewAttachment } from './preview-attachment';
-import { Weather } from './weather';
+import { PreviewAttachment } from '../preview-attachment';
+import { Weather } from '../weather';
 import equal from 'fast-deep-equal';
 import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { Button } from '../ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { MessageEditor } from './message-editor';
-import { DocumentPreview } from './document-preview';
+import { DocumentPreview } from '../document/document-preview';
 
 const PurePreviewMessage = ({
   chatId,
