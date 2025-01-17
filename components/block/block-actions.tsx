@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
-import { ClockRewind, CopyIcon, PlayIcon, RedoIcon, UndoIcon } from './icons';
-import { Button } from './ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { ClockRewind, CopyIcon, PlayIcon, RedoIcon, UndoIcon } from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCopyToClipboard } from 'usehooks-ts';
 import { toast } from 'sonner';
 import type { ConsoleOutput, UIBlock } from './block';
