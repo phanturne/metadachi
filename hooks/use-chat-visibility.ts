@@ -1,6 +1,6 @@
 'use client';
 
-import { updateChatVisibility } from '@/app/(chat)/actions';
+import { updateChatVisibility } from '@/app/(sidebar)/(chat)/actions';
 import type { VisibilityType } from '@/components/chat/visibility-selector';
 import type { Chat } from '@/supabase/queries/chat';
 import { useMemo } from 'react';

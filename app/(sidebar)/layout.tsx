@@ -1,9 +1,8 @@
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { getUser } from '@/supabase/queries/user';
-import Script from 'next/script';
 
-export default async function Layout({
+export default async function SidebarLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -12,10 +11,6 @@ export default async function Layout({
 
   return (
     <>
-      <Script
-        src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"
-        strategy="beforeInteractive"
-      />
       <SidebarProvider
         style={
           {
