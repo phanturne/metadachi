@@ -33,6 +33,33 @@ export type Database = {
         }
         Relationships: []
       }
+      community: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       document: {
         Row: {
           chat_id: string
@@ -71,6 +98,153 @@ export type Database = {
           },
         ]
       }
+      embedding: {
+        Row: {
+          content: string
+          created_at: string
+          embeddings: Json | null
+          file_id: string | null
+          hash: string | null
+          id: string
+          metadata: Json | null
+          tokens: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embeddings?: Json | null
+          file_id?: string | null
+          hash?: string | null
+          id?: string
+          metadata?: Json | null
+          tokens?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embeddings?: Json | null
+          file_id?: string | null
+          hash?: string | null
+          id?: string
+          metadata?: Json | null
+          tokens?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embedding_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "file"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      file: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_path: string
+          folder_id: string | null
+          hash: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          sharing: string
+          size: number | null
+          tokens: number | null
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_path: string
+          folder_id?: string | null
+          hash?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          sharing?: string
+          size?: number | null
+          tokens?: number | null
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_path?: string
+          folder_id?: string | null
+          hash?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          sharing?: string
+          size?: number | null
+          tokens?: number | null
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folder"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folder: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          sharing: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          sharing?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          sharing?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folder_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "folder"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message: {
         Row: {
           chat_id: string
@@ -102,6 +276,41 @@ export type Database = {
             columns: ["chat_id"]
             isOneToOne: false
             referencedRelation: "chat"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permission: {
+        Row: {
+          community_id: string | null
+          id: string
+          resource_id: string
+          resource_type: string
+          role: string
+          user_id: string | null
+        }
+        Insert: {
+          community_id?: string | null
+          id?: string
+          resource_id: string
+          resource_type: string
+          role?: string
+          user_id?: string | null
+        }
+        Update: {
+          community_id?: string | null
+          id?: string
+          resource_id?: string
+          resource_type?: string
+          role?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permission_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "community"
             referencedColumns: ["id"]
           },
         ]
@@ -183,6 +392,29 @@ export type Database = {
           },
         ]
       }
+      user_community: {
+        Row: {
+          community_id: string
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_community_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "community"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vote: {
         Row: {
           chat_id: string
@@ -227,7 +459,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_permission: {
+        Args: {
+          resource_type: string
+          resource_id: string
+          user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
