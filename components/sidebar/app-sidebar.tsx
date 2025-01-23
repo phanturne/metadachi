@@ -3,14 +3,13 @@
 import * as React from 'react';
 import {
   Bot,
-  FileText,
-  Folder,
   HeartIcon,
   Home,
   Library,
   LifeBuoy,
   LucideTrash2,
   MessageCircleMore,
+  PencilRuler,
   PlusIcon,
   Search,
   Send,
@@ -85,16 +84,6 @@ const data = {
       disabled: true,
     },
     {
-      title: 'Documents',
-      icon: FileText,
-      disabled: true,
-    },
-    {
-      title: 'Folders',
-      icon: Folder,
-      disabled: true,
-    },
-    {
       title: 'Libraries',
       icon: Library,
       disabled: true,
@@ -102,6 +91,11 @@ const data = {
     {
       title: 'Assistants',
       icon: Bot,
+      disabled: true,
+    },
+    {
+      title: 'Tools',
+      icon: PencilRuler,
       disabled: true,
     },
   ],
