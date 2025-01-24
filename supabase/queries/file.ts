@@ -2,53 +2,26 @@ import { createClient } from '@/utils/supabase/server';
 import type { Database } from '../types';
 
 export type File = Database['public']['Tables']['file']['Row'];
-
-export async function saveFile({
-  id,
-  name,
-  description,
-  filePath,
-  userId,
-  folderId,
-  size,
-  tokens,
-  hash,
-  type,
-  metadata,
-}: {
-  id: string;
-  name: string;
-  description: string;
-  filePath: string;
-  userId: string;
-  folderId?: string;
-  size: number;
+export type FileInsert = Database['public']['Tables']['file']['Insert'];
+export interface FileChunk {
+  content: string;
   tokens: number;
-  hash: string;
-  type: string;
-  metadata: any;
-}) {
+}
+
+export async function saveFile(fileData: FileInsert) {
   const supabase = await createClient();
-  const { data, error } = await supabase.from('file').insert({
-    id,
-    name,
-    description,
-    file_path: filePath,
-    user_id: userId,
-    folder_id: folderId,
-    size,
-    tokens,
-    hash,
-    type,
-    metadata,
-  });
+  const { data, error } = await supabase
+    .from('file')
+    .insert(fileData)
+    .select('*')
+    .single();
 
   if (error) {
     console.error('Failed to save file in database', error);
-    throw error;
+    return { data: null, error };
   }
 
-  return data;
+  return { data, error };
 }
 
 export async function getFilesByUserId({ userId }: { userId: string }) {

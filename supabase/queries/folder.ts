@@ -2,35 +2,22 @@ import { createClient } from '@/utils/supabase/server';
 import type { Database } from '../types';
 
 export type Folder = Database['public']['Tables']['folder']['Row'];
+export type FolderInsert = Database['public']['Tables']['folder']['Insert'];
 
-export async function saveFolder({
-  id,
-  name,
-  description,
-  userId,
-  parentId,
-}: {
-  id: string;
-  name: string;
-  description: string;
-  userId: string;
-  parentId?: string;
-}) {
+export async function saveFolder(folderData: FolderInsert) {
   const supabase = await createClient();
-  const { data, error } = await supabase.from('folder').insert({
-    id,
-    name,
-    description,
-    user_id: userId,
-    parent_id: parentId,
-  });
+  const { data, error } = await supabase
+    .from('folder')
+    .insert(folderData)
+    .select('*')
+    .single();
 
   if (error) {
     console.error('Failed to save folder in database', error);
-    throw error;
+    return { data: null, error };
   }
 
-  return data;
+  return { data, error };
 }
 
 export async function getFoldersByUserId({ userId }: { userId: string }) {
