@@ -33,8 +33,8 @@ import {
 } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 
-import { generateTitleFromUserMessage } from '../../actions';
 import type { TablesInsert } from '@/supabase/types';
+import { generateTitleFromUserMessage } from '@/app/(sidebar)/(chat)/actions';
 
 export const maxDuration = 60;
 

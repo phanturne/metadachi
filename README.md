@@ -80,3 +80,4 @@ Once it's up and running, you’ll be able to use your hosted instance of Metada
 ## Acknowledgments
 Kudos to the creators of the following repositories for their valuable contributions to the open-source community:
 - [AI Chatbot Template](https://github.com/vercel/ai-chatbot): A full-featured, hackable Next.js AI chatbot built by Vercel
+- [Chatbot UI](https://github.com/mckaywrigley/chatbot-ui): The open-source AI chat app for everyone.
