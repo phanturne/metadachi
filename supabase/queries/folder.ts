@@ -61,3 +61,41 @@ export async function deleteFolderById({ id }: { id: string }) {
     throw error;
   }
 }
+
+export async function getFoldersAndFilesByUserId({
+  userId,
+}: { userId: string }) {
+  const supabase = await createClient();
+
+  const { data: folders, error: foldersError } = await supabase
+    .from('folder')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true });
+
+  if (foldersError) {
+    console.error(
+      'Failed to get folders by user id from database',
+      foldersError,
+    );
+    throw foldersError;
+  }
+
+  const { data: files, error: filesError } = await supabase
+    .from('file')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true });
+
+  if (filesError) {
+    console.error('Failed to get files by user id from database', filesError);
+    throw filesError;
+  }
+
+  const structuredData = folders.map((folder) => ({
+    ...folder,
+    files: files.filter((file) => file.folder_id === folder.id),
+  }));
+
+  return structuredData;
+}

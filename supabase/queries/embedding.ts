@@ -2,40 +2,18 @@ import { createClient } from '@/utils/supabase/server';
 import type { Database } from '../types';
 
 export type Embedding = Database['public']['Tables']['embedding']['Row'];
+export type EmbeddingInsert = Database['public']['Tables']['embedding']['Insert'];
 
-export async function saveEmbedding({
-  id,
-  userId,
-  fileId,
-  content,
+export async function upsertEmbeddings({
   embeddings,
-  tokens,
-  hash,
-  metadata,
 }: {
-  id: string;
-  userId: string;
-  fileId: string;
-  content: string;
-  embeddings: any;
-  tokens: number;
-  hash: string;
-  metadata: any;
+  embeddings: EmbeddingInsert[];
 }) {
   const supabase = await createClient();
-  const { data, error } = await supabase.from('embedding').insert({
-    id,
-    user_id: userId,
-    file_id: fileId,
-    content,
-    embeddings,
-    tokens,
-    hash,
-    metadata,
-  });
+  const { data, error } = await supabase.from('embedding').upsert(embeddings);
 
   if (error) {
-    console.error('Failed to save embedding in database', error);
+    console.error('Failed to upsert embeddings in database', error);
     throw error;
   }
 
@@ -82,4 +60,31 @@ export async function deleteEmbeddingById({ id }: { id: string }) {
     console.error('Failed to delete embedding by id from database', error);
     throw error;
   }
+}
+
+export async function matchEmbeddings({
+  queryEmbedding,
+  matchCount,
+  fileIds,
+  folderIds,
+}: {
+  queryEmbedding: any;
+  matchCount?: number;
+  fileIds?: string[];
+  folderIds?: string[];
+}) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('match_file_items', {
+    query_embedding: queryEmbedding,
+    match_count: matchCount,
+    file_ids: fileIds,
+    folder_ids: folderIds,
+  });
+
+  if (error) {
+    console.error('Failed to match embeddings in database', error);
+    throw error;
+  }
+
+  return data;
 }
