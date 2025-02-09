@@ -55,7 +55,7 @@ export const updateSession = async (request: NextRequest) => {
       request.nextUrl.pathname.startsWith(page),
     );
 
-    if (user && isAuthPage) {
+    if (user.data.user && isAuthPage) {
       return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
     }
 
