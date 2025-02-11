@@ -154,7 +154,10 @@ const PurePreviewMessage = ({
                             isReadonly={isReadonly}
                           />
                         ) : (
-                          <pre>{JSON.stringify(result, null, 2)}</pre>
+                          <p>&quot;{toolName}&quot; tool was called</p>
+                          // <pre className="overflow-x-auto">
+                          //   {JSON.stringify(result, null, 2)}
+                          // </pre>
                         )}
                       </div>
                     );

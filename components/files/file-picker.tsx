@@ -7,7 +7,11 @@ import { Button } from '../ui/button';
 
 const FilePicker = ({
   onFileSelect,
-}: { onFileSelect: (files: string[]) => void }) => {
+  show,
+}: {
+  onFileSelect: (files: string[]) => void;
+  show: boolean;
+}) => {
   const [files, setFiles] = useState<FileRow[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const { session } = useSession();
@@ -43,6 +47,8 @@ const FilePicker = ({
   useEffect(() => {
     onFileSelect(selectedFiles);
   }, [selectedFiles, onFileSelect]);
+
+  if (!show) return null;
 
   return (
     <div className="p-4 bg-gray-100 border-b border-gray-300">

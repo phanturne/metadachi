@@ -11,16 +11,9 @@ export default async function SidebarLayout({
 
   return (
     <>
-      <SidebarProvider
-        style={
-          {
-            '--sidebar-width': '350px',
-          } as React.CSSProperties
-        }
-        defaultOpen={false}
-      >
+      <SidebarProvider>
         <AppSidebar user={user} />
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset className="rounded-lg">{children}</SidebarInset>
       </SidebarProvider>
     </>
   );
