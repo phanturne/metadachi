@@ -1,4 +1,3 @@
-
 import { getUser } from '@/supabase/queries/user';
 import {
   type Message,
@@ -35,6 +34,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import type { TablesInsert } from '@/supabase/types';
 import { generateTitleFromUserMessage } from '@/app/(sidebar)/(chat)/actions';
+import { handleRetrieval } from '@/supabase/queries/embedding';
 
 export const maxDuration = 60;
 
@@ -42,7 +42,8 @@ type AllowedTools =
   | 'createDocument'
   | 'updateDocument'
   | 'requestSuggestions'
-  | 'getWeather';
+  | 'getWeather'
+  | 'getInformation';
 
 const blocksTools: AllowedTools[] = [
   'createDocument',
@@ -52,15 +53,27 @@ const blocksTools: AllowedTools[] = [
 
 const weatherTools: AllowedTools[] = ['getWeather'];
 
-const allTools: AllowedTools[] = [...blocksTools, ...weatherTools];
+const allTools: AllowedTools[] = [
+  ...blocksTools,
+  ...weatherTools,
+  'getInformation',
+];
 
 export async function POST(request: Request) {
   const {
     id,
     messages,
     modelId,
-  }: { id: string; messages: Array<Message>; modelId: string } =
-    await request.json();
+    fileIds,
+  }: {
+    id: string;
+    messages: Array<Message>;
+    modelId: string;
+    fileIds?: string[];
+  } = await request.json();
+
+  const hasFiles = !!fileIds?.length;
+  console.log('fileIds', fileIds);
 
   const { user: sessionUser } = await getUser();
 
@@ -419,6 +432,17 @@ export async function POST(request: Request) {
               };
             },
           },
+          getInformation: {
+            description:
+              'Get information from your knowledge base to answer questions.',
+            parameters: z.object({
+              query: z.string().describe('The user query'),
+            }),
+            execute: async ({ query }) => {
+              const results = await handleRetrieval(query, 5, fileIds);
+              return results;
+            },
+          },
         },
         onFinish: async ({ response }) => {
           if (sessionUser.id) {
@@ -456,6 +480,9 @@ export async function POST(request: Request) {
           isEnabled: true,
           functionId: 'stream-text',
         },
+        // toolChoice: hasFiles
+        //   ? { type: 'tool', toolName: 'getInformation' }
+        //   : 'auto',
       });
 
       result.mergeIntoDataStream(dataStream);

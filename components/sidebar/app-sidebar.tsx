@@ -127,7 +127,7 @@ export function AppSidebar({ user }: { user: GetUserReturn }) {
   );
 
   const { setOpen } = useSidebar();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
 
   // TODO: This method causes a slight delay when toggling the sidebar
   const shouldOpen = pagesWithDoubleSidebar.includes(pathname);
@@ -167,7 +167,7 @@ const FirstSidebarMenuItem = ({
 }) => {
   const { setOpen } = useSidebar();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
 
   const handleNavClick = (item: AppSidebarMenuItemType) => {
     // if (pagesWithDoubleSidebar.includes(item.url ?? '')) {
@@ -301,7 +301,7 @@ const pageTitles: { [key: string]: string } = {
 };
 
 function SecondSidebar({ user }: { user: GetUserReturn }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
 

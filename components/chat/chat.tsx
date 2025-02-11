@@ -14,6 +14,7 @@ import { MultimodalInput } from './multimodal-input';
 import { Messages } from '../message/messages';
 import type { VisibilityType } from './visibility-selector';
 import { useBlockSelector } from '@/hooks/use-block';
+import FilePicker from '../files/file-picker';
 
 export function Chat({
   id,
@@ -33,7 +34,7 @@ export function Chat({
   const {
     messages,
     setMessages,
-    handleSubmit,
+    handleSubmit: originalHandleSubmit,
     input,
     setInput,
     append,
@@ -56,7 +57,22 @@ export function Chat({
   );
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const isBlockVisible = useBlockSelector((state) => state.isVisible);
+
+  const handleFileSelect = (files: string[]) => {
+    setSelectedFiles(files);
+  };
+
+  const handleSubmit = () => {
+    event?.preventDefault(); // TODO: remove after we life state of selected files up
+    originalHandleSubmit(undefined, {
+      experimental_attachments: attachments,
+      body: {
+        fileIds: selectedFiles,
+      },
+    });
+  };
 
   return (
     <>
@@ -79,21 +95,27 @@ export function Chat({
           isBlockVisible={isBlockVisible}
         />
 
-        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+        <form
+          className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
+          onSubmit={handleSubmit}
+        >
           {!isReadonly && (
-            <MultimodalInput
-              chatId={id}
-              input={input}
-              setInput={setInput}
-              handleSubmit={handleSubmit}
-              isLoading={isLoading}
-              stop={stop}
-              attachments={attachments}
-              setAttachments={setAttachments}
-              messages={messages}
-              setMessages={setMessages}
-              append={append}
-            />
+            <>
+              <MultimodalInput
+                chatId={id}
+                input={input}
+                setInput={setInput}
+                handleSubmit={handleSubmit}
+                isLoading={isLoading}
+                stop={stop}
+                attachments={attachments}
+                setAttachments={setAttachments}
+                messages={messages}
+                setMessages={setMessages}
+                append={append}
+              />
+              <FilePicker onFileSelect={handleFileSelect} />
+            </>
           )}
         </form>
       </div>

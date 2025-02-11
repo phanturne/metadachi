@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { createFileAndEmbed, type FileRow } from '@/supabase/queries/file';
+import type { FileRow } from '@/supabase/queries/file';
+import { createFileAndEmbed } from '@/supabase/queries/embedding';
 
 interface FileLibraryProps {
   initialFiles: FileRow[];

@@ -32,7 +32,12 @@ Do not update document right after creating it. Wait for user feedback or reques
 export const regularPrompt =
   'You are a friendly assistant! Keep your responses concise and helpful.';
 
-export const systemPrompt = `${regularPrompt}\n\n${blocksPrompt}`;
+export const ragPrompt = `Use getInformation from your knowledge base before answering any questions if any files are provided. If a response requires multiple tools, call one tool after another without responding to the user.
+    If a response requires information from an additional tool to generate a response, call the appropriate tools in order before responding to the user.
+    ONLY respond to questions using information from tool calls.`;
+
+export const systemPrompt = `${regularPrompt}\n\n${ragPrompt}`;
+// export const systemPrompt = `${regularPrompt}\n\n${blocksPrompt}`;
 
 export const codePrompt = `
 You are a Python code generator that creates self-contained, executable code snippets. When writing code:

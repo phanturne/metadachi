@@ -38,46 +38,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Update match_file_items function to combine file_ids with folder_ids and ensure distinct file_ids
-CREATE OR REPLACE FUNCTION match_file_items (
-  query_embedding VECTOR(1536),
-  match_count INT DEFAULT NULL,
-  file_ids UUID[] DEFAULT NULL,
-  folder_ids UUID[] DEFAULT NULL
-) RETURNS TABLE (
+-- Update match_embeddings function to combine file_ids with folder_ids and ensure distinct file_ids
+CREATE OR REPLACE FUNCTION match_embeddings (
+  query_embedding vector(1536),
+  match_count int DEFAULT null,
+  file_ids UUID[] DEFAULT null
+) returns table (
   id UUID,
   file_id UUID,
   content TEXT,
   tokens INT,
-  similarity FLOAT
+  similarity float
 )
-LANGUAGE plpgsql
-AS $$
+language plpgsql
+as $$
 #variable_conflict use_column
-DECLARE
-  combined_file_ids UUID[];
-BEGIN
-  IF folder_ids IS NOT NULL THEN
-    combined_file_ids := get_all_file_ids_from_folders(folder_ids);
-    IF file_ids IS NOT NULL THEN
-      combined_file_ids := ARRAY(SELECT DISTINCT UNNEST(array_cat(combined_file_ids, file_ids)));
-    END IF;
-  ELSE
-    combined_file_ids := file_ids;
-  END IF;
-
-  RETURN QUERY
-  SELECT
+begin
+  return query
+  select
     id,
     file_id,
     content,
     tokens,
-    1 - (file_items.openai_embedding <=> query_embedding) AS similarity
-  FROM file_items
-  WHERE (file_id = ANY(combined_file_ids))
-  ORDER BY file_items.openai_embedding <=> query_embedding
-  LIMIT match_count;
-END;
+    1 - (embedding.embedding <=> query_embedding) as similarity
+  from embedding
+  where (file_id = ANY(file_ids))
+  order by embedding.embedding <=> query_embedding
+  limit match_count;
+end;
 $$;
 
 -- Create storage bucket for files
@@ -89,16 +77,21 @@ CREATE POLICY select_files_policy ON storage.objects
 FOR SELECT
 USING (
     bucket_id = 'files' AND (
-        EXISTS (
+        NOT EXISTS (
             SELECT 1 FROM file
             WHERE file.file_path = storage.objects.name
-            AND (
-                file.sharing = 'public' OR
-                (file.sharing = 'private' AND file.user_id = auth.uid()) OR
-                (file.sharing = 'custom' AND (
-                    file.user_id = auth.uid() OR
-                    has_permission('file', file.id, auth.uid())
-                ))
+        ) OR (
+            EXISTS (
+                SELECT 1 FROM file
+                WHERE file.file_path = storage.objects.name
+                AND (
+                    file.sharing = 'public' OR
+                    (file.sharing = 'private' AND file.user_id = auth.uid()) OR
+                    (file.sharing = 'custom' AND (
+                        file.user_id = auth.uid() OR
+                        has_permission('file', file.id, auth.uid())
+                    ))
+                )
             )
         )
     )

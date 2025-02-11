@@ -584,12 +584,11 @@ export type Database = {
             }
             Returns: unknown
           }
-      match_file_items: {
+      match_embeddings: {
         Args: {
           query_embedding: string
           match_count?: number
           file_ids?: string[]
-          folder_ids?: string[]
         }
         Returns: {
           id: string

@@ -1,5 +1,6 @@
 // Adapted from https://github.com/mckaywrigley/chatbot-ui/blob/main/db/storage/files.ts
 
+'use server';
 import { DEFAULT_FILE_SIZE_LIMIT } from '@/utils/constants';
 import { createClient } from '@/utils/supabase/server';
 import { toast } from 'sonner';
@@ -22,15 +23,15 @@ export const uploadFile = async (
     );
   }
 
-  const filePath = `${payload.user_id}/${Buffer.from(payload.file_id).toString('base64')}`;
+  const filePath = `${payload.user_id}/${payload.file_id}`;
 
   try {
     const supabase = await createClient();
 
-    const { error } = await supabase.storage
+    const { data, error } = await supabase.storage
       .from('files')
       .upload(filePath, file, {
-        upsert: false, // TODO: Fails when upsert is true
+        upsert: true,
       });
 
     if (error) {
@@ -62,9 +63,12 @@ export const getFileFromStorage = async (filePath: string) => {
     .createSignedUrl(filePath, 60 * 60 * 24); // 24hrs
 
   if (error) {
-    console.error(`Error uploading file with path: ${filePath}`, error);
-    throw new Error('Error downloading file');
+    console.error(
+      `Error creating signed URL for file with path: ${filePath}`,
+      error,
+    );
+    throw new Error('Error creating signed URL for file');
   }
-
+  
   return data.signedUrl;
 };
