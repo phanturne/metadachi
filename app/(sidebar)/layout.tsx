@@ -10,11 +10,13 @@ export default async function SidebarLayout({
   const user = await getUser();
 
   return (
-    <>
+    <div className="h-full overflow-hidden">
       <SidebarProvider>
         <AppSidebar user={user} />
-        <SidebarInset className="rounded-lg">{children}</SidebarInset>
+        <SidebarInset className="h-[calc(100svh-16px)] rounded-lg">
+          {children}
+        </SidebarInset>
       </SidebarProvider>
-    </>
+    </div>
   );
 }

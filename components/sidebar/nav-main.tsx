@@ -37,7 +37,7 @@ const data = {
     },
     {
       title: 'Explore',
-      url: '#',
+      url: ROUTES.EXPLORE,
       icon: Shapes,
     },
   ],
