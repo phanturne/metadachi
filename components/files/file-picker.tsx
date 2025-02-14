@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { type FileRow, getFilesByUserId } from '@/supabase/queries/file';
-import { useSession } from '@/hooks/use-session';
+import type { FileRow } from '@/supabase/queries/file';
 import { Button } from '../ui/button';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const FilePicker = ({
   onFileSelect,
@@ -12,29 +14,18 @@ const FilePicker = ({
   onFileSelect: (files: string[]) => void;
   show: boolean;
 }) => {
-  const [files, setFiles] = useState<FileRow[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
-  const { session } = useSession();
-
-  useEffect(() => {
-    const fetchFiles = async () => {
-      if (!session?.user?.id) {
-        console.error('User not logged in');
-        return;
-      }
-
-      try {
-        const data = await getFilesByUserId({ userId: session.user.id });
-        setFiles(data);
-      } catch (error) {
-        console.error('Error fetching files:', error);
-      }
-    };
-
-    fetchFiles();
-  }, [session]);
+  const {
+    data: files,
+    error,
+    isLoading,
+  } = useSWR<FileRow[]>('/api/files', fetcher);
 
   const handleFileSelect = (file: FileRow) => {
+    // Add event prevention
+    event?.preventDefault();
+    event?.stopPropagation();
+
     setSelectedFiles((prevSelectedFiles) => {
       if (prevSelectedFiles.includes(file.id)) {
         return prevSelectedFiles.filter((id) => id !== file.id);
@@ -49,6 +40,9 @@ const FilePicker = ({
   }, [selectedFiles, onFileSelect]);
 
   if (!show) return null;
+  if (isLoading) return <div className="p-4">Loading files...</div>;
+  if (error) return <div className="p-4">Error loading files</div>;
+  if (!files?.length) return <div className="p-4">No files found</div>;
 
   return (
     <div className="p-4 bg-gray-100 border-b border-gray-300">
@@ -56,8 +50,10 @@ const FilePicker = ({
         {files.map((file) => (
           <Button
             key={file.id}
-            className={`p-2 border rounded cursor-pointer hover:bg-gray-200 ${selectedFiles.includes(file.id) ? 'bg-blue-200' : ''}`}
-            onClick={() => handleFileSelect(file)}
+            className={`p-2 border rounded cursor-pointer hover:bg-gray-200 ${
+              selectedFiles.includes(file.id) ? 'bg-blue-200' : ''
+            }`}
+            onClick={(event) => handleFileSelect(file)}
           >
             {file.name}
           </Button>
