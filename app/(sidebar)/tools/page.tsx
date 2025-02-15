@@ -1,3 +1,5 @@
+import ComingSoon from '@/components/coming-soon';
+
 export default function ToolsPage() {
-  return <div className="p-4">Tools</div>;
+  return <ComingSoon />;
 }
