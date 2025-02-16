@@ -2,19 +2,20 @@
 
 import type { Attachment, Message } from 'ai';
 import { useChat } from 'ai/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 
 import { ChatHeader } from '@/components/chat/chat-header';
-import type { Vote } from '@/supabase/queries/chat';
 import { fetcher } from '@/lib/utils';
+import type { Vote } from '@/supabase/queries/chat';
 
-import { Block } from '../block/block';
-import { MultimodalInput } from './multimodal-input';
-import { Messages } from '../message/messages';
-import type { VisibilityType } from './visibility-selector';
 import { useBlockSelector } from '@/hooks/use-block';
+import { useScroll } from '@/hooks/use-scroll-top';
+import { Block } from '../block/block';
 import FilePicker from '../files/file-picker';
+import { Messages } from '../message/messages';
+import { MultimodalInput } from './multimodal-input';
+import type { VisibilityType } from './visibility-selector';
 
 export function Chat({
   id,
@@ -59,6 +60,8 @@ export function Chat({
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const isBlockVisible = useBlockSelector((state) => state.isVisible);
+  const messagesRef = useRef<HTMLDivElement>(null);
+  const isScrolled = useScroll(messagesRef);
 
   const handleFileSelect = (files: string[]) => {
     setSelectedFiles(files);
@@ -76,27 +79,30 @@ export function Chat({
 
   return (
     <>
-      <div className="flex flex-col min-w-0 h-full">
+      <div className="flex h-full min-w-0 flex-col">
         <ChatHeader
           chatId={id}
           selectedModelId={selectedModelId}
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
+          isScrolled={isScrolled}
         />
 
-        <Messages
-          chatId={id}
-          isLoading={isLoading}
-          votes={votes}
-          messages={messages}
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-          isBlockVisible={isBlockVisible}
-        />
+        <div ref={messagesRef} className="flex-1 overflow-auto">
+          <Messages
+            chatId={id}
+            isLoading={isLoading}
+            votes={votes}
+            messages={messages}
+            setMessages={setMessages}
+            reload={reload}
+            isReadonly={isReadonly}
+            isBlockVisible={isBlockVisible}
+          />
+        </div>
 
         <form
-          className="flex flex-col mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl"
+          className="mx-auto flex w-full flex-col gap-2 bg-background px-4 pb-4 md:max-w-3xl md:pb-6"
           onSubmit={handleSubmit}
         >
           {!isReadonly && (

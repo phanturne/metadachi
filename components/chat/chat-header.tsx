@@ -1,13 +1,15 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { memo } from 'react';
 import { useWindowSize } from 'usehooks-ts';
 
 import { ModelSelector } from '@/components/chat/model-selector';
 import { Button } from '@/components/ui/button';
+import { ROUTES } from '@/utils/constants';
+import { AppHeader } from '../app-header';
 import { PlusIcon } from '../icons';
-import { SidebarTrigger, useSidebar } from '../ui/sidebar';
-import { memo } from 'react';
+import { useSidebar } from '../ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { type VisibilityType, VisibilitySelector } from './visibility-selector';
 
@@ -16,31 +18,28 @@ function PureChatHeader({
   selectedModelId,
   selectedVisibilityType,
   isReadonly,
+  isScrolled,
 }: {
   chatId: string;
   selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
+  isScrolled: boolean;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
-
   const { width: windowWidth } = useWindowSize();
 
   return (
-    <header className="flex sticky h-16 shrink-0 items-center gap-2">
-      <div className="flex items-center gap-2 px-4">
-        <SidebarTrigger className="-ml-1" />
-      </div>
-
+    <AppHeader isScrolled={isScrolled}>
       {(!open || windowWidth < 768) && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="outline"
-              className="order-2 md:order-1 md:px-2 px-2 md:h-fit ml-auto md:ml-0"
+              className="order-2 ml-auto px-2 md:order-1 md:ml-0 md:h-fit md:px-2"
               onClick={() => {
-                router.push('/');
+                router.push(ROUTES.HOME);
                 router.refresh();
               }}
             >
@@ -66,10 +65,13 @@ function PureChatHeader({
           className="order-1 md:order-3"
         />
       )}
-    </header>
+    </AppHeader>
   );
 }
 
 export const ChatHeader = memo(PureChatHeader, (prevProps, nextProps) => {
-  return prevProps.selectedModelId === nextProps.selectedModelId;
+  return (
+    prevProps.selectedModelId === nextProps.selectedModelId &&
+    prevProps.isScrolled === nextProps.isScrolled
+  );
 });

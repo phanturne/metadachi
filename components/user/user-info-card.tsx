@@ -16,7 +16,7 @@ export function UserInfoCard({ avatar, name, email }: UserInfoCardProps) {
 
   return (
     <>
-      <Avatar className="size-8 rounded-lg">
+      <Avatar className="h-8 w-8 rounded-lg">
         <AvatarImage src={avatar || ''} alt={name} />
         <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
       </Avatar>
