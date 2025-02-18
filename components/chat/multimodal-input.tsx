@@ -23,12 +23,15 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { sanitizeUIMessages } from '@/lib/utils';
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from '../icons';
+import { ArrowUpIcon, StopIcon } from '../icons';
 import { PreviewAttachment } from '../preview-attachment';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
+import { Paperclip, Plus } from 'lucide-react';
+import FilePicker from '../files/file-picker';
+import { useChatStore } from '@/store/chatStore';
 
 function PureMultimodalInput({
   chatId,
@@ -41,7 +44,7 @@ function PureMultimodalInput({
   messages,
   setMessages,
   append,
-  handleSubmit,
+  handleSubmit: originalHandleSubmit,
   className,
 }: {
   chatId: string;
@@ -67,6 +70,8 @@ function PureMultimodalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+  const { selectedFiles } = useChatStore();
+  const [isFilePickerOpen, setIsFilePickerOpen] = useState(false);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -113,7 +118,12 @@ function PureMultimodalInput({
   const submitForm = useCallback(() => {
     window.history.replaceState({}, '', `/chat/${chatId}`);
 
-    handleSubmit();
+    originalHandleSubmit(undefined, {
+      experimental_attachments: attachments,
+      body: {
+        fileIds: selectedFiles,
+      },
+    });
 
     setAttachments([]);
     setLocalStorageInput('');
@@ -121,7 +131,15 @@ function PureMultimodalInput({
     if (width && width > 768) {
       textareaRef.current?.focus();
     }
-  }, [handleSubmit, setAttachments, setLocalStorageInput, width, chatId]);
+  }, [
+    originalHandleSubmit,
+    attachments,
+    selectedFiles,
+    setAttachments,
+    setLocalStorageInput,
+    width,
+    chatId,
+  ]);
 
   const uploadFile = async (file: File) => {
     const formData = new FormData();
@@ -175,6 +193,10 @@ function PureMultimodalInput({
     },
     [setAttachments],
   );
+
+  const handleReferencesClick = () => {
+    setIsFilePickerOpen(true);
+  };
 
   return (
     <div className="relative w-full flex flex-col gap-4">
@@ -237,8 +259,12 @@ function PureMultimodalInput({
         }}
       />
 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start gap-2">
         <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
+        <ReferencesButton
+          onClick={handleReferencesClick}
+          selectedCount={selectedFiles.length}
+        />
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
@@ -252,6 +278,11 @@ function PureMultimodalInput({
           />
         )}
       </div>
+
+      <FilePicker
+        show={isFilePickerOpen}
+        onClose={() => setIsFilePickerOpen(false)}
+      />
     </div>
   );
 }
@@ -276,15 +307,17 @@ function PureAttachmentsButton({
 }) {
   return (
     <Button
-      className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+      size="icon"
+      variant="outline"
+      className="rounded-full hover:dark:bg-zinc-900 hover:bg-zinc-200 size-8"
       onClick={(event) => {
         event.preventDefault();
         fileInputRef.current?.click();
       }}
       disabled={isLoading}
-      variant="ghost"
+      aria-label="Upload attachment"
     >
-      <PaperclipIcon size={14} />
+      <Plus />
     </Button>
   );
 }
@@ -343,3 +376,29 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.input !== nextProps.input) return false;
   return true;
 });
+
+function PureReferencesButton({
+  onClick,
+  selectedCount,
+}: {
+  onClick: () => void;
+  selectedCount: number;
+}) {
+  return (
+    <Button
+      variant="outline"
+      className={`rounded-full py-1.5 h-fit hover:dark:bg-zinc-900 hover:bg-zinc-200 ${
+        selectedCount > 0 ? 'bg-blue-200 dark:bg-blue-900' : ''
+      }`}
+      onClick={(event) => {
+        event.preventDefault();
+        onClick();
+      }}
+    >
+      <Paperclip size={14} />
+      {selectedCount > 0 ? `${selectedCount} selected` : 'References'}
+    </Button>
+  );
+}
+
+const ReferencesButton = memo(PureReferencesButton);

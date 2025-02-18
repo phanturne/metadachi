@@ -12,7 +12,6 @@ import type { Vote } from '@/supabase/queries/chat';
 import { useBlockSelector } from '@/hooks/use-block';
 import { useScroll } from '@/hooks/use-scroll-top';
 import { Block } from '../block/block';
-import FilePicker from '../files/file-picker';
 import { Messages } from '../message/messages';
 import { MultimodalInput } from './multimodal-input';
 import type { VisibilityType } from './visibility-selector';
@@ -65,24 +64,9 @@ export function Chat({
   );
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const isBlockVisible = useBlockSelector((state) => state.isVisible);
   const messagesRef = useRef<HTMLDivElement>(null);
   const isScrolled = useScroll(messagesRef);
-
-  const handleFileSelect = (files: string[]) => {
-    setSelectedFiles(files);
-  };
-
-  const handleSubmit = () => {
-    event?.preventDefault(); // TODO: remove after we life state of selected files up
-    originalHandleSubmit(undefined, {
-      experimental_attachments: attachments,
-      body: {
-        fileIds: selectedFiles,
-      },
-    });
-  };
 
   return (
     <>
@@ -110,28 +94,27 @@ export function Chat({
 
         <form
           className="mx-auto flex w-full flex-col gap-2 bg-background px-4 pb-4 md:max-w-3xl md:pb-6"
-          onSubmit={handleSubmit}
+          onSubmit={(event) => {
+            event.preventDefault();
+            originalHandleSubmit(undefined, {
+              experimental_attachments: attachments,
+            });
+          }}
         >
           {!isReadonly && (
-            <>
-              <FilePicker
-                onFileSelect={handleFileSelect}
-                show={input.includes('#')}
-              />
-              <MultimodalInput
-                chatId={id}
-                input={input}
-                setInput={setInput}
-                handleSubmit={handleSubmit}
-                isLoading={isLoading}
-                stop={stop}
-                attachments={attachments}
-                setAttachments={setAttachments}
-                messages={messages}
-                setMessages={setMessages}
-                append={append}
-              />
-            </>
+            <MultimodalInput
+              chatId={id}
+              input={input}
+              setInput={setInput}
+              handleSubmit={originalHandleSubmit}
+              isLoading={isLoading}
+              stop={stop}
+              attachments={attachments}
+              setAttachments={setAttachments}
+              messages={messages}
+              setMessages={setMessages}
+              append={append}
+            />
           )}
         </form>
       </div>
@@ -140,7 +123,7 @@ export function Chat({
         chatId={id}
         input={input}
         setInput={setInput}
-        handleSubmit={handleSubmit}
+        handleSubmit={originalHandleSubmit}
         isLoading={isLoading}
         stop={stop}
         attachments={attachments}
