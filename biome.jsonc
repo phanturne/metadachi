@@ -84,8 +84,8 @@
         "noDocumentImportInPage": "warn",
         "noDuplicateElseIf": "warn",
         "noIrregularWhitespace": "warn",
-        "useValidAutocomplete": "warn",
-        "useSortedClasses": "warn"
+        "useValidAutocomplete": "warn"
+        // "useSortedClasses": "warn"
       }
     }
   },

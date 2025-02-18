@@ -7,18 +7,60 @@ import { memo, useState } from 'react';
 
 import type { Vote } from '@/supabase/queries/chat';
 
+import { cn } from '@/lib/utils';
+import equal from 'fast-deep-equal';
+import { File } from 'lucide-react';
 import { DocumentToolCall, DocumentToolResult } from '../document/document';
+import { DocumentPreview } from '../document/document-preview';
 import { PencilEditIcon, SparklesIcon } from '../icons';
 import { Markdown } from '../markdown';
-import { MessageActions } from './message-actions';
 import { PreviewAttachment } from '../preview-attachment';
-import { Weather } from '../weather';
-import equal from 'fast-deep-equal';
-import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { ScrollArea } from '../ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Weather } from '../weather';
+import { MessageActions } from './message-actions';
 import { MessageEditor } from './message-editor';
-import { DocumentPreview } from '../document/document-preview';
+
+const SourceButton = ({
+  source,
+}: {
+  source: { title: string; content: string };
+}) => {
+  const [open, setOpen] = useState(false);
+
+  // Get first line or first few words as fallback title
+  const displayTitle =
+    source.title || `${source.content.split('\n')[0].slice(0, 50)}...`;
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        onClick={() => setOpen(true)}
+        className="group relative flex items-center gap-2 max-w-[200px] hover:border-primary/50 transition-colors"
+      >
+        <File className="h-4 w-4 text-muted-foreground group-hover:text-primary/80 transition-colors" />
+        <span className="truncate">{displayTitle}</span>
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <File className="h-5 w-5" />
+              <span className="truncate">{displayTitle}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="mt-4 h-full max-h-[60vh] rounded-md border bg-muted/50 p-4">
+            <Markdown>{source.content}</Markdown>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
 
 const PurePreviewMessage = ({
   chatId,
@@ -124,70 +166,101 @@ const PurePreviewMessage = ({
               </div>
             )}
 
-            {message.toolInvocations && message.toolInvocations.length > 0 && (
-              <div className="flex flex-col gap-4">
-                {message.toolInvocations.map((toolInvocation) => {
-                  const { toolName, toolCallId, state, args } = toolInvocation;
+            {message.parts && message.parts.length > 0 && (
+              <div className="flex flex-col gap-4 mt-4">
+                {message.parts.map((part) => {
+                  if (part.type === 'tool-invocation') {
+                    const { toolInvocation } = part;
+                    const { toolName, toolCallId, state, args } =
+                      toolInvocation;
 
-                  if (state === 'result') {
-                    const { result } = toolInvocation;
-
+                    if (state === 'result') {
+                      const { result } = toolInvocation;
+                      return (
+                        <div key={toolCallId}>
+                          {toolName === 'getInformation' ? (
+                            result.length > 0 ? (
+                              <div className="flex flex-col gap-2">
+                                <div className="text-sm text-muted-foreground">
+                                  References:
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {result.map((source: any) => (
+                                    <SourceButton
+                                      key={`${source.title}-${source.content.slice(0, 20)}`}
+                                      source={source}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null
+                          ) : toolName === 'getWeather' ? (
+                            <Weather weatherAtLocation={result} />
+                          ) : toolName === 'createDocument' ? (
+                            <DocumentPreview
+                              isReadonly={isReadonly}
+                              result={result}
+                            />
+                          ) : toolName === 'updateDocument' ? (
+                            <DocumentToolResult
+                              type="update"
+                              result={result}
+                              isReadonly={isReadonly}
+                            />
+                          ) : toolName === 'requestSuggestions' ? (
+                            <DocumentToolResult
+                              type="request-suggestions"
+                              result={result}
+                              isReadonly={isReadonly}
+                            />
+                          ) : (
+                            <p>&quot;{toolName}&quot; tool was called</p>
+                          )}
+                        </div>
+                      );
+                    }
                     return (
-                      <div key={toolCallId}>
-                        {toolName === 'getWeather' ? (
-                          <Weather weatherAtLocation={result} />
+                      <div
+                        key={toolCallId}
+                        className={cx({
+                          skeleton: ['getWeather'].includes(toolName),
+                        })}
+                      >
+                        {toolName === 'getInformation' ? (
+                          <div className="flex gap-2">
+                            <div className="h-9 w-40 rounded-md bg-muted animate-pulse flex items-center px-3 gap-2">
+                              <div className="h-4 w-4 rounded bg-muted-foreground/20" />
+                              <div className="h-4 w-24 rounded bg-muted-foreground/20" />
+                            </div>
+                            <div className="h-9 w-40 rounded-md bg-muted animate-pulse flex items-center px-3 gap-2">
+                              <div className="h-4 w-4 rounded bg-muted-foreground/20" />
+                              <div className="h-4 w-24 rounded bg-muted-foreground/20" />
+                            </div>
+                          </div>
+                        ) : toolName === 'getWeather' ? (
+                          <Weather />
                         ) : toolName === 'createDocument' ? (
                           <DocumentPreview
                             isReadonly={isReadonly}
-                            result={result}
+                            args={args}
                           />
                         ) : toolName === 'updateDocument' ? (
-                          <DocumentToolResult
+                          <DocumentToolCall
                             type="update"
-                            result={result}
+                            args={args}
                             isReadonly={isReadonly}
                           />
                         ) : toolName === 'requestSuggestions' ? (
-                          <DocumentToolResult
+                          <DocumentToolCall
                             type="request-suggestions"
-                            result={result}
+                            args={args}
                             isReadonly={isReadonly}
                           />
-                        ) : (
-                          <p>&quot;{toolName}&quot; tool was called</p>
-                          // <pre className="overflow-x-auto">
-                          //   {JSON.stringify(result, null, 2)}
-                          // </pre>
-                        )}
+                        ) : null}
                       </div>
                     );
                   }
-                  return (
-                    <div
-                      key={toolCallId}
-                      className={cx({
-                        skeleton: ['getWeather'].includes(toolName),
-                      })}
-                    >
-                      {toolName === 'getWeather' ? (
-                        <Weather />
-                      ) : toolName === 'createDocument' ? (
-                        <DocumentPreview isReadonly={isReadonly} args={args} />
-                      ) : toolName === 'updateDocument' ? (
-                        <DocumentToolCall
-                          type="update"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'requestSuggestions' ? (
-                        <DocumentToolCall
-                          type="request-suggestions"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : null}
-                    </div>
-                  );
+                  return null;
                 })}
               </div>
             )}
@@ -213,13 +286,7 @@ export const PreviewMessage = memo(
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.message.content !== nextProps.message.content) return false;
-    if (
-      !equal(
-        prevProps.message.toolInvocations,
-        nextProps.message.toolInvocations,
-      )
-    )
-      return false;
+    if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
     if (!equal(prevProps.vote, nextProps.vote)) return false;
 
     return true;

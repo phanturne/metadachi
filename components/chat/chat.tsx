@@ -47,7 +47,14 @@ export function Chat({
     body: { id, modelId: selectedModelId },
     initialMessages,
     experimental_throttle: 100,
-    onFinish: () => {
+    onFinish: (message) => {
+      fetch(`/api/message`, {
+        method: 'POST',
+        body: JSON.stringify({ message: { ...message, chat_id: id } }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       mutate('/api/history');
     },
   });

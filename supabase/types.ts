@@ -248,25 +248,28 @@ export type Database = {
       message: {
         Row: {
           chat_id: string
-          content: Json
+          content: string
           created_at: string
           id: string
+          parts: Json
           role: string
           user_id: string
         }
         Insert: {
           chat_id: string
-          content: Json
+          content: string
           created_at?: string
           id?: string
+          parts?: Json
           role: string
           user_id: string
         }
         Update: {
           chat_id?: string
-          content?: Json
+          content?: string
           created_at?: string
           id?: string
+          parts?: Json
           role?: string
           user_id?: string
         }

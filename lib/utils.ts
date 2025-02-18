@@ -3,16 +3,11 @@ import type {
   CoreMessage,
   CoreToolMessage,
   Message,
-  ToolInvocation,
 } from 'ai';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-import type {
-  Message as DBMessage,
-  Document,
-  MessageContent,
-} from '@/supabase/queries/chat';
+import type { Message as DBMessage, Document } from '@/supabase/queries/chat';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -83,49 +78,14 @@ function addToolMessageToChat({
 export function convertToUIMessages(
   messages: Array<DBMessage>,
 ): Array<Message> {
-  return messages.reduce((chatMessages: Array<Message>, message) => {
-    // Deserialize the content if it's a JSON string
-    let content: MessageContent | null = null;
-    if (typeof message.content === 'string') {
-      content = JSON.parse(message.content);
-    }
-
-    if (message.role === 'tool') {
-      return addToolMessageToChat({
-        toolMessage: { ...message, content } as CoreToolMessage,
-        messages: chatMessages,
-      });
-    }
-
-    let textContent = '';
-    const toolInvocations: Array<ToolInvocation> = [];
-
-    if (typeof content === 'string') {
-      textContent = content;
-    } else if (Array.isArray(content)) {
-      for (const item of content) {
-        if (item.type === 'text') {
-          textContent += item.text;
-        } else if (item.type === 'tool-call') {
-          toolInvocations.push({
-            state: 'call',
-            toolCallId: item.toolCallId,
-            toolName: item.toolName,
-            args: item.args,
-          });
-        }
-      }
-    }
-
-    chatMessages.push({
+  return messages.map((message) => {
+    return {
       id: message.id,
       role: message.role as Message['role'],
-      content: textContent,
-      toolInvocations,
-    });
-
-    return chatMessages;
-  }, []);
+      content: message.content,
+      parts: message.parts as Message['parts'],
+    };
+  });
 }
 
 export function sanitizeResponseMessages(

@@ -26,10 +26,7 @@ import {
   saveDocument,
   saveSuggestions,
 } from '@/supabase/queries/document';
-import {
-  getMostRecentUserMessage,
-  sanitizeResponseMessages,
-} from '@/lib/utils';
+import { getMostRecentUserMessage } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { TablesInsert } from '@/supabase/types';
@@ -443,38 +440,6 @@ export async function POST(request: Request) {
               return results;
             },
           },
-        },
-        onFinish: async ({ response }) => {
-          if (sessionUser.id) {
-            try {
-              const responseMessagesWithoutIncompleteToolCalls =
-                sanitizeResponseMessages(response.messages);
-
-              await saveMessages({
-                messages: responseMessagesWithoutIncompleteToolCalls.map(
-                  (message) => {
-                    const messageId = uuidv4();
-
-                    if (message.role === 'assistant') {
-                      dataStream.writeMessageAnnotation({
-                        messageIdFromServer: messageId,
-                      });
-                    }
-
-                    return {
-                      id: messageId,
-                      chat_id: id,
-                      role: message.role,
-                      content: JSON.stringify(message.content),
-                      user_id: sessionUser.id,
-                    };
-                  },
-                ),
-              });
-            } catch (error) {
-              console.error('Failed to save chat');
-            }
-          }
         },
         experimental_telemetry: {
           isEnabled: true,
