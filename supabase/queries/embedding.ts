@@ -15,6 +15,7 @@ import { embedMany } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { toast } from 'sonner';
 import { uploadFile } from './storage/files';
+import { checkFileSize } from '@/utils/utils';
 
 export type Embedding = Database['public']['Tables']['embedding']['Row'];
 export type EmbeddingInsert =
@@ -106,6 +107,16 @@ export const createFileAndEmbed = async (
   file: File,
   fileRecord: FileInsert,
 ) => {
+  try {
+    checkFileSize(file);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    } else {
+      throw new Error('An unknown error occurred.');
+    }
+  }
+
   const validFilename = fileRecord.name
     .replace(/[^a-z0-9.]/gi, '_')
     .toLowerCase();

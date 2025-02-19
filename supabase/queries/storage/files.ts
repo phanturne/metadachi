@@ -1,9 +1,9 @@
 // Adapted from https://github.com/mckaywrigley/chatbot-ui/blob/main/db/storage/files.ts
 
 'use server';
-import { DEFAULT_FILE_SIZE_LIMIT } from '@/utils/constants';
 import { createClient } from '@/utils/supabase/server';
 import { toast } from 'sonner';
+import { checkFileSize } from '@/utils/utils';
 
 export const uploadFile = async (
   file: File,
@@ -13,14 +13,14 @@ export const uploadFile = async (
     file_id: string;
   },
 ) => {
-  const SIZE_LIMIT = Number(
-    process.env.NEXT_PUBLIC_USER_FILE_SIZE_LIMIT || DEFAULT_FILE_SIZE_LIMIT,
-  );
-
-  if (file.size > SIZE_LIMIT) {
-    throw new Error(
-      `File must be less than ${Math.floor(SIZE_LIMIT / 1000000)}MB`,
-    );
+  try {
+    checkFileSize(file);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    } else {
+      throw new Error('An unknown error occurred.');
+    }
   }
 
   const filePath = `${payload.user_id}/${payload.file_id}`;
@@ -69,6 +69,6 @@ export const getFileFromStorage = async (filePath: string) => {
     );
     throw new Error('Error creating signed URL for file');
   }
-  
+
   return data.signedUrl;
 };
