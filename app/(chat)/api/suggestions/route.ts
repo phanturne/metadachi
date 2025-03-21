@@ -1,5 +1,5 @@
-import { auth } from '@/app/(auth)/auth';
 import { getSuggestionsByDocumentId } from '@/lib/db/queries';
+import { getUser } from '@/supabase/queries/user';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,9 +9,9 @@ export async function GET(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const session = await auth();
+  const { user } = await getUser();
 
-  if (!session || !session.user) {
+  if (!user) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     return Response.json([], { status: 200 });
   }
 
-  if (suggestion.userId !== session.user.id) {
+  if (suggestion.userId !== user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
