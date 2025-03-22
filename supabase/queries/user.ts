@@ -6,7 +6,6 @@ import type { User } from '@supabase/supabase-js';
 export interface GetUserReturn {
   user: User | null;
   error: Error | null;
-  isAnonymous: boolean;
 }
 
 /*
@@ -26,13 +25,11 @@ export const getUser = async (): Promise<GetUserReturn> => {
     return {
       user: fetchedUser,
       error: null,
-      isAnonymous: fetchedUser?.is_anonymous || false,
     };
   } catch (e) {
     return {
       user: null,
       error: e as Error,
-      isAnonymous: false,
     };
   }
 };
