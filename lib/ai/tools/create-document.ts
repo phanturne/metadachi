@@ -1,4 +1,4 @@
-import { generateUUID } from '@/lib/utils';
+import { v4 as uuidv4 } from 'uuid';
 import { type DataStreamWriter, tool } from 'ai';
 import { z } from 'zod';
 import {
@@ -21,7 +21,7 @@ export const createDocument = ({ user, dataStream }: CreateDocumentProps) =>
       kind: z.enum(artifactKinds),
     }),
     execute: async ({ title, kind }) => {
-      const id = generateUUID();
+      const id = uuidv4();
 
       dataStream.writeData({
         type: 'kind',

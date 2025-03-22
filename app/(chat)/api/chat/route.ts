@@ -13,7 +13,6 @@ import {
   saveMessages,
 } from '@/lib/db/queries';
 import {
-  generateUUID,
   getMostRecentUserMessage,
   getTrailingMessageId,
 } from '@/lib/utils';
@@ -25,6 +24,7 @@ import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 import { getUser } from '@/supabase/queries/user';
+import { v4 as uuidv4 } from 'uuid';
 
 export const maxDuration = 60;
 
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
                   'requestSuggestions',
                 ],
           experimental_transform: smoothStream({ chunking: 'word' }),
-          experimental_generateMessageId: generateUUID,
+          experimental_generateMessageId: uuidv4,
           tools: {
             getWeather,
             createDocument: createDocument({ user, dataStream }),
