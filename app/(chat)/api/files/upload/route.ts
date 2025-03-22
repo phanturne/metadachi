@@ -1,4 +1,4 @@
-import { getUser } from '@/supabase/queries/user';
+import { getUser } from '@/lib/db/queries';
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';

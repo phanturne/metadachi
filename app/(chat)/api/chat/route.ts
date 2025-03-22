@@ -7,15 +7,13 @@ import {
 } from 'ai';
 import { systemPrompt } from '@/lib/ai/prompts';
 import {
+  getUser,
   deleteChatById,
   getChatById,
   saveChat,
   saveMessages,
 } from '@/lib/db/queries';
-import {
-  getMostRecentUserMessage,
-  getTrailingMessageId,
-} from '@/lib/utils';
+import { getMostRecentUserMessage, getTrailingMessageId } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
 import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
@@ -23,7 +21,6 @@ import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
-import { getUser } from '@/supabase/queries/user';
 import { v4 as uuidv4 } from 'uuid';
 
 export const maxDuration = 60;
@@ -72,9 +69,11 @@ export async function POST(request: Request) {
           chatId: id,
           id: userMessage.id,
           role: 'user',
-          parts: userMessage.parts,
-          attachments: userMessage.experimental_attachments ?? [],
-          createdAt: new Date(),
+          parts: JSON.stringify(userMessage.parts),
+          attachments: JSON.stringify(
+            userMessage.experimental_attachments ?? [],
+          ),
+          createdAt: new Date().toISOString(),
         },
       ],
     });
@@ -130,10 +129,11 @@ export async function POST(request: Request) {
                       id: assistantId,
                       chatId: id,
                       role: assistantMessage.role,
-                      parts: assistantMessage.parts,
-                      attachments:
+                      parts: JSON.stringify(assistantMessage.parts),
+                      attachments: JSON.stringify(
                         assistantMessage.experimental_attachments ?? [],
-                      createdAt: new Date(),
+                      ),
+                      createdAt: new Date().toISOString(),
                     },
                   ],
                 });

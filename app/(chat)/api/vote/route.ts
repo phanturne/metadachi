@@ -1,5 +1,9 @@
-import { getChatById, getVotesByChatId, voteMessage } from '@/lib/db/queries';
-import { getUser } from '@/supabase/queries/user';
+import {
+  getChatById,
+  getUser,
+  getVotesByChatId,
+  voteMessage,
+} from '@/lib/db/queries';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

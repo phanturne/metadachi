@@ -2,9 +2,9 @@ import type { ArtifactKind } from '@/components/artifact';
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,
+  getUser,
   saveDocument,
 } from '@/lib/db/queries';
-import { getUser } from '@/supabase/queries/user';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

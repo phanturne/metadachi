@@ -9,7 +9,205 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      Chat: {
+        Row: {
+          createdAt: string
+          id: string
+          title: string
+          userId: string
+          visibility: string
+        }
+        Insert: {
+          createdAt?: string
+          id?: string
+          title: string
+          userId: string
+          visibility?: string
+        }
+        Update: {
+          createdAt?: string
+          id?: string
+          title?: string
+          userId?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      Document: {
+        Row: {
+          content: string | null
+          createdAt: string
+          id: string
+          kind: string
+          title: string
+          userId: string
+        }
+        Insert: {
+          content?: string | null
+          createdAt?: string
+          id?: string
+          kind?: string
+          title: string
+          userId: string
+        }
+        Update: {
+          content?: string | null
+          createdAt?: string
+          id?: string
+          kind?: string
+          title?: string
+          userId?: string
+        }
+        Relationships: []
+      }
+      Message: {
+        Row: {
+          attachments: Json
+          chatId: string
+          createdAt: string
+          id: string
+          parts: Json
+          role: string
+        }
+        Insert: {
+          attachments: Json
+          chatId: string
+          createdAt?: string
+          id?: string
+          parts: Json
+          role: string
+        }
+        Update: {
+          attachments?: Json
+          chatId?: string
+          createdAt?: string
+          id?: string
+          parts?: Json
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Message_chatId_fkey"
+            columns: ["chatId"]
+            isOneToOne: false
+            referencedRelation: "Chat"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Profile: {
+        Row: {
+          avatarUrl: string | null
+          bio: string
+          createdAt: string | null
+          displayName: string
+          id: string
+          updatedAt: string | null
+          userId: string
+          username: string
+        }
+        Insert: {
+          avatarUrl?: string | null
+          bio?: string
+          createdAt?: string | null
+          displayName: string
+          id?: string
+          updatedAt?: string | null
+          userId: string
+          username: string
+        }
+        Update: {
+          avatarUrl?: string | null
+          bio?: string
+          createdAt?: string | null
+          displayName?: string
+          id?: string
+          updatedAt?: string | null
+          userId?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      Suggestion: {
+        Row: {
+          createdAt: string
+          description: string | null
+          documentCreatedAt: string
+          documentId: string
+          id: string
+          isResolved: boolean
+          originalText: string
+          suggestedText: string
+          userId: string
+        }
+        Insert: {
+          createdAt?: string
+          description?: string | null
+          documentCreatedAt: string
+          documentId: string
+          id?: string
+          isResolved?: boolean
+          originalText: string
+          suggestedText: string
+          userId: string
+        }
+        Update: {
+          createdAt?: string
+          description?: string | null
+          documentCreatedAt?: string
+          documentId?: string
+          id?: string
+          isResolved?: boolean
+          originalText?: string
+          suggestedText?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Suggestion_documentId_documentCreatedAt_fkey"
+            columns: ["documentId", "documentCreatedAt"]
+            isOneToOne: false
+            referencedRelation: "Document"
+            referencedColumns: ["id", "createdAt"]
+          },
+        ]
+      }
+      Vote: {
+        Row: {
+          chatId: string
+          createdAt: string
+          isUpvoted: boolean
+          messageId: string
+        }
+        Insert: {
+          chatId: string
+          createdAt?: string
+          isUpvoted: boolean
+          messageId: string
+        }
+        Update: {
+          chatId?: string
+          createdAt?: string
+          isUpvoted?: boolean
+          messageId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Vote_chatId_fkey"
+            columns: ["chatId"]
+            isOneToOne: false
+            referencedRelation: "Chat"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Vote_messageId_fkey"
+            columns: ["messageId"]
+            isOneToOne: false
+            referencedRelation: "Message"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

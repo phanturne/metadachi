@@ -98,6 +98,7 @@ export function PureMessageActions({
                             chatId,
                             messageId: message.id,
                             isUpvoted: true,
+                            createdAt: new Date().toISOString(),
                           },
                         ];
                       },
@@ -151,6 +152,7 @@ export function PureMessageActions({
                             chatId,
                             messageId: message.id,
                             isUpvoted: false,
+                            createdAt: new Date().toISOString(),
                           },
                         ];
                       },

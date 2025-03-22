@@ -48,6 +48,7 @@ import {
 import type { Chat } from '@/lib/db/schema';
 import { fetcher } from '@/lib/utils';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
+import type { VisibilityType } from './visibility-selector';
 
 type GroupedChats = {
   today: Chat[];
@@ -70,7 +71,7 @@ const PureChatItem = ({
 }) => {
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId: chat.id,
-    initialVisibility: chat.visibility,
+    initialVisibility: chat.visibility as VisibilityType,
   });
 
   return (
@@ -246,7 +247,7 @@ export function SidebarHistory({ user }: { user: User | null }) {
   }
 
   const groupChatsByDate = (chats: Chat[]): GroupedChats => {
-    const now = new Date();
+    const now = new Date().toISOString();
     const oneWeekAgo = subWeeks(now, 1);
     const oneMonthAgo = subMonths(now, 1);
 

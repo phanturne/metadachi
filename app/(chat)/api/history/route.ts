@@ -1,5 +1,4 @@
-import { getChatsByUserId } from '@/lib/db/queries';
-import { getUser } from '@/supabase/queries/user';
+import { getUser, getChatsByUserId } from '@/lib/db/queries';
 
 export async function GET() {
   const { user } = await getUser();

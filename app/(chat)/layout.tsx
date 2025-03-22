@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { getUser } from '@/supabase/queries/user';
+import { getUser } from '@/lib/db/queries';
 import Script from 'next/script';
 
 export const experimental_ppr = true;
