@@ -1,7 +1,7 @@
 import { getUser } from '@/lib/db/queries';
-import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { createClient } from '@/utils/supabase/server';
 
 // Use Blob instead of File since File is not available in Node.js environment
 const FileSchema = z.object({
@@ -10,10 +10,21 @@ const FileSchema = z.object({
     .refine((file) => file.size <= 5 * 1024 * 1024, {
       message: 'File size should be less than 5MB',
     })
-    // Update the file type based on the kind of files you want to accept
-    .refine((file) => ['image/jpeg', 'image/png'].includes(file.type), {
-      message: 'File type should be JPEG or PNG',
-    }),
+    .refine(
+      (file) =>
+        [
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'application/pdf',
+          'text/plain',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ].includes(file.type),
+      {
+        message: 'Unsupported file type',
+      },
+    ),
 });
 
 export async function POST(request: Request) {
@@ -50,11 +61,14 @@ export async function POST(request: Request) {
     const fileBuffer = await file.arrayBuffer();
 
     try {
-      const data = await put(`${filename}`, fileBuffer, {
-        access: 'public',
+      const supabase = await createClient();
+      const { data, error } = await supabase.storage
+      .from('attachments')
+      .upload(`${user.id}/${filename}`, fileBuffer, {
+        upsert: true,
       });
 
-      return NextResponse.json(data);
+      return NextResponse.json(data, { status: 200 });
     } catch (error) {
       return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }
