@@ -1,15 +1,15 @@
-import { DataStreamWriter, tool } from 'ai';
-import { Session } from 'next-auth';
+import { type DataStreamWriter, tool } from 'ai';
 import { z } from 'zod';
-import { getDocumentById, saveDocument } from '@/lib/db/queries';
+import { getDocumentById } from '@/lib/db/queries';
 import { documentHandlersByArtifactKind } from '@/lib/artifacts/server';
+import type { User } from '@supabase/supabase-js';
 
 interface UpdateDocumentProps {
-  session: Session;
+  user: User;
   dataStream: DataStreamWriter;
 }
 
-export const updateDocument = ({ session, dataStream }: UpdateDocumentProps) =>
+export const updateDocument = ({ user, dataStream }: UpdateDocumentProps) =>
   tool({
     description: 'Update a document with the given description.',
     parameters: z.object({
@@ -45,7 +45,7 @@ export const updateDocument = ({ session, dataStream }: UpdateDocumentProps) =>
         document,
         description,
         dataStream,
-        session,
+        user,
       });
 
       dataStream.writeData({ type: 'finish', content: '' });

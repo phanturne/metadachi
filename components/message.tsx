@@ -1,6 +1,6 @@
 'use client';
 
-import type { UIMessage } from 'ai';
+import type { Attachment, UIMessage } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useState } from 'react';
@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
 import { MessageReasoning } from './message-reasoning';
-import { UseChatHelpers } from '@ai-sdk/react';
+import type { UseChatHelpers } from '@ai-sdk/react';
 
 const PurePreviewMessage = ({
   chatId,
@@ -38,6 +38,18 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+
+  // Parse experimental_attachments if it's a string
+  const attachments =
+    typeof message.experimental_attachments === 'string'
+      ? JSON.parse(message.experimental_attachments)
+      : message.experimental_attachments;
+
+  // Parse parts if it's a string
+  const parts =
+    typeof message.parts === 'string'
+      ? JSON.parse(message.parts)
+      : message.parts;
 
   return (
     <AnimatePresence>
@@ -66,12 +78,12 @@ const PurePreviewMessage = ({
           )}
 
           <div className="flex flex-col gap-4 w-full">
-            {message.experimental_attachments && (
+            {attachments && (
               <div
                 data-testid={`message-attachments`}
                 className="flex flex-row justify-end gap-2"
               >
-                {message.experimental_attachments.map((attachment) => (
+                {attachments.map((attachment: Attachment) => (
                   <PreviewAttachment
                     key={attachment.url}
                     attachment={attachment}
@@ -80,139 +92,158 @@ const PurePreviewMessage = ({
               </div>
             )}
 
-            {message.parts?.map((part, index) => {
-              const { type } = part;
-              const key = `message-${message.id}-part-${index}`;
+            {parts?.map(
+              (
+                part: {
+                  reasoning?: any;
+                  text?: any;
+                  type?: any;
+                  toolInvocation?: any;
+                },
+                index: number,
+              ) => {
+                const { type } = part;
+                const key = `message-${message.id}-part-${index}`;
 
-              if (type === 'reasoning') {
-                return (
-                  <MessageReasoning
-                    key={key}
-                    isLoading={isLoading}
-                    reasoning={part.reasoning}
-                  />
-                );
-              }
-
-              if (type === 'text') {
-                if (mode === 'view') {
+                if (type === 'reasoning') {
                   return (
-                    <div key={key} className="flex flex-row gap-2 items-start">
-                      {message.role === 'user' && !isReadonly && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              data-testid="message-edit-button"
-                              variant="ghost"
-                              className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100"
-                              onClick={() => {
-                                setMode('edit');
-                              }}
-                            >
-                              <PencilEditIcon />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit message</TooltipContent>
-                        </Tooltip>
-                      )}
+                    <MessageReasoning
+                      key={key}
+                      isLoading={isLoading}
+                      reasoning={part.reasoning}
+                    />
+                  );
+                }
 
+                if (type === 'text') {
+                  if (mode === 'view') {
+                    return (
                       <div
-                        data-testid="message-content"
-                        className={cn('flex flex-col gap-4', {
-                          'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
-                            message.role === 'user',
+                        key={key}
+                        className="flex flex-row gap-2 items-start"
+                      >
+                        {message.role === 'user' && !isReadonly && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                data-testid="message-edit-button"
+                                variant="ghost"
+                                className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100"
+                                onClick={() => {
+                                  setMode('edit');
+                                }}
+                              >
+                                <PencilEditIcon />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit message</TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        <div
+                          data-testid="message-content"
+                          className={cn('flex flex-col gap-4', {
+                            'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
+                              message.role === 'user',
+                          })}
+                        >
+                          <Markdown>{part.text}</Markdown>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (mode === 'edit') {
+                    return (
+                      <div
+                        key={key}
+                        className="flex flex-row gap-2 items-start"
+                      >
+                        <div className="size-8" />
+
+                        <MessageEditor
+                          key={message.id}
+                          message={message}
+                          setMode={setMode}
+                          setMessages={setMessages}
+                          reload={reload}
+                        />
+                      </div>
+                    );
+                  }
+                }
+
+                if (type === 'tool-invocation') {
+                  const { toolInvocation } = part;
+                  const { toolName, toolCallId, state } = toolInvocation;
+
+                  if (state === 'call') {
+                    const { args } = toolInvocation;
+
+                    return (
+                      <div
+                        key={toolCallId}
+                        className={cx({
+                          skeleton: ['getWeather'].includes(toolName),
                         })}
                       >
-                        <Markdown>{part.text}</Markdown>
+                        {toolName === 'getWeather' ? (
+                          <Weather />
+                        ) : toolName === 'createDocument' ? (
+                          <DocumentPreview
+                            isReadonly={isReadonly}
+                            args={args}
+                          />
+                        ) : toolName === 'updateDocument' ? (
+                          <DocumentToolCall
+                            type="update"
+                            args={args}
+                            isReadonly={isReadonly}
+                          />
+                        ) : toolName === 'requestSuggestions' ? (
+                          <DocumentToolCall
+                            type="request-suggestions"
+                            args={args}
+                            isReadonly={isReadonly}
+                          />
+                        ) : null}
                       </div>
-                    </div>
-                  );
+                    );
+                  }
+
+                  if (state === 'result') {
+                    const { result } = toolInvocation;
+
+                    return (
+                      <div key={toolCallId}>
+                        {toolName === 'getWeather' ? (
+                          <Weather weatherAtLocation={result} />
+                        ) : toolName === 'createDocument' ? (
+                          <DocumentPreview
+                            isReadonly={isReadonly}
+                            result={result}
+                          />
+                        ) : toolName === 'updateDocument' ? (
+                          <DocumentToolResult
+                            type="update"
+                            result={result}
+                            isReadonly={isReadonly}
+                          />
+                        ) : toolName === 'requestSuggestions' ? (
+                          <DocumentToolResult
+                            type="request-suggestions"
+                            result={result}
+                            isReadonly={isReadonly}
+                          />
+                        ) : (
+                          <pre>{JSON.stringify(result, null, 2)}</pre>
+                        )}
+                      </div>
+                    );
+                  }
                 }
-
-                if (mode === 'edit') {
-                  return (
-                    <div key={key} className="flex flex-row gap-2 items-start">
-                      <div className="size-8" />
-
-                      <MessageEditor
-                        key={message.id}
-                        message={message}
-                        setMode={setMode}
-                        setMessages={setMessages}
-                        reload={reload}
-                      />
-                    </div>
-                  );
-                }
-              }
-
-              if (type === 'tool-invocation') {
-                const { toolInvocation } = part;
-                const { toolName, toolCallId, state } = toolInvocation;
-
-                if (state === 'call') {
-                  const { args } = toolInvocation;
-
-                  return (
-                    <div
-                      key={toolCallId}
-                      className={cx({
-                        skeleton: ['getWeather'].includes(toolName),
-                      })}
-                    >
-                      {toolName === 'getWeather' ? (
-                        <Weather />
-                      ) : toolName === 'createDocument' ? (
-                        <DocumentPreview isReadonly={isReadonly} args={args} />
-                      ) : toolName === 'updateDocument' ? (
-                        <DocumentToolCall
-                          type="update"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'requestSuggestions' ? (
-                        <DocumentToolCall
-                          type="request-suggestions"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : null}
-                    </div>
-                  );
-                }
-
-                if (state === 'result') {
-                  const { result } = toolInvocation;
-
-                  return (
-                    <div key={toolCallId}>
-                      {toolName === 'getWeather' ? (
-                        <Weather weatherAtLocation={result} />
-                      ) : toolName === 'createDocument' ? (
-                        <DocumentPreview
-                          isReadonly={isReadonly}
-                          result={result}
-                        />
-                      ) : toolName === 'updateDocument' ? (
-                        <DocumentToolResult
-                          type="update"
-                          result={result}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'requestSuggestions' ? (
-                        <DocumentToolResult
-                          type="request-suggestions"
-                          result={result}
-                          isReadonly={isReadonly}
-                        />
-                      ) : (
-                        <pre>{JSON.stringify(result, null, 2)}</pre>
-                      )}
-                    </div>
-                  );
-                }
-              }
-            })}
+              },
+            )}
 
             {!isReadonly && (
               <MessageActions

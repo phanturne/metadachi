@@ -1,84 +1,131 @@
 'use server';
 
-import { z } from 'zod';
+import { encodedRedirect } from '@/utils/utils';
+import { createClient } from '@/utils/supabase/server';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { ROUTES } from '@/utils/constants';
 
-import { createUser, getUser } from '@/lib/db/queries';
+export const signUpAction = async (formData: FormData) => {
+  const email = formData.get('email')?.toString();
+  const password = formData.get('password')?.toString();
+  const supabase = await createClient();
+  const origin = (await headers()).get('origin');
 
-import { signIn } from './auth';
+  if (!email || !password) {
+    return encodedRedirect(
+      'error',
+      ROUTES.REGISTER,
+      'Email and password are required',
+    );
+  }
 
-const authFormSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${origin}/auth/callback`,
+    },
+  });
 
-export interface LoginActionState {
-  status: 'idle' | 'in_progress' | 'success' | 'failed' | 'invalid_data';
-}
-
-export const login = async (
-  _: LoginActionState,
-  formData: FormData,
-): Promise<LoginActionState> => {
-  try {
-    const validatedData = authFormSchema.parse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-    });
-
-    await signIn('credentials', {
-      email: validatedData.email,
-      password: validatedData.password,
-      redirect: false,
-    });
-
-    return { status: 'success' };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { status: 'invalid_data' };
-    }
-
-    return { status: 'failed' };
+  if (error) {
+    console.error(`${error.code} ${error.message}`);
+    return encodedRedirect('error', ROUTES.REGISTER, error.message);
+  } else {
+    return encodedRedirect(
+      'success',
+      ROUTES.REGISTER,
+      'Thanks for signing up! Please check your email for a verification link.',
+    );
   }
 };
 
-export interface RegisterActionState {
-  status:
-    | 'idle'
-    | 'in_progress'
-    | 'success'
-    | 'failed'
-    | 'user_exists'
-    | 'invalid_data';
-}
+export const signInAction = async (formData: FormData) => {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const supabase = await createClient();
 
-export const register = async (
-  _: RegisterActionState,
-  formData: FormData,
-): Promise<RegisterActionState> => {
-  try {
-    const validatedData = authFormSchema.parse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-    });
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    const [user] = await getUser(validatedData.email);
-
-    if (user) {
-      return { status: 'user_exists' } as RegisterActionState;
-    }
-    await createUser(validatedData.email, validatedData.password);
-    await signIn('credentials', {
-      email: validatedData.email,
-      password: validatedData.password,
-      redirect: false,
-    });
-
-    return { status: 'success' };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { status: 'invalid_data' };
-    }
-
-    return { status: 'failed' };
+  if (error) {
+    return encodedRedirect('error', ROUTES.LOGIN, error.message);
   }
+
+  return redirect(ROUTES.HOME);
+};
+
+export const forgotPasswordAction = async (formData: FormData) => {
+  const email = formData.get('email')?.toString();
+  const supabase = await createClient();
+  const origin = (await headers()).get('origin');
+  const callbackUrl = formData.get('callbackUrl')?.toString();
+
+  if (!email) {
+    return encodedRedirect(
+      'error',
+      ROUTES.FORGOT_PASSWORD,
+      'Email is required',
+    );
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?redirect_to=${ROUTES.RESET_PASSWORD}`,
+  });
+
+  if (error) {
+    console.error(error.message);
+    return encodedRedirect(
+      'error',
+      ROUTES.FORGOT_PASSWORD,
+      'Could not reset password',
+    );
+  }
+
+  if (callbackUrl) {
+    return redirect(callbackUrl);
+  }
+
+  return encodedRedirect(
+    'success',
+    ROUTES.FORGOT_PASSWORD,
+    'Check your email for a link to reset your password.',
+  );
+};
+
+export const resetPasswordAction = async (formData: FormData) => {
+  const supabase = await createClient();
+
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  if (!password || !confirmPassword) {
+    encodedRedirect(
+      'error',
+      ROUTES.RESET_PASSWORD,
+      'Password and confirm password are required',
+    );
+  }
+
+  if (password !== confirmPassword) {
+    encodedRedirect('error', ROUTES.RESET_PASSWORD, 'Passwords do not match');
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: password,
+  });
+
+  if (error) {
+    encodedRedirect('error', ROUTES.RESET_PASSWORD, 'Password update failed');
+  }
+
+  encodedRedirect('success', ROUTES.RESET_PASSWORD, 'Password updated');
+};
+
+export const signOutAction = async () => {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  return redirect(ROUTES.LOGIN);
 };

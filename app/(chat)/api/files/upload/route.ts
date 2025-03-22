@@ -1,8 +1,7 @@
-import { put } from '@vercel/blob';
+import { getUser } from '@/lib/db/queries';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-
-import { auth } from '@/app/(auth)/auth';
+import { createClient } from '@/utils/supabase/server';
 
 // Use Blob instead of File since File is not available in Node.js environment
 const FileSchema = z.object({
@@ -11,16 +10,15 @@ const FileSchema = z.object({
     .refine((file) => file.size <= 5 * 1024 * 1024, {
       message: 'File size should be less than 5MB',
     })
-    // Update the file type based on the kind of files you want to accept
     .refine((file) => ['image/jpeg', 'image/png'].includes(file.type), {
-      message: 'File type should be JPEG or PNG',
+      message: 'Unsupported file type',
     }),
 });
 
 export async function POST(request: Request) {
-  const session = await auth();
+  const { user } = await getUser();
 
-  if (!session) {
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -51,11 +49,30 @@ export async function POST(request: Request) {
     const fileBuffer = await file.arrayBuffer();
 
     try {
-      const data = await put(`${filename}`, fileBuffer, {
-        access: 'public',
-      });
+      const supabase = await createClient();
+      const { data: uploadData, error } = await supabase.storage
+        .from('attachments')
+        .upload(`${user.id}/${filename}`, fileBuffer, {
+          upsert: true,
+        });
 
-      return NextResponse.json(data);
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // Get public URL for the uploaded file
+      const { data: publicUrlData } = supabase.storage
+        .from('attachments')
+        .getPublicUrl(uploadData.path);
+
+      // Prepare enhanced response with url, pathname and contentType
+      const enhancedData = {
+        url: publicUrlData.publicUrl,
+        pathname: filename,
+        contentType: file.type,
+      };
+
+      return NextResponse.json(enhancedData, { status: 200 });
     } catch (error) {
       return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }

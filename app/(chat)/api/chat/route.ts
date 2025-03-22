@@ -1,23 +1,19 @@
 import {
-  UIMessage,
+  type UIMessage,
   appendResponseMessages,
   createDataStreamResponse,
   smoothStream,
   streamText,
 } from 'ai';
-import { auth } from '@/app/(auth)/auth';
 import { systemPrompt } from '@/lib/ai/prompts';
 import {
+  getUser,
   deleteChatById,
   getChatById,
   saveChat,
   saveMessages,
 } from '@/lib/db/queries';
-import {
-  generateUUID,
-  getMostRecentUserMessage,
-  getTrailingMessageId,
-} from '@/lib/utils';
+import { getMostRecentUserMessage, getTrailingMessageId } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
 import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
@@ -25,6 +21,7 @@ import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
+import { v4 as uuidv4 } from 'uuid';
 
 export const maxDuration = 60;
 
@@ -40,9 +37,9 @@ export async function POST(request: Request) {
       selectedChatModel: string;
     } = await request.json();
 
-    const session = await auth();
+    const { user } = await getUser();
 
-    if (!session || !session.user || !session.user.id) {
+    if (!user) {
       return new Response('Unauthorized', { status: 401 });
     }
 
@@ -59,9 +56,9 @@ export async function POST(request: Request) {
         message: userMessage,
       });
 
-      await saveChat({ id, userId: session.user.id, title });
+      await saveChat({ id, userId: user.id, title });
     } else {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== user.id) {
         return new Response('Unauthorized', { status: 401 });
       }
     }
@@ -72,9 +69,11 @@ export async function POST(request: Request) {
           chatId: id,
           id: userMessage.id,
           role: 'user',
-          parts: userMessage.parts,
-          attachments: userMessage.experimental_attachments ?? [],
-          createdAt: new Date(),
+          parts: JSON.stringify(userMessage.parts),
+          attachments: JSON.stringify(
+            userMessage.experimental_attachments ?? [],
+          ),
+          createdAt: new Date().toISOString(),
         },
       ],
     });
@@ -96,18 +95,18 @@ export async function POST(request: Request) {
                   'requestSuggestions',
                 ],
           experimental_transform: smoothStream({ chunking: 'word' }),
-          experimental_generateMessageId: generateUUID,
+          experimental_generateMessageId: uuidv4,
           tools: {
             getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
+            createDocument: createDocument({ user, dataStream }),
+            updateDocument: updateDocument({ user, dataStream }),
             requestSuggestions: requestSuggestions({
-              session,
+              user,
               dataStream,
             }),
           },
           onFinish: async ({ response }) => {
-            if (session.user?.id) {
+            if (user?.id) {
               try {
                 const assistantId = getTrailingMessageId({
                   messages: response.messages.filter(
@@ -130,10 +129,11 @@ export async function POST(request: Request) {
                       id: assistantId,
                       chatId: id,
                       role: assistantMessage.role,
-                      parts: assistantMessage.parts,
-                      attachments:
+                      parts: JSON.stringify(assistantMessage.parts),
+                      attachments: JSON.stringify(
                         assistantMessage.experimental_attachments ?? [],
-                      createdAt: new Date(),
+                      ),
+                      createdAt: new Date().toISOString(),
                     },
                   ],
                 });
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
         });
       },
       onError: () => {
-        return 'Oops, an error occured!';
+        return 'Oops, an error occurred!';
       },
     });
   } catch (error) {
@@ -173,16 +173,16 @@ export async function DELETE(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const session = await auth();
+  const { user } = await getUser();
 
-  if (!session || !session.user) {
+  if (!user) {
     return new Response('Unauthorized', { status: 401 });
   }
 
   try {
     const chat = await getChatById({ id });
 
-    if (chat.userId !== session.user.id) {
+    if (chat?.userId !== user.id) {
       return new Response('Unauthorized', { status: 401 });
     }
 

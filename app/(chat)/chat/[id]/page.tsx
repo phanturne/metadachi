@@ -1,13 +1,13 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import { auth } from '@/app/(auth)/auth';
 import { Chat } from '@/components/chat';
-import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
+import { getChatById, getMessagesByChatId, getUser } from '@/lib/db/queries';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
-import { DBMessage } from '@/lib/db/schema';
-import { Attachment, UIMessage } from 'ai';
+import type { DBMessage } from '@/lib/db/schema';
+import type { Attachment, UIMessage } from 'ai';
+import type { VisibilityType } from '@/components/visibility-selector';
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -18,14 +18,14 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
-  const session = await auth();
+  const { user } = await getUser();
 
   if (chat.visibility === 'private') {
-    if (!session || !session.user) {
+    if (!user || user.is_anonymous) {
       return notFound();
     }
 
-    if (session.user.id !== chat.userId) {
+    if (user.id !== chat.userId) {
       return notFound();
     }
   }
@@ -41,9 +41,9 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
       role: message.role as UIMessage['role'],
       // Note: content will soon be deprecated in @ai-sdk/react
       content: '',
-      createdAt: message.createdAt,
+      createdAt:new Date(message.createdAt),
       experimental_attachments:
-        (message.attachments as Array<Attachment>) ?? [],
+        (message.attachments as unknown as Array<Attachment>) ?? [],
     }));
   }
 
@@ -57,8 +57,8 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
           id={chat.id}
           initialMessages={convertToUIMessages(messagesFromDb)}
           selectedChatModel={DEFAULT_CHAT_MODEL}
-          selectedVisibilityType={chat.visibility}
-          isReadonly={session?.user?.id !== chat.userId}
+          selectedVisibilityType={chat.visibility as VisibilityType}
+          isReadonly={!user || user.id !== chat.userId}
         />
         <DataStreamHandler id={id} />
       </>
@@ -71,8 +71,8 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         id={chat.id}
         initialMessages={convertToUIMessages(messagesFromDb)}
         selectedChatModel={chatModelFromCookie.value}
-        selectedVisibilityType={chat.visibility}
-        isReadonly={session?.user?.id !== chat.userId}
+        selectedVisibilityType={chat.visibility as VisibilityType}
+        isReadonly={!user || user.id !== chat.userId}
       />
       <DataStreamHandler id={id} />
     </>

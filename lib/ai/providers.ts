@@ -5,7 +5,6 @@ import {
 } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { fireworks } from '@ai-sdk/fireworks';
-import { xai } from '@ai-sdk/xai';
 import { isTestEnvironment } from '../constants';
 import {
   artifactModel,
@@ -25,13 +24,13 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': xai('grok-2-1212'),
+        'chat-model': openai('gpt-4o-mini'),
         'chat-model-reasoning': wrapLanguageModel({
           model: fireworks('accounts/fireworks/models/deepseek-r1'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': xai('grok-2-1212'),
-        'artifact-model': xai('grok-2-1212'),
+        'title-model': openai('gpt-4o-mini'),
+        'artifact-model': openai('gpt-4o-mini'),
       },
       imageModels: {
         'small-model': openai.image('dall-e-2'),

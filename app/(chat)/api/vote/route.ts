@@ -1,5 +1,9 @@
-import { auth } from '@/app/(auth)/auth';
-import { getChatById, getVotesByChatId, voteMessage } from '@/lib/db/queries';
+import {
+  getChatById,
+  getUser,
+  getVotesByChatId,
+  voteMessage,
+} from '@/lib/db/queries';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,9 +13,9 @@ export async function GET(request: Request) {
     return new Response('chatId is required', { status: 400 });
   }
 
-  const session = await auth();
+  const { user } = await getUser();
 
-  if (!session || !session.user || !session.user.email) {
+  if (!user || user.is_anonymous) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -21,7 +25,7 @@ export async function GET(request: Request) {
     return new Response('Chat not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
+  if (chat.userId !== user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -42,9 +46,9 @@ export async function PATCH(request: Request) {
     return new Response('messageId and type are required', { status: 400 });
   }
 
-  const session = await auth();
+  const { user } = await getUser();
 
-  if (!session || !session.user || !session.user.email) {
+  if (!user || user.is_anonymous) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -54,7 +58,7 @@ export async function PATCH(request: Request) {
     return new Response('Chat not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
+  if (chat.userId !== user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
 

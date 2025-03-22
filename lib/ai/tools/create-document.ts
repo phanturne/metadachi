@@ -1,18 +1,18 @@
-import { generateUUID } from '@/lib/utils';
-import { DataStreamWriter, tool } from 'ai';
+import { v4 as uuidv4 } from 'uuid';
+import { type DataStreamWriter, tool } from 'ai';
 import { z } from 'zod';
-import { Session } from 'next-auth';
 import {
   artifactKinds,
   documentHandlersByArtifactKind,
 } from '@/lib/artifacts/server';
+import type { User } from '@supabase/supabase-js';
 
 interface CreateDocumentProps {
-  session: Session;
+  user: User;
   dataStream: DataStreamWriter;
 }
 
-export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
+export const createDocument = ({ user, dataStream }: CreateDocumentProps) =>
   tool({
     description:
       'Create a document for a writing or content creation activities. This tool will call other functions that will generate the contents of the document based on the title and kind.',
@@ -21,7 +21,7 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
       kind: z.enum(artifactKinds),
     }),
     execute: async ({ title, kind }) => {
-      const id = generateUUID();
+      const id = uuidv4();
 
       dataStream.writeData({
         type: 'kind',
@@ -56,7 +56,7 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
         id,
         title,
         dataStream,
-        session,
+        user,
       });
 
       dataStream.writeData({ type: 'finish', content: '' });
