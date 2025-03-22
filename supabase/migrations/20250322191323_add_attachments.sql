@@ -4,24 +4,18 @@ VALUES ('attachments', 'Attachments', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Create access policies for attachments
--- Since the bucket is public, anyone can view files, but we still need policies for modifications
+-- Public read access policy
+CREATE POLICY "Allow public read access on attachments"
+    ON storage.objects FOR SELECT
+    USING (bucket_id = 'attachments');
 
--- Users can upload their own attachments
-CREATE POLICY "Users can upload their own attachments"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  auth.uid() = (storage.foldername(name))[1]::uuid
-);
-
--- Users can update their own attachments
-CREATE POLICY "Users can update their own attachments"
-ON storage.objects FOR UPDATE
-USING (auth.uid() = (storage.foldername(name))[1]::uuid);
-
--- Users can delete their own attachments
-CREATE POLICY "Users can delete their own attachments"
-ON storage.objects FOR DELETE
-USING (auth.uid() = (storage.foldername(name))[1]::uuid);
-
--- Add index to improve performance for JSON containment operations
-CREATE INDEX IF NOT EXISTS idx_message_attachments ON "Message" USING GIN (attachments);
+-- Authenticated users can access their own attachments for all operations
+CREATE POLICY "Allow authenticated access to own attachments"
+    ON storage.objects FOR ALL TO authenticated
+    USING (
+        bucket_id = 'attachments'
+        AND owner = auth.uid()
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    )    WITH CHECK (        bucket_id = 'attachments'        AND (storage.foldername(name))[1] = auth.uid()::text
+        AND (ARRAY_LENGTH(regexp_split_to_array(name, '/'), 1) = 2)
+    );

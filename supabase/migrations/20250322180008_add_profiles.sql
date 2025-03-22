@@ -154,7 +154,7 @@ CREATE TRIGGER on_profile_avatar_change
 
 -- Create avatars bucket if it doesn't exist
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('avatars', 'avatars', true)
+VALUES ('avatars', 'Avatars', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage Policies
