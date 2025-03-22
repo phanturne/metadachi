@@ -94,7 +94,13 @@ export async function getChatById({ id }: { id: string }) {
       .eq('id', id)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      // If it's the "no rows returned" error, return null instead of throwing
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      throw error;
+    }
     return data;
   } catch (error) {
     console.error('Failed to get chat by id from database', error);

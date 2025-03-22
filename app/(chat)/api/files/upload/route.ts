@@ -10,21 +10,9 @@ const FileSchema = z.object({
     .refine((file) => file.size <= 5 * 1024 * 1024, {
       message: 'File size should be less than 5MB',
     })
-    .refine(
-      (file) =>
-        [
-          'image/jpeg',
-          'image/png',
-          'image/gif',
-          'application/pdf',
-          'text/plain',
-          'application/msword',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ].includes(file.type),
-      {
-        message: 'Unsupported file type',
-      },
-    ),
+    .refine((file) => ['image/jpeg', 'image/png'].includes(file.type), {
+      message: 'Unsupported file type',
+    }),
 });
 
 export async function POST(request: Request) {
@@ -62,13 +50,29 @@ export async function POST(request: Request) {
 
     try {
       const supabase = await createClient();
-      const { data, error } = await supabase.storage
-      .from('attachments')
-      .upload(`${user.id}/${filename}`, fileBuffer, {
-        upsert: true,
-      });
+      const { data: uploadData, error } = await supabase.storage
+        .from('attachments')
+        .upload(`${user.id}/${filename}`, fileBuffer, {
+          upsert: true,
+        });
 
-      return NextResponse.json(data, { status: 200 });
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // Get public URL for the uploaded file
+      const { data: publicUrlData } = supabase.storage
+        .from('attachments')
+        .getPublicUrl(uploadData.path);
+
+      // Prepare enhanced response with url, pathname and contentType
+      const enhancedData = {
+        url: publicUrlData.publicUrl,
+        pathname: filename,
+        contentType: file.type,
+      };
+
+      return NextResponse.json(enhancedData, { status: 200 });
     } catch (error) {
       return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }
