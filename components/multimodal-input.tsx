@@ -15,6 +15,7 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
+import { useRouter } from 'next/navigation';
 
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
@@ -37,6 +38,7 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
+  urlBehavior = 'none',
 }: {
   chatId: string;
   input: UseChatHelpers['input'];
@@ -50,9 +52,11 @@ function PureMultimodalInput({
   append: UseChatHelpers['append'];
   handleSubmit: UseChatHelpers['handleSubmit'];
   className?: string;
+  urlBehavior?: 'redirect' | 'query' | 'none';
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+  const router = useRouter();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -104,8 +108,6 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    window.history.replaceState({}, '', `/chat/${chatId}`);
-
     handleSubmit(undefined, {
       experimental_attachments: attachments,
     });
@@ -117,14 +119,7 @@ function PureMultimodalInput({
     if (width && width > 768) {
       textareaRef.current?.focus();
     }
-  }, [
-    attachments,
-    handleSubmit,
-    setAttachments,
-    setLocalStorageInput,
-    width,
-    chatId,
-  ]);
+  }, [attachments, handleSubmit, setAttachments, setLocalStorageInput, width]);
 
   const uploadFile = async (file: File) => {
     const formData = new FormData();

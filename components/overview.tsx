@@ -12,7 +12,7 @@ export const Overview = () => {
       transition={{ delay: 0.5 }}
     >
       <div className="rounded-xl p-8 flex flex-col gap-8 leading-relaxed text-center max-w-xl mx-auto backdrop-blur-sm bg-gradient-to-b from-background/80 to-background/40 border border-muted/30 shadow-lg">
-        <motion.p
+        <motion.div
           className="flex flex-row justify-center gap-4 items-center"
           animate={{
             scale: [1, 1.02, 1],
@@ -28,7 +28,7 @@ export const Overview = () => {
           <div className="p-3 rounded-full bg-gradient-to-br from-primary/20 to-primary/10">
             <MessageIcon size={32} />
           </div>
-        </motion.p>
+        </motion.div>
         <div className="space-y-4">
           <p className="text-2xl font-medium tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
             Welcome! I&apos;m your AI assistant.

@@ -14,6 +14,9 @@ import { Messages } from './messages';
 import type { VisibilityType } from './visibility-selector';
 import { useArtifactSelector } from '@/hooks/use-artifact';
 import { toast } from 'sonner';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+export type ChatType = 'standalone' | 'embedded';
 
 export function Chat({
   id,
@@ -21,13 +24,17 @@ export function Chat({
   selectedChatModel,
   selectedVisibilityType,
   isReadonly,
+  type = 'standalone',
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
   selectedChatModel: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
+  type?: ChatType;
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { mutate } = useSWRConfig();
 
   const {
@@ -49,6 +56,17 @@ export function Chat({
     generateId: uuidv4,
     onFinish: () => {
       mutate('/api/history');
+
+      // Only update URL on first message
+      if (messages.length === 0) {
+        if (type === 'standalone') {
+          router.replace(`/chat/${id}`, { scroll: false });
+        } else if (type === 'embedded') {
+          const params = new URLSearchParams(searchParams);
+          params.set('chatId', id);
+          router.replace(`?${params}`, { scroll: false });
+        }
+      }
     },
     onError: () => {
       toast.error('An error occurred, please try again!');
@@ -65,12 +83,13 @@ export function Chat({
 
   return (
     <>
-      <div className="flex flex-col min-w-0 h-dvh bg-background">
+      <div className="flex flex-col h-full bg-background">
         <ChatHeader
           chatId={id}
           selectedModelId={selectedChatModel}
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
+          type={type}
         />
 
         <Messages

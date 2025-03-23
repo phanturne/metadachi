@@ -21,6 +21,7 @@ export default async function Page() {
           selectedChatModel={DEFAULT_CHAT_MODEL}
           selectedVisibilityType="private"
           isReadonly={false}
+          type="standalone"
         />
         <DataStreamHandler id={id} />
       </>
