@@ -63,20 +63,16 @@ export async function POST(request: Request) {
       }
     }
 
-    await saveMessages({
-      messages: [
-        {
-          chatId: id,
-          id: userMessage.id,
-          role: 'user',
-          parts: JSON.stringify(userMessage.parts),
-          attachments: JSON.stringify(
-            userMessage.experimental_attachments ?? [],
-          ),
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    });
+    await saveMessages([
+      {
+        chatId: id,
+        id: userMessage.id,
+        role: 'user',
+        parts: JSON.stringify(userMessage.parts),
+        attachments: JSON.stringify(userMessage.experimental_attachments ?? []),
+        createdAt: new Date().toISOString(),
+      },
+    ]);
 
     return createDataStreamResponse({
       execute: (dataStream) => {
@@ -123,20 +119,18 @@ export async function POST(request: Request) {
                   responseMessages: response.messages,
                 });
 
-                await saveMessages({
-                  messages: [
-                    {
-                      id: assistantId,
-                      chatId: id,
-                      role: assistantMessage.role,
-                      parts: JSON.stringify(assistantMessage.parts),
-                      attachments: JSON.stringify(
-                        assistantMessage.experimental_attachments ?? [],
-                      ),
-                      createdAt: new Date().toISOString(),
-                    },
-                  ],
-                });
+                await saveMessages([
+                  {
+                    id: assistantId,
+                    chatId: id,
+                    role: assistantMessage.role,
+                    parts: JSON.stringify(assistantMessage.parts),
+                    attachments: JSON.stringify(
+                      assistantMessage.experimental_attachments ?? [],
+                    ),
+                    createdAt: new Date().toISOString(),
+                  },
+                ]);
               } catch (error) {
                 console.error('Failed to save chat');
               }

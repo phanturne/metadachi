@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           createdAt: string
           id: string
+          libraryId: string | null
           title: string
           userId: string
           visibility: string
@@ -20,6 +21,7 @@ export type Database = {
         Insert: {
           createdAt?: string
           id?: string
+          libraryId?: string | null
           title: string
           userId: string
           visibility?: string
@@ -27,11 +29,20 @@ export type Database = {
         Update: {
           createdAt?: string
           id?: string
+          libraryId?: string | null
           title?: string
           userId?: string
           visibility?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "Chat_libraryId_fkey"
+            columns: ["libraryId"]
+            isOneToOne: false
+            referencedRelation: "Library"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       Document: {
         Row: {
@@ -57,6 +68,145 @@ export type Database = {
           kind?: string
           title?: string
           userId?: string
+        }
+        Relationships: []
+      }
+      Embedding: {
+        Row: {
+          content: string
+          createdAt: string
+          embedding: string
+          fileId: string
+          hash: string
+          id: string
+          metadata: Json | null
+          tokens: number
+          updatedAt: string
+          userId: string
+        }
+        Insert: {
+          content: string
+          createdAt?: string
+          embedding: string
+          fileId: string
+          hash: string
+          id?: string
+          metadata?: Json | null
+          tokens: number
+          updatedAt?: string
+          userId: string
+        }
+        Update: {
+          content?: string
+          createdAt?: string
+          embedding?: string
+          fileId?: string
+          hash?: string
+          id?: string
+          metadata?: Json | null
+          tokens?: number
+          updatedAt?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Embedding_fileId_fkey"
+            columns: ["fileId"]
+            isOneToOne: false
+            referencedRelation: "File"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      File: {
+        Row: {
+          createdAt: string
+          description: string | null
+          filePath: string
+          hash: string | null
+          id: string
+          libraryId: string | null
+          metadata: Json | null
+          name: string
+          size: number | null
+          tokens: number | null
+          type: string | null
+          updatedAt: string
+          userId: string
+          visibility: string
+        }
+        Insert: {
+          createdAt?: string
+          description?: string | null
+          filePath: string
+          hash?: string | null
+          id?: string
+          libraryId?: string | null
+          metadata?: Json | null
+          name: string
+          size?: number | null
+          tokens?: number | null
+          type?: string | null
+          updatedAt?: string
+          userId: string
+          visibility?: string
+        }
+        Update: {
+          createdAt?: string
+          description?: string | null
+          filePath?: string
+          hash?: string | null
+          id?: string
+          libraryId?: string | null
+          metadata?: Json | null
+          name?: string
+          size?: number | null
+          tokens?: number | null
+          type?: string | null
+          updatedAt?: string
+          userId?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "File_libraryId_fkey"
+            columns: ["libraryId"]
+            isOneToOne: false
+            referencedRelation: "Library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Library: {
+        Row: {
+          createdAt: string
+          description: string | null
+          id: string
+          imagePath: string | null
+          name: string
+          updatedAt: string
+          userId: string
+          visibility: string
+        }
+        Insert: {
+          createdAt?: string
+          description?: string | null
+          id?: string
+          imagePath?: string | null
+          name: string
+          updatedAt?: string
+          userId: string
+          visibility?: string
+        }
+        Update: {
+          createdAt?: string
+          description?: string | null
+          id?: string
+          imagePath?: string | null
+          name?: string
+          updatedAt?: string
+          userId?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -213,7 +363,192 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      binary_quantize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+      halfvec_avg: {
+        Args: {
+          "": number[]
+        }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflat_bit_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      l2_norm:
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      l2_normalize:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: unknown
+          }
+      match_embeddings: {
+        Args: {
+          query_embedding: string
+          match_count?: number
+          file_ids?: string[]
+        }
+        Returns: {
+          id: string
+          file_id: string
+          content: string
+          tokens: number
+          similarity: number
+        }[]
+      }
+      sparsevec_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
+      vector_avg: {
+        Args: {
+          "": number[]
+        }
+        Returns: string
+      }
+      vector_dims:
+        | {
+            Args: {
+              "": string
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              "": unknown
+            }
+            Returns: number
+          }
+      vector_norm: {
+        Args: {
+          "": string
+        }
+        Returns: number
+      }
+      vector_out: {
+        Args: {
+          "": string
+        }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: {
+          "": string
+        }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: {
+          "": unknown[]
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
