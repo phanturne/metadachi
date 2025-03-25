@@ -9,25 +9,28 @@ import { LibraryHeader } from '@/components/library-header';
 import { loadChat } from '@/lib/utils/chat';
 import type { UIMessage } from 'ai';
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: { chatId?: string };
-}) {
+interface PageProps {
+  params: { id: string };
+  searchParams: Promise<{ chatId?: string }>;
+}
+
+export default async function Page({ searchParams, params }: PageProps) {
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get('chat-model');
+
+  const resolvedSearchParams = await searchParams;
 
   let id = uuidv4();
   let initialMessages: Array<UIMessage> = [];
   let isReadonly = false;
 
   // If chatId is provided, load existing chat data
-  if (searchParams.chatId) {
+  if (resolvedSearchParams.chatId) {
     const {
       chat,
       messages,
       isReadonly: readonly,
-    } = await loadChat(searchParams.chatId);
+    } = await loadChat(resolvedSearchParams.chatId);
     if (chat) {
       id = chat.id;
       initialMessages = messages;
