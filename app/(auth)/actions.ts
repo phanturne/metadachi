@@ -1,10 +1,10 @@
 'use server';
 
+import { ROUTES } from '@/lib/constants';
 import { encodedRedirect } from '@/utils/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { ROUTES } from '@/lib/constants';
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
@@ -102,7 +102,7 @@ export const resetPasswordAction = async (formData: FormData) => {
   const confirmPassword = formData.get('confirmPassword') as string;
 
   if (!password || !confirmPassword) {
-    encodedRedirect(
+    return encodedRedirect(
       'error',
       ROUTES.RESET_PASSWORD,
       'Password and confirm password are required',
@@ -110,7 +110,7 @@ export const resetPasswordAction = async (formData: FormData) => {
   }
 
   if (password !== confirmPassword) {
-    encodedRedirect('error', ROUTES.RESET_PASSWORD, 'Passwords do not match');
+    return encodedRedirect('error', ROUTES.RESET_PASSWORD, 'Passwords do not match');
   }
 
   const { error } = await supabase.auth.updateUser({
@@ -118,10 +118,10 @@ export const resetPasswordAction = async (formData: FormData) => {
   });
 
   if (error) {
-    encodedRedirect('error', ROUTES.RESET_PASSWORD, 'Password update failed');
+    return encodedRedirect('error', ROUTES.RESET_PASSWORD, 'Password update failed');
   }
 
-  encodedRedirect('success', ROUTES.RESET_PASSWORD, 'Password updated');
+  return encodedRedirect('success', ROUTES.RESET_PASSWORD, 'Password updated');
 };
 
 export const signOutAction = async () => {
