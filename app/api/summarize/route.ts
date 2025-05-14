@@ -23,7 +23,7 @@ async function extractTextFromUrl(url: string) {
 export async function POST(req: NextRequest) {
   try {
     // Extract data from request body
-    const { prompt, inputType } = await req.json()
+    const { prompt, inputType, customInstructions } = await req.json()
 
     if (!prompt) {
       return Response.json({ error: "No input provided" }, { status: 400 })
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     if (inputType === "url") {
       try {
         textToAnalyze = await extractTextFromUrl(prompt)
-      } catch (error) {
+      } catch {
         return Response.json({ error: "Failed to process URL" }, { status: 400 })
       }
     } else {
@@ -51,12 +51,15 @@ export async function POST(req: NextRequest) {
         summary: z.string().describe("A concise summary in 2-3 paragraphs"),
         keyPoints: z.array(z.string()).describe("An array of key insights as bullet points"),
         quotes: z.array(z.string()).describe("An array of notable quotes or statistics"),
+        tags: z.array(z.string()).describe("An array of relevant tags to categorize the content"),
       }),
-      prompt: `Please analyze the following text and provide a structured response. If the text is a URL, analyze its content. If it's direct text, analyze that text:
+      prompt: `Please analyze the following text and provide a structured response. If the text is a URL, analyze its content. If it's direct text, analyze that text.
 
-${textToAnalyze}`,
+${textToAnalyze}
+
+${customInstructions ? `Additional Instructions: ${customInstructions}` : ""}`,
       system:
-        "You are a helpful AI assistant that specializes in analyzing and summarizing text. Provide clear, concise, and well-structured summaries with key insights. Always analyze the provided text, whether it's direct text or content from a URL.",
+        "You are a helpful AI assistant that specializes in analyzing and summarizing text. Provide clear, concise, and well-structured summaries with key insights. Always analyze the provided text, whether it's direct text or content from a URL. Generate relevant tags to categorize the content based on its main themes and topics.",
     })
 
     // Return the object as JSON

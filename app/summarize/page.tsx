@@ -11,16 +11,49 @@ type SummaryResponse = {
   summary: string
   keyPoints: string[]
   quotes: string[]
+  tags: string[]
 }
 
+const SUMMARY_PRESETS = {
+  concise: {
+    label: "Concise",
+    instructions: "Provide a brief, to-the-point summary focusing on the most essential information. Keep it under 100 words.",
+  },
+  detailed: {
+    label: "Detailed",
+    instructions: "Provide a comprehensive analysis with in-depth insights and thorough coverage of all major points.",
+  },
+  academic: {
+    label: "Academic",
+    instructions: "Analyze the content from an academic perspective, highlighting methodology, findings, and implications.",
+  },
+  business: {
+    label: "Business",
+    instructions: "Focus on business implications, market insights, and actionable takeaways for professionals.",
+  },
+  custom: {
+    label: "Custom",
+    instructions: "",
+  },
+} as const
+
+type SummaryPreset = keyof typeof SUMMARY_PRESETS
+
 export default function SummarizePage() {
-  const [inputType, setInputType] = useState<"text" | "url">("text")
+  const [inputType, setInputType] = useState<"text" | "url" | "file">("text")
   const [input, setInput] = useState("")
+  const [customInstructions, setCustomInstructions] = useState("")
+  const [selectedPreset, setSelectedPreset] = useState<SummaryPreset>("concise")
   const [isLoading, setIsLoading] = useState(false)
   const [summary, setSummary] = useState<SummaryResponse | null>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value)
+  }
+
+  const handlePresetChange = (preset: SummaryPreset) => {
+    setSelectedPreset(preset)
+    setCustomInstructions(SUMMARY_PRESETS[preset].instructions)
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -39,6 +72,7 @@ export default function SummarizePage() {
         body: JSON.stringify({
           prompt: input,
           inputType,
+          customInstructions,
         }),
       })
 
@@ -109,6 +143,36 @@ export default function SummarizePage() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="customInstructions" className="text-base">
+                Summary Style
+              </Label>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {Object.entries(SUMMARY_PRESETS).map(([key, { label }]) => (
+                  <Button
+                    key={key}
+                    variant={selectedPreset === key ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePresetChange(key as SummaryPreset)}
+                    className="rounded-full"
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+              <Textarea
+                id="customInstructions"
+                value={customInstructions}
+                onChange={(e) => {
+                  setCustomInstructions(e.target.value)
+                  setSelectedPreset("custom")
+                }}
+                placeholder="Add any specific requirements to tailor the summary..."
+                className="min-h-[100px] resize-none text-base"
+                disabled={isLoading}
+              />
+            </div>
+
             <Button type="submit" disabled={isLoading || !input.trim()} className="w-full gap-2 h-11">
               {isLoading ? (
                 <>
@@ -158,6 +222,31 @@ export default function SummarizePage() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            <div className="bg-card rounded-xl shadow-lg p-8 border border-border/50">
+              <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-primary"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Tags
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {summary.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
 
             {summary.quotes.length > 0 && (
