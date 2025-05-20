@@ -3,8 +3,9 @@
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Link, Loader2, Sparkles, Type } from 'lucide-react'
-import { useState } from "react"
+import { createClient } from "@/utils/supabase/client"
+import { Link, Loader2, Sparkles, Type, Upload } from 'lucide-react'
+import { useRef, useState } from "react"
 import { toast } from "sonner"
 
 type SummaryResponse = {
@@ -39,6 +40,15 @@ const SUMMARY_PRESETS = {
 
 type SummaryPreset = keyof typeof SUMMARY_PRESETS
 
+const ALLOWED_FILE_TYPES = [
+  'text/plain',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/markdown',
+  'text/html',
+]
+
 export default function SummarizePage() {
   const [inputType, setInputType] = useState<"text" | "url" | "file">("text")
   const [input, setInput] = useState("")
@@ -46,52 +56,131 @@ export default function SummarizePage() {
   const [selectedPreset, setSelectedPreset] = useState<SummaryPreset>("concise")
   const [isLoading, setIsLoading] = useState(false)
   const [summary, setSummary] = useState<SummaryResponse | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const supabase = createClient()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value)
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast.error("Unsupported file type. Please upload a text file, PDF, or Word document.")
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      toast.error("File size too large. Please upload a file smaller than 10MB.")
+      return
+    }
+
+    setSelectedFile(file)
+    setInput(file.name) // Show filename in the input field
+  }
+
   const handlePresetChange = (preset: SummaryPreset) => {
     setSelectedPreset(preset)
-    setCustomInstructions(SUMMARY_PRESETS[preset].instructions)
+    if (preset !== "custom") {
+      setCustomInstructions(SUMMARY_PRESETS[preset].instructions)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (isLoading) return // Prevent double submission
+    
+    if (inputType === "file" && !selectedFile) {
+      toast.error("Please select a file to upload")
+      return
+    }
+    if (inputType !== "file" && !input.trim()) return
 
     setIsLoading(true)
     setSummary(null)
 
     try {
-      const response = await fetch("/api/summarize", {
+      const formData = new FormData()
+      formData.append("type", inputType.toUpperCase())
+      
+      if (inputType === "file" && selectedFile) {
+        formData.append("file", selectedFile)
+      } else {
+        formData.append("content", input)
+        if (inputType === "url") {
+          formData.append("url", input)
+        }
+      }
+      
+      formData.append("customInstructions", customInstructions)
+
+      // Create source
+      const sourceResponse = await fetch("/api/sources", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: input,
-          inputType,
-          customInstructions,
-        }),
+        body: formData,
       })
 
-      const responseData = await response.json()
+      const sourceData = await sourceResponse.json()
 
-      if (!response.ok) {
-        toast.error(responseData.error || "Failed to generate summary")
+      if (!sourceResponse.ok) {
+        toast.error(sourceData.error || "Failed to create source")
         setIsLoading(false)
         return
       }
 
-      // Successfully received the summary
-      setSummary(responseData)
-      toast.success("Summary generated successfully!")
+      // Start polling for summary
+      const pollInterval = setInterval(async () => {
+        try {
+          const { data: summaries, error } = await supabase
+            .from('summaries')
+            .select('*')
+            .eq('source_id', sourceData.id)
+
+          if (error) {
+            console.error('Error polling summary:', error)
+            clearInterval(pollInterval)
+            toast.error("Failed to fetch summary")
+            setIsLoading(false)
+            return
+          }
+
+          // If we have a summary, use it
+          if (summaries && summaries.length > 0) {
+            const summary = summaries[0]
+            clearInterval(pollInterval)
+            setSummary({
+              summary: summary.summary_text,
+              keyPoints: summary.key_points,
+              quotes: summary.quotes,
+              tags: summary.tags,
+            })
+            toast.success("Summary generated successfully!")
+            setIsLoading(false)
+          }
+        } catch (err) {
+          console.error('Error in polling:', err)
+          clearInterval(pollInterval)
+          toast.error("Failed to fetch summary")
+          setIsLoading(false)
+        }
+      }, 2000) // Poll every 2 seconds
+
+      // Stop polling after 2 minutes
+      setTimeout(() => {
+        clearInterval(pollInterval)
+        if (isLoading) {
+          toast.error("Summary generation timed out")
+          setIsLoading(false)
+        }
+      }, 120000)
+
     } catch (err) {
       console.error("Submit error:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to submit request"
       toast.error(errorMessage)
-    } finally {
       setIsLoading(false)
     }
   }
@@ -104,7 +193,7 @@ export default function SummarizePage() {
             AI Summary Generator
           </h1>
           <p className="text-muted-foreground">
-            Transform any text or article into a clear, concise summary with key insights
+            Transform any text, article, or document into a clear, concise summary with key insights
           </p>
         </div>
 
@@ -126,21 +215,70 @@ export default function SummarizePage() {
               <Link className="w-4 h-4" />
               URL Input
             </Button>
+            <Button
+              variant={inputType === "file" ? "default" : "outline"}
+              onClick={() => setInputType("file")}
+              className="flex-1 gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              File Upload
+            </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="input" className="text-base">
-                {inputType === "text" ? "Enter your text" : "Enter URL"}
+                {inputType === "text" ? "Enter your text" : inputType === "url" ? "Enter URL" : "Upload file"}
               </Label>
-              <Textarea
-                id="input"
-                value={input}
-                onChange={handleInputChange}
-                placeholder={inputType === "text" ? "Paste your text here..." : "https://example.com/article"}
-                className="min-h-[200px] resize-none text-base"
-                disabled={isLoading}
-              />
+              {inputType === "file" ? (
+                <div className="flex flex-col gap-4">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept={ALLOWED_FILE_TYPES.join(",")}
+                    className="hidden"
+                  />
+                  <div className="flex gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-1"
+                    >
+                      Choose File
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedFile(null)
+                        setInput("")
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = ""
+                        }
+                      }}
+                      disabled={!selectedFile}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                  {selectedFile && (
+                    <div className="text-sm text-muted-foreground">
+                      Selected file: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)}MB)
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Textarea
+                  id="input"
+                  value={input}
+                  onChange={handleInputChange}
+                  placeholder={inputType === "text" ? "Paste your text here..." : "https://example.com/article"}
+                  className="min-h-[200px] resize-none text-base"
+                  disabled={isLoading}
+                />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -151,6 +289,7 @@ export default function SummarizePage() {
                 {Object.entries(SUMMARY_PRESETS).map(([key, { label }]) => (
                   <Button
                     key={key}
+                    type="button"
                     variant={selectedPreset === key ? "default" : "outline"}
                     size="sm"
                     onClick={() => handlePresetChange(key as SummaryPreset)}
@@ -173,7 +312,11 @@ export default function SummarizePage() {
               />
             </div>
 
-            <Button type="submit" disabled={isLoading || !input.trim()} className="w-full gap-2 h-11">
+            <Button 
+              type="submit" 
+              disabled={isLoading || (inputType === "file" ? !selectedFile : !input.trim())} 
+              className="w-full gap-2 h-11"
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
