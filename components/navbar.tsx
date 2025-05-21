@@ -4,12 +4,12 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { createClient } from "@/utils/supabase/client"
@@ -56,6 +56,9 @@ export function Navbar() {
                 <Link href="/summarize" className="text-lg font-medium transition-colors hover:text-primary">
                   Summarize
                 </Link>
+                <Link href="/library" className="text-lg font-medium transition-colors hover:text-primary">
+                  Library
+                </Link>
               </nav>
             </SheetContent>
           </Sheet>
@@ -71,6 +74,9 @@ export function Navbar() {
           </Link>
           <Link href="/summarize" className="text-sm font-medium transition-colors hover:text-primary">
             Summarize
+          </Link>
+          <Link href="/library" className="text-sm font-medium transition-colors hover:text-primary">
+            Library
           </Link>
         </nav>
         <div className="flex items-center gap-2">
