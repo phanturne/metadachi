@@ -14,73 +14,22 @@ async function generateEmbedding(text: string): Promise<number[]> {
   return response.data[0].embedding
 }
 
-async function getFileContent(filePath: string) {
-  const supabase = await createClient()
-  const { data, error } = await supabase.storage
-    .from('source_files')
-    .download(filePath)
-
-  if (error) throw error
-  return data.text()
-}
-
 // Process source in background
-async function processSourceInBackground(sourceId: string, customInstructions: string | null) {
+async function processSourceInBackground(sourceId: string, content: string) {
   const supabase = await createClient()
   
   try {
-    // Get the source
-    const { data: source, error: sourceError } = await supabase
-      .from("sources")
-      .select("*")
-      .eq("id", sourceId)
-      .single()
-
-    if (sourceError || !source) {
-      throw new Error("Failed to fetch source")
-    }
-
-    // Get content based on source type
-    let content = source.content
-    if (source.type === "FILE" && source.file_path) {
-      content = await getFileContent(source.file_path)
-    }
-
     // Generate embeddings for text chunks
-    if (content) {
-      const chunks = splitTextIntoChunks(content)
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i]
-        const embedding = await generateEmbedding(chunk)
-        await supabase.from("source_embeddings").insert({
-          source_id: sourceId,
-          chunk_index: i,
-          chunk_text: chunk,
-          embedding: JSON.stringify(embedding)
-        })
-      }
-    }
-
-    // Generate summary
-    const summary = await generateSummary(content || "", customInstructions || undefined)
-    
-    // Store the summary
-    const { error: summaryError } = await supabase
-      .from("summaries")
-      .insert({
+    const chunks = splitTextIntoChunks(content)
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i]
+      const embedding = await generateEmbedding(chunk)
+      await supabase.from("source_embeddings").insert({
         source_id: sourceId,
-        summary_text: summary.summary,
-        key_points: summary.keyPoints,
-        quotes: summary.quotes,
-        tags: summary.tags,
-        style: "default",
-        user_id: source.user_id,
-        is_public: source.is_public,
-        custom_instructions: customInstructions
+        chunk_index: i,
+        chunk_text: chunk,
+        embedding: JSON.stringify(embedding)
       })
-
-    if (summaryError) {
-      throw summaryError
     }
 
     // Update source status
@@ -140,8 +89,9 @@ export async function POST(req: NextRequest) {
       // Upload file to Supabase Storage with user's ID in the path
       const fileBuffer = await file.arrayBuffer()
       const fileExt = file.name.split('.').pop()
-      fileName = `${Date.now()}.${fileExt}`
-      filePath = `${currentUser.id}/${fileName}`
+      const uniqueFileName = `${Date.now()}.${fileExt}`
+      filePath = `${currentUser.id}/${uniqueFileName}`
+      fileName = file.name // Store original file name
 
       const { error: uploadError } = await supabase.storage
         .from('source_files')
@@ -157,6 +107,19 @@ export async function POST(req: NextRequest) {
 
       fileSize = file.size
       fileType = file.type
+      
+      // Get file content for immediate summary
+      try {
+        const textDecoder = new TextDecoder()
+        sourceContent = textDecoder.decode(fileBuffer)
+        
+        if (!sourceContent) {
+          throw new Error("Failed to extract content from file")
+        }
+      } catch (error) {
+        console.error("Error extracting text from file:", error)
+        return Response.json({ error: "Failed to process file" }, { status: 400 })
+      }
     } else if (type === "URL" && url) {
       try {
         sourceContent = await extractTextFromUrl(url)
@@ -169,36 +132,67 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create source
+    // Generate summary immediately
+    const summary = await generateSummary(sourceContent || "", customInstructions || undefined)
+
+    // Create source in background
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { data: source, error: sourceError } = await supabase
-      .from("sources")
-      .insert({
-        type: type.toUpperCase() as "TEXT" | "URL" | "FILE",
-        content: sourceContent,
-        url: type.toUpperCase() === "URL" ? url : null,
-        file_name: fileName,
-        file_path: filePath,
-        file_size: fileSize,
-        file_type: fileType,
-        is_public: false,
-        user_id: user.id
-      })
-      .select()
-      .single()
+    // Start background processing for database operations
+    Promise.all([
+      // Create source record
+      supabase
+        .from("sources")
+        .insert({
+          type: type.toUpperCase() as "TEXT" | "URL" | "FILE",
+          content: type.toUpperCase() === "FILE" ? null : sourceContent,
+          url: type.toUpperCase() === "URL" ? url : null,
+          file_name: type.toUpperCase() === "FILE" ? fileName : null,
+          file_path: type.toUpperCase() === "FILE" ? filePath : null,
+          file_size: type.toUpperCase() === "FILE" ? fileSize : null,
+          file_type: type.toUpperCase() === "FILE" ? fileType : null,
+          is_public: false,
+          user_id: user.id
+        })
+        .select()
+        .single()
+        .then(async ({ data: source, error: sourceError }) => {
+          if (sourceError || !source) {
+            throw sourceError || new Error("Failed to create source")
+          }
 
-    if (sourceError || !source) {
-      throw sourceError || new Error("Failed to create source")
-    }
+          // Store the summary
+          await supabase
+            .from("summaries")
+            .insert({
+              source_id: source.id,
+              summary_text: summary.summary,
+              key_points: summary.keyPoints,
+              quotes: summary.quotes,
+              tags: summary.tags,
+              style: "default",
+              user_id: user.id,
+              is_public: false,
+              custom_instructions: customInstructions
+            })
 
-    // Start background processing
-    processSourceInBackground(source.id, customInstructions).catch(console.error)
+          // Process embeddings in background
+          processSourceInBackground(source.id, sourceContent || "").catch(console.error)
+        })
+    ]).catch(console.error)
 
-    return Response.json(source)
+    // Return summary immediately with file info
+    return Response.json({
+      summary: summary.summary,
+      keyPoints: summary.keyPoints,
+      quotes: summary.quotes,
+      tags: summary.tags,
+      fileSize: fileSize,
+      fileName: fileName
+    })
   } catch (error) {
     console.error("Error creating source:", error)
     return Response.json({ error: "Failed to create source" }, { status: 500 })

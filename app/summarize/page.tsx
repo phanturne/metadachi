@@ -132,7 +132,7 @@ export default function SummarizePage() {
       
       formData.append("customInstructions", customInstructions)
 
-      // Create source
+      // Create source and get summary
       const sourceResponse = await fetch("/api/sources", {
         method: "POST",
         body: formData,
@@ -146,51 +146,24 @@ export default function SummarizePage() {
         return
       }
 
-      // Start polling for summary
-      const pollInterval = setInterval(async () => {
-        try {
-          const { data: summaries, error } = await supabase
-            .from('summaries')
-            .select('*')
-            .eq('source_id', sourceData.id)
-
-          if (error) {
-            console.error('Error polling summary:', error)
-            clearInterval(pollInterval)
-            toast.error("Failed to fetch summary")
-            setIsLoading(false)
-            return
-          }
-
-          // If we have a summary, use it
-          if (summaries && summaries.length > 0) {
-            const summary = summaries[0]
-            clearInterval(pollInterval)
-            setSummary({
-              summary: summary.summary_text,
-              keyPoints: summary.key_points,
-              quotes: summary.quotes,
-              tags: summary.tags,
-            })
-            toast.success("Summary generated successfully!")
-            setIsLoading(false)
-          }
-        } catch (err) {
-          console.error('Error in polling:', err)
-          clearInterval(pollInterval)
-          toast.error("Failed to fetch summary")
-          setIsLoading(false)
-        }
-      }, 2000) // Poll every 2 seconds
-
-      // Stop polling after 2 minutes
-      setTimeout(() => {
-        clearInterval(pollInterval)
-        if (isLoading) {
-          toast.error("Summary generation timed out")
-          setIsLoading(false)
-        }
-      }, 120000)
+      // Use the immediate summary response
+      setSummary({
+        summary: sourceData.summary,
+        keyPoints: sourceData.keyPoints,
+        quotes: sourceData.quotes,
+        tags: sourceData.tags,
+      })
+      
+      // Update file info if it's a file upload
+      if (inputType === "file" && selectedFile) {
+        setSelectedFile(new File([selectedFile], selectedFile.name, {
+          type: selectedFile.type,
+          lastModified: selectedFile.lastModified
+        }))
+      }
+      
+      toast.success("Summary generated successfully!")
+      setIsLoading(false)
 
     } catch (err) {
       console.error("Submit error:", err)

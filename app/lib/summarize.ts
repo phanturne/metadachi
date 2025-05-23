@@ -31,11 +31,13 @@ export async function generateSummary(text: string, customInstructions?: string)
     }),
     prompt: `Please analyze the following text and provide a structured response. If the text is a URL, analyze its content. If it's direct text, analyze that text.
 
-${text}
+${customInstructions ? `IMPORTANT: Please follow these specific instructions for the summary:
+${customInstructions}
 
-${customInstructions ? `Additional Instructions: ${customInstructions}` : ""}`,
+` : ""}Text to analyze:
+${text}`,
     system:
-      "You are a helpful AI assistant that specializes in analyzing and summarizing text. Provide clear, concise, and well-structured summaries with key insights. Always analyze the provided text, whether it's direct text or content from a URL. Generate relevant tags to categorize the content based on its main themes and topics.",
+      "You are a helpful AI assistant that specializes in analyzing and summarizing text. Provide clear, concise, and well-structured summaries with key insights. Always analyze the provided text, whether it's direct text or content from a URL. Generate relevant tags to categorize the content based on its main themes and topics. When custom instructions are provided, prioritize following them exactly.",
   })
 
   return object
