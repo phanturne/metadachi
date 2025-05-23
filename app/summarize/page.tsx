@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { signInAnonymouslyIfNeeded } from "@/utils/supabase/anonymous"
 import { createClient } from "@/utils/supabase/client"
 import { Link, Loader2, Sparkles, Type, Upload } from 'lucide-react'
 import { useRef, useState } from "react"
@@ -57,6 +58,7 @@ export default function SummarizePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [summary, setSummary] = useState<SummaryResponse | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isGuest, setIsGuest] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
@@ -98,6 +100,19 @@ export default function SummarizePage() {
       return
     }
     if (inputType !== "file" && !input.trim()) return
+
+    // Modular anonymous sign-in
+    const { isGuest, error } = await signInAnonymouslyIfNeeded(supabase)
+    if (error) {
+      toast.error("Failed to create guest account. Please try again.")
+      return
+    }
+    if (isGuest) {
+      setIsGuest(true)
+      toast.info("We've created a temporary guest account to save your summaries. Add an email to keep them forever!", {
+        duration: 5000,
+      })
+    }
 
     setIsLoading(true)
     setSummary(null)
@@ -195,6 +210,17 @@ export default function SummarizePage() {
           <p className="text-muted-foreground">
             Transform any text, article, or document into a clear, concise summary with key insights
           </p>
+          {isGuest && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              <p>Your files and summaries are saved securely with a guest account.</p>
+              <p className="mt-1">
+                <Link href="/auth/signup" className="text-primary hover:underline">
+                  Sign up
+                </Link>{" "}
+                to access them anytime.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="bg-card rounded-xl shadow-lg p-6 mb-8 border border-border/50">

@@ -114,6 +114,16 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Missing required fields" }, { status: 400 })
     }
 
+    // Get user first to ensure authentication
+    const { data: { user: existingUser }, error: userError } = await supabase.auth.getUser()
+    if (userError || !existingUser) {
+      // Try to sign in anonymously if no user exists
+      const { data: guestData, error: guestError } = await supabase.auth.signInAnonymously()
+      if (guestError || !guestData.user) {
+        return Response.json({ error: "Unauthorized" }, { status: 401 })
+      }
+    }
+
     let sourceContent = content
     let fileName: string | null = null
     let filePath: string | null = null
@@ -121,9 +131,9 @@ export async function POST(req: NextRequest) {
     let fileType: string | null = null
 
     if (type === "FILE" && file) {
-      // Get user first to ensure authentication
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user) {
+      // Get the current user (either existing or newly created guest)
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) {
         return Response.json({ error: "Unauthorized" }, { status: 401 })
       }
 
@@ -131,7 +141,7 @@ export async function POST(req: NextRequest) {
       const fileBuffer = await file.arrayBuffer()
       const fileExt = file.name.split('.').pop()
       fileName = `${Date.now()}.${fileExt}`
-      filePath = `${user.id}/${fileName}`
+      filePath = `${currentUser.id}/${fileName}`
 
       const { error: uploadError } = await supabase.storage
         .from('source_files')
