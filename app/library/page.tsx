@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/utils/supabase/client"
-import { Book, Copy, FileText, Globe, Grid, List, Loader2, Search, Sparkles, Tag, Trash2, X } from "lucide-react"
+import { Book, FileText, Globe, Grid, List, Loader2, Search, Sparkles, Tag, Trash2, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -31,6 +31,7 @@ type Source = {
   content: string | null
   url: string | null
   file_name: string | null
+  file_path: string | null
   created_at: string
   summary?: {
     summary_text: string
@@ -54,6 +55,9 @@ export default function LibraryPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [tagSearchQuery, setTagSearchQuery] = useState("")
   const [sourceToDelete, setSourceToDelete] = useState<Source | null>(null)
+  const [fileContent, setFileContent] = useState<string | null>(null)
+  const [isLoadingFile, setIsLoadingFile] = useState(false)
+  const [isContentExpanded, setIsContentExpanded] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -101,19 +105,6 @@ export default function LibraryPage() {
     } catch (error) {
       console.error("Error deleting source:", error)
       toast.error("Failed to delete source")
-    }
-  }
-
-  const copyToClipboard = async (text: string | null) => {
-    if (!text) {
-      toast.error("No content to copy")
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(text)
-      toast.success("Copied to clipboard")
-    } catch {
-      toast.error("Failed to copy to clipboard")
     }
   }
 
@@ -167,11 +158,11 @@ export default function LibraryPage() {
   const getSourceIcon = (type: Source["type"]) => {
     switch (type) {
       case "TEXT":
-        return <FileText className="w-5 h-5" />
+        return <FileText className="w-4 h-4" />
       case "URL":
-        return <Globe className="w-5 h-5" />
+        return <Globe className="w-4 h-4" />
       case "FILE":
-        return <Book className="w-5 h-5" />
+        return <Book className="w-4 h-4" />
     }
   }
 
@@ -189,6 +180,24 @@ export default function LibraryPage() {
     if (source.type === "URL") return source.url
     if (source.type === "FILE") return source.file_name
     return source.content?.slice(0, 100) + (source.content && source.content.length > 100 ? "..." : "")
+  }
+
+  const fetchFileContent = async (filePath: string) => {
+    try {
+      setIsLoadingFile(true)
+      const { data, error } = await supabase.storage
+        .from('source_files')
+        .download(filePath)
+
+      if (error) throw error
+      const content = await data.text()
+      setFileContent(content)
+    } catch (error) {
+      console.error("Error fetching file content:", error)
+      toast.error("Failed to load file content")
+    } finally {
+      setIsLoadingFile(false)
+    }
   }
 
   return (
@@ -355,72 +364,54 @@ export default function LibraryPage() {
               No sources found
             </div>
           ) : (
-            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "flex flex-col gap-6"}>
+            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-6"}>
               {filteredAndSortedSources.map((source) => (
                 <div
                   key={source.id}
-                  className={`bg-card rounded-xl shadow-lg p-6 border border-border/50 hover:border-primary/50 transition-colors ${
+                  className={`bg-card rounded-xl shadow-lg p-6 border border-border/50 hover:border-primary/50 transition-all duration-200 ${
                     viewMode === "list" ? "flex items-start gap-4" : ""
                   }`}
                 >
                   <div 
-                    className={`${viewMode === "list" ? "flex items-start gap-4 flex-1" : ""} cursor-pointer group`}
+                    className={`${viewMode === "list" ? "flex items-start gap-4 flex-1" : ""} cursor-pointer group relative`}
                     onClick={() => setSelectedSource(source)}
                   >
-                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                      {getSourceIcon(source.type)}
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        {getSourceIcon(source.type)}
+                        <span className="text-sm">{formatDate(source.created_at)}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSourceToDelete(source);
+                        }}
+                        className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 -mr-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(source.created_at)}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="text-sm text-muted-foreground">
-                            {source.type}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyToClipboard(getSourcePreview(source));
-                            }}
-                            className="h-8 w-8"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSourceToDelete(source);
-                            }}
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="text-lg font-medium mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                      <div className="text-lg font-medium mb-3 line-clamp-1 group-hover:text-primary transition-colors">
                         {getSourcePreview(source)}
                       </div>
                       {source.summary && (
                         <div className="mt-4 pt-4 border-t border-border/50">
                           <div className="flex items-center gap-2 text-primary mb-2">
                             <Sparkles className="w-4 h-4" />
-                            <span className="font-medium">Summary</span>
+                            <span className="font-medium text-sm">Summary</span>
                           </div>
-                          <div className="text-muted-foreground line-clamp-3">
+                          <div className="text-muted-foreground line-clamp-3 text-sm">
                             {source.summary.summary_text}
                           </div>
                           {source.summary.tags && source.summary.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-3">
+                            <div className="flex flex-wrap gap-1.5 mt-2">
                               {source.summary.tags.map((tag, index) => (
                                 <span
                                   key={index}
-                                  className="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs"
+                                  className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs"
                                 >
                                   {tag}
                                 </span>
@@ -464,42 +455,103 @@ export default function LibraryPage() {
 
       {/* Source Detail Modal */}
       {selectedSource && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-xl shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Source Details</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card rounded-xl shadow-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                  {getSourceIcon(selectedSource.type)}
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    {selectedSource.type === "FILE" ? selectedSource.file_name : "Source Details"}
+                  </h2>
+                  <div className="text-sm text-muted-foreground">
+                    {formatDate(selectedSource.created_at)}
+                  </div>
+                </div>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setSelectedSource(null)}
-                className="h-8 w-8"
+                onClick={() => {
+                  setSelectedSource(null)
+                  setFileContent(null)
+                  setIsContentExpanded(false)
+                }}
+                className="h-8 w-8 hover:bg-muted"
               >
                 ×
               </Button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Type</div>
-                <div className="font-medium">{selectedSource.type}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">Created</div>
-                <div className="font-medium">{formatDate(selectedSource.created_at)}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">Content</div>
-                <div className="whitespace-pre-wrap font-medium">
-                  {selectedSource.content || selectedSource.url || selectedSource.file_name}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium text-muted-foreground">Content</div>
+                  {selectedSource.type === "FILE" && !isLoadingFile && !fileContent && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => selectedSource.file_path && fetchFileContent(selectedSource.file_path)}
+                      className="h-8"
+                    >
+                      Load File Content
+                    </Button>
+                  )}
                 </div>
+                {selectedSource.type === "FILE" ? (
+                  <div>
+                    {isLoadingFile ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      </div>
+                    ) : fileContent ? (
+                      <div className="relative">
+                        <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isContentExpanded ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
+                          {fileContent}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute bottom-0 right-0 bg-gradient-to-t from-background to-transparent px-4 py-2 hover:bg-transparent"
+                          onClick={() => setIsContentExpanded(!isContentExpanded)}
+                        >
+                          {isContentExpanded ? 'Collapse' : 'Expand'}
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isContentExpanded ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
+                      {selectedSource.content || selectedSource.url}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute bottom-0 right-0 bg-gradient-to-t from-background to-transparent px-4 py-2 hover:bg-transparent"
+                      onClick={() => setIsContentExpanded(!isContentExpanded)}
+                    >
+                      {isContentExpanded ? 'Collapse' : 'Expand'}
+                    </Button>
+                  </div>
+                )}
               </div>
               {selectedSource.summary && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">Summary</div>
-                  <div className="whitespace-pre-wrap">{selectedSource.summary.summary_text}</div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center gap-2 text-primary mb-2">
+                      <Sparkles className="w-4 h-4" />
+                      <span className="font-medium">Summary</span>
+                    </div>
+                    <div className="whitespace-pre-wrap text-muted-foreground">
+                      {selectedSource.summary.summary_text}
+                    </div>
+                  </div>
                   {selectedSource.summary.key_points.length > 0 && (
-                    <div className="mt-4">
-                      <div className="text-sm text-muted-foreground mb-1">Key Points</div>
-                      <ul className="list-disc list-inside space-y-1">
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-2">Key Points</div>
+                      <ul className="list-disc list-inside space-y-1.5 text-muted-foreground">
                         {selectedSource.summary.key_points.map((point, index) => (
                           <li key={index}>{point}</li>
                         ))}
@@ -507,13 +559,28 @@ export default function LibraryPage() {
                     </div>
                   )}
                   {selectedSource.summary.quotes.length > 0 && (
-                    <div className="mt-4">
-                      <div className="text-sm text-muted-foreground mb-1">Notable Quotes</div>
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-2">Notable Quotes</div>
                       <div className="space-y-2">
                         {selectedSource.summary.quotes.map((quote, index) => (
-                          <blockquote key={index} className="border-l-4 border-primary/20 pl-4 italic">
+                          <blockquote key={index} className="border-l-4 border-primary/20 pl-4 italic text-muted-foreground">
                             {quote}
                           </blockquote>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {selectedSource.summary.tags && selectedSource.summary.tags.length > 0 && (
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-2">Tags</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedSource.summary.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs"
+                          >
+                            {tag}
+                          </span>
                         ))}
                       </div>
                     </div>
