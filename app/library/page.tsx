@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/utils/supabase/client"
 import { Book, FileText, Globe, Grid, List, Loader2, Search, Sparkles, Tag, Trash2, X } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 type Source = {
@@ -60,11 +60,7 @@ export default function LibraryPage() {
   const [isContentExpanded, setIsContentExpanded] = useState(false)
   const supabase = createClient()
 
-  useEffect(() => {
-    loadSources()
-  }, [])
-
-  const loadSources = async () => {
+  const loadSources = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("sources")
@@ -88,7 +84,11 @@ export default function LibraryPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    loadSources()
+  }, [loadSources])
 
   const deleteSource = async (sourceId: string) => {
     try {

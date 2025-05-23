@@ -4,38 +4,20 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { createClient } from "@/utils/supabase/client"
-import type { User as SupabaseUser } from '@supabase/supabase-js'
-import { Menu, User } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
+import { Home, Library, Menu, User } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import * as React from "react"
 
 export function Navbar() {
-  const [user, setUser] = React.useState<SupabaseUser | null>(null)
-  const supabase = createClient()
-  const router = useRouter()
-
-  React.useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-  }, [supabase.auth])
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.refresh()
-  }
+  const { user, signOut } = useAuth()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -50,13 +32,12 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[240px] sm:w-[300px]">
               <nav className="flex flex-col gap-4 mt-8">
-                <Link href="/" className="text-lg font-medium transition-colors hover:text-primary">
+                <Link href="/" className="text-lg font-medium transition-colors hover:text-primary flex items-center gap-2">
+                  <Home className="h-5 w-5" />
                   Home
                 </Link>
-                <Link href="/summarize" className="text-lg font-medium transition-colors hover:text-primary">
-                  Summarize
-                </Link>
-                <Link href="/library" className="text-lg font-medium transition-colors hover:text-primary">
+                <Link href="/library" className="text-lg font-medium transition-colors hover:text-primary flex items-center gap-2">
+                  <Library className="h-5 w-5" />
                   Library
                 </Link>
               </nav>
@@ -69,13 +50,12 @@ export function Navbar() {
           </Link>
         </div>
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/" className="text-sm font-medium transition-colors hover:text-primary">
+          <Link href="/" className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-2">
+            <Home className="h-4 w-4" />
             Home
           </Link>
-          <Link href="/summarize" className="text-sm font-medium transition-colors hover:text-primary">
-            Summarize
-          </Link>
-          <Link href="/library" className="text-sm font-medium transition-colors hover:text-primary">
+          <Link href="/library" className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-2">
+            <Library className="h-4 w-4" />
             Library
           </Link>
         </nav>
@@ -96,11 +76,23 @@ export function Navbar() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.email}</p>
+                    <p className="text-sm font-medium leading-none">
+                      {user.email || "Guest User"}
+                    </p>
+                    {!user.email && (
+                      <p className="text-xs text-muted-foreground">
+                        Anonymous Account
+                      </p>
+                    )}
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
+                {!user.email && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/login">Create Account</Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={signOut}>
                   Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
