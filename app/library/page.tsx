@@ -1,13 +1,23 @@
 "use client"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/utils/supabase/client"
@@ -30,7 +40,7 @@ type Source = {
   } | null
 }
 
-type SortOption = "newest" | "oldest" | "type"
+type SortOption = "newest" | "oldest"
 type ViewMode = "grid" | "list"
 
 export default function LibraryPage() {
@@ -43,6 +53,7 @@ export default function LibraryPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [tagSearchQuery, setTagSearchQuery] = useState("")
+  const [sourceToDelete, setSourceToDelete] = useState<Source | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -86,6 +97,7 @@ export default function LibraryPage() {
 
       setSources(sources.filter(s => s.id !== sourceId))
       toast.success("Source deleted successfully")
+      setSourceToDelete(null)
     } catch (error) {
       console.error("Error deleting source:", error)
       toast.error("Failed to delete source")
@@ -147,8 +159,6 @@ export default function LibraryPage() {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         case "oldest":
           return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        case "type":
-          return a.type.localeCompare(b.type)
         default:
           return 0
       }
@@ -285,13 +295,6 @@ export default function LibraryPage() {
                 >
                   {sortBy === "newest" ? "Newest First" : "Oldest First"}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setSortBy("type")}
-                  className="flex-1 sm:flex-none"
-                >
-                  Sort by Type
-                </Button>
                 <div className="flex gap-2">
                   <Button
                     variant={viewMode === "grid" ? "default" : "outline"}
@@ -360,7 +363,10 @@ export default function LibraryPage() {
                     viewMode === "list" ? "flex items-start gap-4" : ""
                   }`}
                 >
-                  <div className={`${viewMode === "list" ? "flex items-start gap-4 flex-1" : ""}`}>
+                  <div 
+                    className={`${viewMode === "list" ? "flex items-start gap-4 flex-1" : ""} cursor-pointer group`}
+                    onClick={() => setSelectedSource(source)}
+                  >
                     <div className="p-2 bg-primary/10 rounded-lg text-primary">
                       {getSourceIcon(source.type)}
                     </div>
@@ -376,7 +382,10 @@ export default function LibraryPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => copyToClipboard(getSourcePreview(source))}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(getSourcePreview(source));
+                            }}
                             className="h-8 w-8"
                           >
                             <Copy className="h-4 w-4" />
@@ -384,17 +393,17 @@ export default function LibraryPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => deleteSource(source.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSourceToDelete(source);
+                            }}
                             className="h-8 w-8 text-destructive hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
-                      <div 
-                        className="text-lg font-medium mb-2 line-clamp-2 cursor-pointer hover:text-primary"
-                        onClick={() => setSelectedSource(source)}
-                      >
+                      <div className="text-lg font-medium mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                         {getSourcePreview(source)}
                       </div>
                       {source.summary && (
@@ -428,6 +437,30 @@ export default function LibraryPage() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!sourceToDelete} onOpenChange={() => setSourceToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the source
+              {sourceToDelete?.type === "URL" ? ` from ${sourceToDelete.url}` : ""}
+              {sourceToDelete?.type === "FILE" ? ` "${sourceToDelete.file_name}"` : ""}
+              {sourceToDelete?.type === "TEXT" ? " and its content" : ""}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => sourceToDelete && deleteSource(sourceToDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Source Detail Modal */}
       {selectedSource && (
