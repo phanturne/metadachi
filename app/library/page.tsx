@@ -1,5 +1,7 @@
 "use client"
 
+import { SourceInput as SourceInputType } from "@/components/source-input"
+import { SourceModal } from "@/components/source-modal"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,18 +23,23 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/utils/supabase/client"
-import { Book, FileText, Globe, Grid, List, Loader2, Search, Sparkles, Tag, Trash2, X } from "lucide-react"
+import { Book, FileText, Globe, Grid, List, Loader2, Plus, Search, Sparkles, Tag, Trash2, X } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
-type Source = {
+type SourceType = "TEXT" | "URL" | "FILE"
+
+interface Source {
   id: string
-  type: "TEXT" | "URL" | "FILE"
+  type: SourceType
   content: string | null
   url: string | null
   file_name: string | null
   file_path: string | null
+  file_size: number | null
+  file_type: string | null
   created_at: string
+  user_id: string
   summary?: {
     summary_text: string
     key_points: string[]
@@ -41,23 +48,23 @@ type Source = {
   } | null
 }
 
-type SortOption = "newest" | "oldest"
-type ViewMode = "grid" | "list"
-
 export default function LibraryPage() {
   const [sources, setSources] = useState<Source[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedType, setSelectedType] = useState<"ALL" | "TEXT" | "URL" | "FILE">("ALL")
-  const [sortBy, setSortBy] = useState<SortOption>("newest")
+  const [selectedType, setSelectedType] = useState<SourceType | "ALL">("ALL")
+  const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest")
   const [selectedSource, setSelectedSource] = useState<Source | null>(null)
-  const [viewMode, setViewMode] = useState<ViewMode>("grid")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [tagSearchQuery, setTagSearchQuery] = useState("")
+  const [isSourceModalOpen, setIsSourceModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [sourceToDelete, setSourceToDelete] = useState<Source | null>(null)
-  const [fileContent, setFileContent] = useState<string | null>(null)
-  const [isLoadingFile, setIsLoadingFile] = useState(false)
-  const [isContentExpanded, setIsContentExpanded] = useState(false)
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false)
+  const [summary, setSummary] = useState("")
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
   const supabase = createClient()
 
   const loadSources = useCallback(async () => {
@@ -90,18 +97,31 @@ export default function LibraryPage() {
     loadSources()
   }, [loadSources])
 
-  const deleteSource = async (sourceId: string) => {
+  const handleDeleteSource = async () => {
+    if (!sourceToDelete) return
+
     try {
-      const { error: deleteError } = await supabase
+      // If it's a file, delete from storage first
+      if (sourceToDelete.type === "FILE" && sourceToDelete.file_path) {
+        const { error: storageError } = await supabase.storage
+          .from("source_files")
+          .remove([sourceToDelete.file_path])
+
+        if (storageError) throw storageError
+      }
+
+      // Delete from database
+      const { error } = await supabase
         .from("sources")
         .delete()
-        .eq("id", sourceId)
+        .eq("id", sourceToDelete.id)
 
-      if (deleteError) throw deleteError
+      if (error) throw error
 
-      setSources(sources.filter(s => s.id !== sourceId))
       toast.success("Source deleted successfully")
+      setIsDeleteDialogOpen(false)
       setSourceToDelete(null)
+      loadSources()
     } catch (error) {
       console.error("Error deleting source:", error)
       toast.error("Failed to delete source")
@@ -178,25 +198,80 @@ export default function LibraryPage() {
 
   const getSourcePreview = (source: Source) => {
     if (source.type === "URL") return source.url
-    if (source.type === "FILE") return source.file_name
+    if (source.type === "FILE") {
+      const fileSize = source.file_size ? formatFileSize(source.file_size) : null
+      return (
+        <div className="flex items-center gap-2">
+          <span className="truncate">{source.file_name}</span>
+          {fileSize && (
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              ({fileSize})
+            </span>
+          )}
+        </div>
+      )
+    }
     return source.content?.slice(0, 100) + (source.content && source.content.length > 100 ? "..." : "")
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
   }
 
   const fetchFileContent = async (filePath: string) => {
     try {
-      setIsLoadingFile(true)
+      setIsGeneratingSummary(true)
       const { data, error } = await supabase.storage
         .from('source_files')
         .download(filePath)
 
       if (error) throw error
       const content = await data.text()
-      setFileContent(content)
+      setSummary(content)
     } catch (error) {
       console.error("Error fetching file content:", error)
       toast.error("Failed to load file content")
     } finally {
-      setIsLoadingFile(false)
+      setIsGeneratingSummary(false)
+    }
+  }
+
+  const handleSourceSubmit = async (source: SourceInputType) => {
+    try {
+      setIsSubmitting(true)
+      const formData = new FormData()
+      formData.append("type", source.type)
+      
+      if (source.type === "TEXT") {
+        formData.append("content", source.content)
+      } else if (source.type === "URL") {
+        formData.append("url", source.url)
+      } else if (source.type === "FILE" && source.file) {
+        formData.append("file", source.file)
+      }
+
+      const response = await fetch("/api/sources", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to add source")
+      }
+
+      toast.success("Source added successfully")
+      setIsSourceModalOpen(false)
+      loadSources()
+    } catch (error) {
+      console.error("Error adding source:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to add source")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -230,37 +305,57 @@ export default function LibraryPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={selectedType === "ALL" ? "default" : "outline"}
-                  onClick={() => setSelectedType("ALL")}
-                  className="flex-1 sm:flex-none"
-                >
-                  All
-                </Button>
-                <Button
-                  variant={selectedType === "TEXT" ? "default" : "outline"}
-                  onClick={() => setSelectedType("TEXT")}
-                  className="flex-1 sm:flex-none"
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Text
-                </Button>
-                <Button
-                  variant={selectedType === "URL" ? "default" : "outline"}
-                  onClick={() => setSelectedType("URL")}
-                  className="flex-1 sm:flex-none"
-                >
-                  <Globe className="w-4 h-4 mr-2" />
-                  URL
-                </Button>
-                <Button
-                  variant={selectedType === "FILE" ? "default" : "outline"}
-                  onClick={() => setSelectedType("FILE")}
-                  className="flex-1 sm:flex-none"
-                >
-                  <Book className="w-4 h-4 mr-2" />
-                  File
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-2">
+                      <FileText className="h-4 w-4" />
+                      {selectedType === "ALL" ? "All Types" : selectedType}
+                      {selectedType !== "ALL" && (
+                        <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                          1
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[200px]">
+                    <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={selectedType === "ALL"}
+                      onCheckedChange={() => setSelectedType("ALL")}
+                    >
+                      All Types
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={selectedType === "TEXT"}
+                      onCheckedChange={() => setSelectedType("TEXT")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Text
+                      </div>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={selectedType === "URL"}
+                      onCheckedChange={() => setSelectedType("URL")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        URL
+                      </div>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={selectedType === "FILE"}
+                      onCheckedChange={() => setSelectedType("FILE")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Book className="h-4 w-4" />
+                        File
+                      </div>
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-9 gap-2">
@@ -297,18 +392,35 @@ export default function LibraryPage() {
                     </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button
-                  variant="outline"
-                  onClick={() => setSortBy(sortBy === "newest" ? "oldest" : "newest")}
-                  className="flex-1 sm:flex-none"
-                >
-                  {sortBy === "newest" ? "Newest First" : "Oldest First"}
-                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-2">
+                      {sortBy === "newest" ? "Newest First" : "Oldest First"}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuCheckboxItem
+                      checked={sortBy === "newest"}
+                      onCheckedChange={() => setSortBy("newest")}
+                    >
+                      Newest First
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={sortBy === "oldest"}
+                      onCheckedChange={() => setSortBy("oldest")}
+                    >
+                      Oldest First
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <div className="flex gap-2">
                   <Button
                     variant={viewMode === "grid" ? "default" : "outline"}
                     onClick={() => setViewMode("grid")}
                     size="icon"
+                    className="h-9 w-9"
                   >
                     <Grid className="h-4 w-4" />
                   </Button>
@@ -316,10 +428,21 @@ export default function LibraryPage() {
                     variant={viewMode === "list" ? "default" : "outline"}
                     onClick={() => setViewMode("list")}
                     size="icon"
+                    className="h-9 w-9"
                   >
                     <List className="h-4 w-4" />
                   </Button>
                 </div>
+
+                <Button
+                  onClick={() => {
+                    setIsSourceModalOpen(true)
+                  }}
+                  className="h-9 gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Source
+                </Button>
               </div>
             </div>
 
@@ -376,51 +499,103 @@ export default function LibraryPage() {
                     className={`${viewMode === "list" ? "flex items-start gap-4 flex-1" : ""} cursor-pointer group relative`}
                     onClick={() => setSelectedSource(source)}
                   >
-                    <div className="flex items-center justify-between text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        {getSourceIcon(source.type)}
-                        <span className="text-sm">{formatDate(source.created_at)}</span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSourceToDelete(source);
-                        }}
-                        className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 -mr-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-lg font-medium mb-3 line-clamp-1 group-hover:text-primary transition-colors">
-                        {getSourcePreview(source)}
-                      </div>
-                      {source.summary && (
-                        <div className="mt-4 pt-4 border-t border-border/50">
-                          <div className="flex items-center gap-2 text-primary mb-2">
-                            <Sparkles className="w-4 h-4" />
-                            <span className="font-medium text-sm">Summary</span>
+                    {viewMode === "list" ? (
+                      <div className="flex flex-col gap-2 flex-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-primary/10 rounded-md text-primary">
+                              {getSourceIcon(source.type)}
+                            </div>
+                            <span className="text-sm text-muted-foreground">{formatDate(source.created_at)}</span>
                           </div>
-                          <div className="text-muted-foreground line-clamp-3 text-sm">
-                            {source.summary.summary_text}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSourceToDelete(source);
+                            }}
+                            className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="text-lg font-medium line-clamp-1 group-hover:text-primary transition-colors">
+                          {getSourcePreview(source)}
+                        </div>
+                        {source.summary && (
+                          <div className="mt-2">
+                            <div className="flex items-center gap-2 text-primary mb-1">
+                              <Sparkles className="w-4 h-4" />
+                              <span className="font-medium text-sm">Summary</span>
+                            </div>
+                            <div className="text-muted-foreground line-clamp-2 text-sm">
+                              {source.summary.summary_text}
+                            </div>
+                            {source.summary.tags && source.summary.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {source.summary.tags.map((tag, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          {source.summary.tags && source.summary.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                              {source.summary.tags.map((tag, index) => (
-                                <span
-                                  key={index}
-                                  className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            {getSourceIcon(source.type)}
+                            <span className="text-sm">{formatDate(source.created_at)}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSourceToDelete(source);
+                            }}
+                            className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 -mr-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-lg font-medium mb-3 line-clamp-1 group-hover:text-primary transition-colors">
+                            {getSourcePreview(source)}
+                          </div>
+                          {source.summary && (
+                            <div className="mt-4 pt-4 border-t border-border/50">
+                              <div className="flex items-center gap-2 text-primary mb-2">
+                                <Sparkles className="w-4 h-4" />
+                                <span className="font-medium text-sm">Summary</span>
+                              </div>
+                              <div className="text-muted-foreground line-clamp-3 text-sm">
+                                {source.summary.summary_text}
+                              </div>
+                              {source.summary.tags && source.summary.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {source.summary.tags.map((tag, index) => (
+                                    <span
+                                      key={index}
+                                      className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -429,22 +604,27 @@ export default function LibraryPage() {
         </div>
       </div>
 
+      {/* Source Modal */}
+      <SourceModal
+        open={isSourceModalOpen}
+        onOpenChange={setIsSourceModalOpen}
+        onSourceSubmit={handleSourceSubmit}
+        isSubmitting={isSubmitting}
+      />
+
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!sourceToDelete} onOpenChange={() => setSourceToDelete(null)}>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Source</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the source
-              {sourceToDelete?.type === "URL" ? ` from ${sourceToDelete.url}` : ""}
-              {sourceToDelete?.type === "FILE" ? ` "${sourceToDelete.file_name}"` : ""}
-              {sourceToDelete?.type === "TEXT" ? " and its content" : ""}.
+              Are you sure you want to delete this source? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => sourceToDelete && deleteSource(sourceToDelete.id)}
+              onClick={handleDeleteSource}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
@@ -476,8 +656,8 @@ export default function LibraryPage() {
                 size="icon"
                 onClick={() => {
                   setSelectedSource(null)
-                  setFileContent(null)
-                  setIsContentExpanded(false)
+                  setSummary("")
+                  setIsSummaryModalOpen(false)
                 }}
                 className="h-8 w-8 hover:bg-muted"
               >
@@ -488,7 +668,7 @@ export default function LibraryPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium text-muted-foreground">Content</div>
-                  {selectedSource.type === "FILE" && !isLoadingFile && !fileContent && (
+                  {selectedSource.type === "FILE" && !isGeneratingSummary && !summary && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -501,38 +681,38 @@ export default function LibraryPage() {
                 </div>
                 {selectedSource.type === "FILE" ? (
                   <div>
-                    {isLoadingFile ? (
+                    {isGeneratingSummary ? (
                       <div className="flex items-center justify-center py-8">
                         <Loader2 className="w-6 h-6 animate-spin text-primary" />
                       </div>
-                    ) : fileContent ? (
+                    ) : summary ? (
                       <div className="relative">
-                        <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isContentExpanded ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
-                          {fileContent}
+                        <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isSummaryModalOpen ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
+                          {summary}
                         </div>
                         <Button
                           variant="ghost"
                           size="sm"
                           className="absolute bottom-0 right-0 bg-gradient-to-t from-background to-transparent px-4 py-2 hover:bg-transparent"
-                          onClick={() => setIsContentExpanded(!isContentExpanded)}
+                          onClick={() => setIsSummaryModalOpen(!isSummaryModalOpen)}
                         >
-                          {isContentExpanded ? 'Collapse' : 'Expand'}
+                          {isSummaryModalOpen ? 'Collapse' : 'Expand'}
                         </Button>
                       </div>
                     ) : null}
                   </div>
                 ) : (
                   <div className="relative">
-                    <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isContentExpanded ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
+                    <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isSummaryModalOpen ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
                       {selectedSource.content || selectedSource.url}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="absolute bottom-0 right-0 bg-gradient-to-t from-background to-transparent px-4 py-2 hover:bg-transparent"
-                      onClick={() => setIsContentExpanded(!isContentExpanded)}
+                      onClick={() => setIsSummaryModalOpen(!isSummaryModalOpen)}
                     >
-                      {isContentExpanded ? 'Collapse' : 'Expand'}
+                      {isSummaryModalOpen ? 'Collapse' : 'Expand'}
                     </Button>
                   </div>
                 )}

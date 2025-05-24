@@ -140,10 +140,6 @@ export default function Home() {
             Join our users who are saving time, gaining insights, and building their knowledge library with our AI-powered platform.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="gap-2" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <Sparkles className="h-5 w-5" />
-              Try Again
-            </Button>
             <Button size="lg" variant="outline" className="gap-2" onClick={() => router.push("/login")}>
               <BookOpen className="h-5 w-5" />
               Create Account
