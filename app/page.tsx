@@ -9,11 +9,20 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function Home() {
-  const { user, isLoading } = useAuth()
+  const { isLoading } = useAuth()
   const [summary, setSummary] = useState<SummaryResponse | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
   const router = useRouter()
 
-  if (isLoading) {
+  const handleSummaryGenerated = (newSummary: SummaryResponse) => {
+    setSummary(newSummary)
+    // Store summary in localStorage
+    localStorage.setItem('pendingSummary', JSON.stringify(newSummary))
+    setIsNavigating(true)
+    router.push('/summarize')
+  }
+
+  if (isLoading || isNavigating) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
         <div className="container mx-auto max-w-3xl py-12 px-4">
@@ -27,20 +36,6 @@ export default function Home() {
     )
   }
 
-  // If user is authenticated, show the standard summarize page
-  if (user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        <div className="container mx-auto max-w-3xl py-12 px-4">
-          <SummarizeTool 
-            onSummaryGenerated={setSummary}
-            showTitle={true}
-          />
-          {summary && <SummaryResults summary={summary} className="mt-8" />}
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -96,7 +91,7 @@ export default function Home() {
           </div>
 
           {/* Right: Summarize Tool */}
-          <SummarizeTool onSummaryGenerated={setSummary} />
+          <SummarizeTool onSummaryGenerated={handleSummaryGenerated} />
         </div>
 
         {/* Summary Results */}

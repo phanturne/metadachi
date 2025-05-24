@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useAuth } from "@/contexts/auth-context"
-import { Home, Library, Menu, User } from "lucide-react"
+import { Home, Library, Menu, Scroll, User } from "lucide-react"
 import Link from "next/link"
 
 export function Navbar() {
@@ -32,9 +32,13 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[240px] sm:w-[300px]">
               <nav className="flex flex-col gap-4 mt-8">
-                <Link href="/" className="text-lg font-medium transition-colors hover:text-primary flex items-center gap-2">
+                <Link href="/home" className="text-lg font-medium transition-colors hover:text-primary flex items-center gap-2">
                   <Home className="h-5 w-5" />
                   Home
+                </Link>
+                <Link href="/summarize" className="text-lg font-medium transition-colors hover:text-primary flex items-center gap-2">
+                  <Scroll className="h-5 w-5" />
+                  Summarize
                 </Link>
                 <Link href="/library" className="text-lg font-medium transition-colors hover:text-primary flex items-center gap-2">
                   <Library className="h-5 w-5" />
@@ -50,9 +54,13 @@ export function Navbar() {
           </Link>
         </div>
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/" className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-2">
+          <Link href="/home" className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-2">
             <Home className="h-4 w-4" />
             Home
+          </Link>
+          <Link href="/summarize" className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-2">
+            <Scroll className="h-4 w-4" />
+            Summarize
           </Link>
           <Link href="/library" className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-2">
             <Library className="h-4 w-4" />
