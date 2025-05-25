@@ -25,6 +25,46 @@ interface DashboardData {
   popularTags: string[];
 }
 
+function SkeletonCard() {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+        <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+      </CardHeader>
+      <CardContent>
+        <div className="h-8 w-16 bg-muted rounded animate-pulse mb-2" />
+        <div className="h-3 w-32 bg-muted rounded animate-pulse" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function SkeletonRecentSource() {
+  return (
+    <div className="flex items-center gap-3 p-2 rounded-lg border bg-card">
+      <div className="h-8 w-8 bg-muted rounded-lg animate-pulse" />
+      <div className="flex-1">
+        <div className="h-4 w-48 bg-muted rounded animate-pulse mb-2" />
+        <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+      </div>
+      <div className="h-6 w-16 bg-muted rounded animate-pulse" />
+    </div>
+  );
+}
+
+function SkeletonQuickAction() {
+  return (
+    <div className="h-10 w-full bg-muted rounded animate-pulse" />
+  );
+}
+
+function SkeletonTag() {
+  return (
+    <div className="h-6 w-20 bg-muted rounded-full animate-pulse" />
+  );
+}
+
 export default function HomePage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,10 +89,66 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-[50vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-center">
+          <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+          <div className="h-10 w-32 bg-muted rounded animate-pulse" />
         </div>
+
+        {/* Stats Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+
+        {/* Recent Activity and Quick Actions Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-2">
+              <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <SkeletonRecentSource />
+                <SkeletonRecentSource />
+                <SkeletonRecentSource />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <SkeletonQuickAction />
+                <SkeletonQuickAction />
+                <SkeletonQuickAction />
+                <SkeletonQuickAction />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tags Overview Skeleton */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              <SkeletonTag />
+              <SkeletonTag />
+              <SkeletonTag />
+              <SkeletonTag />
+              <SkeletonTag />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

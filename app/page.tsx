@@ -9,10 +9,16 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function Home() {
-  const { isLoading } = useAuth()
+  const { user } = useAuth()
   const [summary, setSummary] = useState<SummaryResponse | null>(null)
   const [isNavigating, setIsNavigating] = useState(false)
   const router = useRouter()
+
+  // Immediate redirect if user is authenticated
+  if (user) {
+    router.replace('/home')
+    return null
+  }
 
   const handleSummaryGenerated = (newSummary: SummaryResponse) => {
     setSummary(newSummary)
@@ -22,20 +28,9 @@ export default function Home() {
     router.push('/summarize')
   }
 
-  if (isLoading || isNavigating) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        <div className="container mx-auto max-w-3xl py-12 px-4">
-          <div className="animate-pulse">
-            <div className="h-8 bg-muted rounded w-3/4 mb-4"></div>
-            <div className="h-4 bg-muted rounded w-1/2 mb-8"></div>
-            <div className="h-[400px] bg-muted rounded"></div>
-          </div>
-        </div>
-      </div>
-    )
+  if (isNavigating) {
+    return null
   }
-
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
