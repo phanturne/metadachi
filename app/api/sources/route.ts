@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
           file_path: type.toUpperCase() === "FILE" ? filePath : null,
           file_size: type.toUpperCase() === "FILE" ? fileSize : null,
           file_type: type.toUpperCase() === "FILE" ? fileType : null,
-          is_public: false,
+          visibility: 'PRIVATE',
           user_id: user.id
         })
         .select()
@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
               tags: summary.tags,
               style: "default",
               user_id: user.id,
-              is_public: false,
+              visibility: 'PRIVATE',
               custom_instructions: customInstructions
             })
 

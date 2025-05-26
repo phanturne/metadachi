@@ -9,6 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      notebook_sources: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          notebook_id: string
+          order_index: number
+          source_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          notebook_id: string
+          order_index: number
+          source_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          notebook_id?: string
+          order_index?: number
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notebook_sources_notebook_id_fkey"
+            columns: ["notebook_id"]
+            isOneToOne: false
+            referencedRelation: "notebooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notebook_sources_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notebooks: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          featured_at: string | null
+          id: string
+          is_featured: boolean
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: Database["public"]["Enums"]["visibility_type"]
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured_at?: string | null
+          id?: string
+          is_featured?: boolean
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+          visibility?: Database["public"]["Enums"]["visibility_type"]
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured_at?: string | null
+          id?: string
+          is_featured?: boolean
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: Database["public"]["Enums"]["visibility_type"]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatarUrl: string | null
@@ -86,11 +170,11 @@ export type Database = {
           file_size: number | null
           file_type: string | null
           id: string
-          is_public: boolean
           type: Database["public"]["Enums"]["source_type"]
           updated_at: string
           url: string | null
           user_id: string
+          visibility: Database["public"]["Enums"]["visibility_type"]
         }
         Insert: {
           content?: string | null
@@ -100,11 +184,11 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           id?: string
-          is_public?: boolean
           type: Database["public"]["Enums"]["source_type"]
           updated_at?: string
           url?: string | null
           user_id: string
+          visibility?: Database["public"]["Enums"]["visibility_type"]
         }
         Update: {
           content?: string | null
@@ -114,11 +198,11 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           id?: string
-          is_public?: boolean
           type?: Database["public"]["Enums"]["source_type"]
           updated_at?: string
           url?: string | null
           user_id?: string
+          visibility?: Database["public"]["Enums"]["visibility_type"]
         }
         Relationships: []
       }
@@ -127,7 +211,6 @@ export type Database = {
           created_at: string
           custom_instructions: string | null
           id: string
-          is_public: boolean
           key_points: string[]
           quotes: string[]
           source_id: string
@@ -136,12 +219,12 @@ export type Database = {
           tags: string[]
           updated_at: string
           user_id: string
+          visibility: Database["public"]["Enums"]["visibility_type"]
         }
         Insert: {
           created_at?: string
           custom_instructions?: string | null
           id?: string
-          is_public?: boolean
           key_points: string[]
           quotes: string[]
           source_id: string
@@ -150,12 +233,12 @@ export type Database = {
           tags: string[]
           updated_at?: string
           user_id: string
+          visibility?: Database["public"]["Enums"]["visibility_type"]
         }
         Update: {
           created_at?: string
           custom_instructions?: string | null
           id?: string
-          is_public?: boolean
           key_points?: string[]
           quotes?: string[]
           source_id?: string
@@ -164,6 +247,7 @@ export type Database = {
           tags?: string[]
           updated_at?: string
           user_id?: string
+          visibility?: Database["public"]["Enums"]["visibility_type"]
         }
         Relationships: [
           {
@@ -291,6 +375,7 @@ export type Database = {
     }
     Enums: {
       source_type: "TEXT" | "URL" | "FILE"
+      visibility_type: "PRIVATE" | "PUBLIC" | "SHARED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -407,6 +492,7 @@ export const Constants = {
   public: {
     Enums: {
       source_type: ["TEXT", "URL", "FILE"],
+      visibility_type: ["PRIVATE", "PUBLIC", "SHARED"],
     },
   },
 } as const
