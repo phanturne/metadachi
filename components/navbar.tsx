@@ -4,16 +4,16 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useAuth } from "@/contexts/auth-context"
-import { Home, Library, Menu, Scroll, User } from "lucide-react"
+import { BookOpen, Github, Home, Library, Menu, Scroll, User } from "lucide-react"
 import Link from "next/link"
 
 export function Navbar() {
@@ -44,6 +44,10 @@ export function Navbar() {
                   <Library className="h-5 w-5" />
                   Library
                 </Link>
+                <Link href="/notebooks" className="text-lg font-medium transition-colors hover:text-primary flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Notebooks
+                </Link>
               </nav>
             </SheetContent>
           </Sheet>
@@ -66,8 +70,18 @@ export function Navbar() {
             <Library className="h-4 w-4" />
             Library
           </Link>
+          <Link href="/notebooks" className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Notebooks
+          </Link>
         </nav>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" asChild>
+            <a href="https://github.com/phanturne/metadachi" target="_blank" rel="noopener noreferrer">
+              <Github className="h-5 w-5" />
+              <span className="sr-only">GitHub Repository</span>
+            </a>
+          </Button>
           <ThemeToggle />
           {user ? (
             <DropdownMenu>
