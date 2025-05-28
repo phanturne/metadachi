@@ -514,6 +514,7 @@ export default function LibraryPage() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setSourceToDelete(source);
+                              setIsDeleteDialogOpen(true);
                             }}
                             className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
                           >
@@ -554,18 +555,19 @@ export default function LibraryPage() {
                             {getSourceIcon(source.type)}
                             <span className="text-sm">{formatDate(source.created_at)}</span>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSourceToDelete(source);
-                            }}
-                            className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 -mr-2"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSourceToDelete(source);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                              className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-lg font-medium mb-3 line-clamp-1 group-hover:text-primary transition-colors">
                             {getSourcePreview(source)}
