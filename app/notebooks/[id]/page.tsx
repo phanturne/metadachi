@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { useAuth } from "@/contexts/auth-context"
 import { createClient } from "@/utils/supabase/client"
-import { ArrowLeft, Plus } from "lucide-react"
+import { ArrowLeft, Lock, Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { use, useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -36,7 +36,7 @@ interface Source {
 
 export default function NotebookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { user } = useAuth()
+  const { user, createAnonymousAccount } = useAuth()
   const router = useRouter()
   const [notebook, setNotebook] = useState<Notebook | null>(null)
   const [notebookSources, setNotebookSources] = useState<Source[]>([])
@@ -44,6 +44,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
   const [isAddSourceDialogOpen, setIsAddSourceDialogOpen] = useState(false)
   const [availableSources, setAvailableSources] = useState<Source[]>([])
   const [sourcesToAdd, setSourcesToAdd] = useState<string[]>([])
+  const [hasAccess, setHasAccess] = useState(false)
 
   useEffect(() => {
     const loadNotebook = async () => {
@@ -55,12 +56,25 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
           .eq("id", id)
           .single()
 
-        if (error) throw error
+        if (error) {
+          console.error("Error loading notebook:", error)
+          toast.error("Failed to load notebook")
+          setNotebook(null)
+          setHasAccess(false)
+          return
+        }
+
+        // Check if user has access to the notebook
+        const canAccess = data.visibility === "PUBLIC" || 
+          (!!user && (data.user_id === user.id || data.visibility === "SHARED"))
+
+        setHasAccess(canAccess)
         setNotebook(data)
       } catch (error) {
         console.error("Error loading notebook:", error)
         toast.error("Failed to load notebook")
-        router.push("/notebooks")
+        setNotebook(null)
+        setHasAccess(false)
       } finally {
         setIsLoading(false)
       }
@@ -93,13 +107,11 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
       }
     }
 
-    if (!user && !isLoading) {
-      router.push("/auth/signin")
-    } else if (user) {
-      loadNotebook()
+    loadNotebook()
+    if (hasAccess) {
       loadNotebookSources()
     }
-  }, [user, isLoading, router, id])
+  }, [id, user, hasAccess, router])
 
   const loadAvailableSources = async () => {
     try {
@@ -126,6 +138,11 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
 
   const handleAddSources = async () => {
     try {
+      // Create anonymous account if user is not logged in
+      if (!user) {
+        await createAnonymousAccount()
+      }
+
       const supabase = createClient()
       
       // Get the current max order_index
@@ -196,8 +213,48 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
     )
   }
 
-  if (!notebook) {
-    return null
+  if (!notebook || !hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+        <div className="container mx-auto py-12 px-4">
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/notebooks")}
+              className="h-8 w-8"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
+              <Lock className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+              Access Restricted
+            </h1>
+            <p className="text-lg text-muted-foreground mb-8">
+              {!notebook 
+                ? "This notebook does not exist or you don't have permission to view it."
+                : notebook.visibility === "PRIVATE" 
+                  ? "This notebook is private and can only be accessed by its owner."
+                  : "You don't have permission to view this notebook."}
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button onClick={() => router.push("/notebooks")}>
+                Back to Notebooks
+              </Button>
+              {!user && (
+                <Button variant="outline" onClick={() => router.push("/auth/signin")}>
+                  Sign in to Access
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

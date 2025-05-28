@@ -8,7 +8,7 @@ type AuthContextType = {
   user: User | null
   isLoading: boolean
   signOut: () => Promise<void>
-  signInAnonymously: () => Promise<void>
+  createAnonymousAccount: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -40,16 +40,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const signInAnonymously = async () => {
+  const createAnonymousAccount = async () => {
     try {
       console.log("Attempting anonymous sign in...")
-      const { data, error } = await supabase.auth.signInAnonymously()
+      
+      // Create a promise that resolves when the auth state changes
+      const authStatePromise = new Promise<void>((resolve) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_IN' && session?.user) {
+            console.log("Anonymous sign in successful:", session.user.id)
+            subscription.unsubscribe()
+            resolve()
+          }
+        })
+      })
+
+      // Start the anonymous sign in
+      const { error } = await supabase.auth.signInAnonymously()
       if (error) {
         console.error("Anonymous sign in error:", error)
         throw error
       }
-      console.log("Anonymous sign in successful:", data?.user?.id)
-      // Listener should handle state update, no need for manual update
+
+      // Wait for the auth state to actually update
+      await authStatePromise
     } catch (error) {
       console.error("Error signing in anonymously:", error)
       throw error
@@ -65,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     isLoading,
     signOut,
-    signInAnonymously,
+    createAnonymousAccount,
   }
 
   return (

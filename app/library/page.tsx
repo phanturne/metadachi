@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { useAuth } from "@/contexts/auth-context"
 import { createClient } from "@/utils/supabase/client"
 import { Book, FileText, Globe, Grid, List, Loader2, Plus, Search, Sparkles, Tag, Trash2, X } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
@@ -49,6 +50,7 @@ interface Source {
 }
 
 export default function LibraryPage() {
+  const { user, createAnonymousAccount } = useAuth()
   const [sources, setSources] = useState<Source[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -243,6 +245,12 @@ export default function LibraryPage() {
   const handleSourceSubmit = async (source: SourceInputType) => {
     try {
       setIsSubmitting(true)
+
+      // Create anonymous account if user is not logged in
+      if (!user) {
+        await createAnonymousAccount()
+      }
+
       const formData = new FormData()
       formData.append("type", source.type)
       

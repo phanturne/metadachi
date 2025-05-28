@@ -3,7 +3,6 @@
 import { NotebookModal } from "@/components/notebook-modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useAuth } from "@/contexts/auth-context"
 import { createClient } from "@/utils/supabase/client"
 import { BookOpen, Grid, List, Plus, Search } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -23,7 +22,6 @@ interface Notebook {
 }
 
 export default function NotebooksPage() {
-  const { user } = useAuth()
   const router = useRouter()
   const [notebooks, setNotebooks] = useState<Notebook[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -34,9 +32,18 @@ export default function NotebooksPage() {
   const loadNotebooks = async () => {
     try {
       const supabase = createClient()
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      
+      if (!currentUser) {
+        setNotebooks([])
+        setIsLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from("notebooks")
         .select("*")
+        .eq("user_id", currentUser.id)
         .order("created_at", { ascending: false })
 
       if (error) throw error
@@ -50,12 +57,13 @@ export default function NotebooksPage() {
   }
 
   useEffect(() => {
-    if (!user) {
-      router.push("/auth/signin")
-    } else {
-      loadNotebooks()
-    }
-  }, [user, router])
+    loadNotebooks()
+  }, [])
+
+  const handleNotebookCreated = async () => {
+    // Just reload the notebooks after creation
+    loadNotebooks()
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -192,9 +200,7 @@ export default function NotebooksPage() {
       <NotebookModal 
         isOpen={isNotebookModalOpen}
         onClose={() => setIsNotebookModalOpen(false)}
-        onNotebookCreated={() => {
-          loadNotebooks()
-        }}
+        onNotebookCreated={handleNotebookCreated}
       />
     </div>
   )
