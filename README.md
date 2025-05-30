@@ -18,18 +18,16 @@ Metadachi is an AI-powered knowledge management platform that helps you extract 
 - Generate summaries and insights from your sources
 - Create embeddings for semantic search
 - Chat with your content using AI
-- 🚧 Reference specific chunks in conversations
 
 ### 📓 Notebooks
 
-- 🚧 Create and organize sources into notebooks
-- 🚧 Share notebooks with others
-- 🚧 Public and private notebook options
-- 🚧 Collaborative knowledge building
+- Create and organize sources into notebooks
+- Public and private notebook options
+- Collaborative knowledge building
 
 ### 💬 Chat Interface
 
-- 🚧 Interactive chat with your sources
+- Interactive chat with your sources
 - 🚧 Tag and reference specific sources
 - Semantic search for relevant content
 
@@ -48,16 +46,16 @@ Metadachi is an AI-powered knowledge management platform that helps you extract 
 3. **Interactive Learning**
 
    - Chat with your sources to explore topics in depth
-   - 🚧 Create and share notebooks for collaborative learning
+   - Create and share notebooks for collaborative learning
 
 4. **Research Organization**
-   - 🚧 Group related sources into notebooks
-   - 🚧 Share research findings with others
-   - 🚧 Maintain a structured collection of insights
+   - Group related sources into notebooks
+   - Share research findings with others
+   - Maintain a structured collection of insights
 
 ## 🔒 Authentication
 
-- 🚧 Guest access available for basic features
+- Guest access available for basic features
 - Full access with user registration
 - Secure source management and sharing
 
