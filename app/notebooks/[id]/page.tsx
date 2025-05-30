@@ -8,6 +8,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAuth } from "@/contexts/auth-context"
 import { createClient } from "@/utils/supabase/client"
 import { ArrowLeft, Lock, Plus } from "lucide-react"
@@ -258,9 +259,9 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <div className="container mx-auto py-8 px-4">
-        <div className="flex items-center gap-4 mb-6">
+    <div className="h-[calc(100vh-var(--navbar-height))] overflow-hidden bg-gradient-to-b from-background to-muted/20">
+      <div className="container mx-auto h-full py-8 px-4 flex flex-col">
+        <div className="flex items-center gap-4 mb-6 flex-shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -281,10 +282,10 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-12rem)]">
+        <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
           {/* Left panel - Source selection */}
-          <div className="col-span-4 bg-card rounded-lg border shadow-sm p-4 flex flex-col h-full">
-            <div className="flex justify-between items-center mb-4">
+          <div className="col-span-4 bg-card rounded-lg border shadow-sm p-4 flex flex-col min-h-0">
+            <div className="flex justify-between items-center mb-4 flex-shrink-0">
               <h2 className="text-lg font-semibold">Sources</h2>
               <Button
                 variant="outline"
@@ -298,7 +299,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
                 Add Source
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-2">
                 {notebookSources.map((source) => (
                   <div
@@ -321,11 +322,11 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
                   </div>
                 )}
               </div>
-            </div>
+            </ScrollArea>
           </div>
 
           {/* Right panel - Chat interface */}
-          <div className="col-span-8 bg-card rounded-lg border shadow-sm p-4 flex flex-col h-full">
+          <div className="col-span-8 bg-card rounded-lg border shadow-sm p-4 flex flex-col min-h-0">
             <ChatPanel selectedSources={notebookSources.map(s => s.id)} />
           </div>
         </div>

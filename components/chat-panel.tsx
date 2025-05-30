@@ -61,8 +61,8 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <ScrollArea ref={scrollRef} className="flex-1">
+    <div className="flex flex-col h-full min-h-0">
+      <ScrollArea ref={scrollRef} className="flex-1 min-h-0">
         <div className="space-y-4 pr-4">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-8">
@@ -88,42 +88,49 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
 
               {/* Show tool calls */}
               {message.toolInvocations?.map((toolInvocation) => (
-                <div key={toolInvocation.toolCallId} className="ml-4 space-y-2 max-w-[85%]">
+                <div key={toolInvocation.toolCallId} className={cn(
+                  "space-y-2 w-full max-w-[85%]",
+                  message.role === "user" ? "ml-auto" : "ml-4"
+                )}>
                   {toolInvocation.state === "call" && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Search className="h-4 w-4 animate-spin" />
-                      <span>Searching sources for: &quot;{toolInvocation.args.query}&quot;</span>
+                      <span className="truncate">Searching sources for: &quot;{toolInvocation.args.query}&quot;</span>
                     </div>
                   )}
                   {toolInvocation.state === "result" && (
                     <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 text-sm">
                       <div className="flex items-center gap-2 mb-2">
-                        <Search className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium text-blue-600">Source Search Results</span>
+                        <Search className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                        <span className="font-medium text-blue-600 truncate">Source Search Results</span>
                       </div>
                       {toolInvocation.result.success ? (
                         <div className="space-y-3">
-                          <p className="text-green-600">{toolInvocation.result.message}</p>
-                          <div className="space-y-2">
+                          <p className="text-green-600 truncate text-xs">{toolInvocation.result.message}</p>
+                          <div className="grid grid-cols-5 gap-2">
                             {toolInvocation.result.sources.map((source: Source) => (
                               <div key={source.id} className="bg-white dark:bg-blue-950/40 rounded p-2">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Badge variant="secondary" className="text-xs">
-                                    Source {source.id}
-                                  </Badge>
-                                  <span className="text-xs text-muted-foreground">
-                                    Similarity: {Math.round(source.similarity * 100)}%
-                                  </span>
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium truncate">
+                                      {source.file_name || source.url || "Text Source"}
+                                    </p>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                                        {source.type.toLowerCase()}
+                                      </Badge>
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {Math.round(source.similarity * 100)}% match
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <p className="text-xs text-muted-foreground line-clamp-3">
-                                  {source.content}
-                                </p>
                               </div>
                             ))}
                           </div>
                         </div>
                       ) : (
-                        <p className="text-amber-600">{toolInvocation.result.message}</p>
+                        <p className="text-amber-600 truncate">{toolInvocation.result.message}</p>
                       )}
                     </div>
                   )}
@@ -146,7 +153,7 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSubmit} className="flex items-center space-x-2 mt-4">
+      <form onSubmit={handleSubmit} className="flex items-center space-x-2 mt-4 flex-shrink-0">
         <Input
           value={input}
           onChange={handleInputChange}

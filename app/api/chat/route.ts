@@ -18,6 +18,12 @@ interface MatchResult {
   context_before: string[]
   context_after: string[]
   similarity: number
+  source_metadata?: {
+    id: string
+    type: "TEXT" | "URL" | "FILE"
+    file_name: string | null
+    url: string | null
+  }
 }
 
 interface FormattedSource {
@@ -26,6 +32,9 @@ interface FormattedSource {
   chunk_index: number
   content: string
   similarity: number
+  type: "TEXT" | "URL" | "FILE"
+  file_name: string | null
+  url: string | null
 }
 
 interface SearchResult {
@@ -62,7 +71,25 @@ async function searchSources(query: string, supabase: SupabaseClient): Promise<M
       return []
     }
 
-    return relevantContent as MatchResult[]
+    // Get source metadata for each match
+    const sourceIds = [...new Set(relevantContent.map((match: { source_id: string }) => match.source_id))]
+    const { data: sources, error: sourcesError } = await supabase
+      .from("sources")
+      .select("id, type, file_name, url")
+      .in("id", sourceIds)
+
+    if (sourcesError) {
+      console.error("Error fetching source metadata:", sourcesError)
+      return relevantContent as MatchResult[]
+    }
+
+    // Add source metadata to matches
+    const matchesWithMetadata = relevantContent.map((match: { source_id: string }) => ({
+      ...match,
+      source_metadata: sources.find(s => s.id === match.source_id)
+    }))
+
+    return matchesWithMetadata as MatchResult[]
   } catch (error) {
     console.error("Error in searchSources:", error)
     return []
@@ -72,17 +99,27 @@ async function searchSources(query: string, supabase: SupabaseClient): Promise<M
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const json = await req.json()
-  const { messages } = json as { messages: Message[] }
+  const { messages, sourceIds } = json as { messages: Message[], sourceIds: string[] }
 
   if (!messages || messages.length === 0) {
     return new Response("No messages provided", { status: 400 })
   }
 
   try {
+    // Get source metadata for context
+    const { data: sources } = await supabase
+      .from("sources")
+      .select("id, type, file_name, url")
+      .in("id", sourceIds)
+
+    const sourceContext = sources?.map(s => 
+      `- ${s.file_name || s.url || "Text Source"} (${s.type.toLowerCase()})`
+    ).join("\n") || "No sources available"
+
     // Define the search tool
     const searchSourcesTool = tool({
       description:
-        "Search through the available sources to find relevant information for answering user questions. Always use this tool first when a user asks a question.",
+        "Search through the available sources to find relevant information for answering user questions.",
       parameters: z.object({
         query: z.string().describe("The search query to find relevant information"),
       }),
@@ -99,7 +136,7 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        const formattedResults: FormattedSource[] = results.map((match, index) => {
+        const formattedResults: FormattedSource[] = results.map((match: MatchResult, index) => {
           const beforeContext = match.context_before.join(" ")
           const afterContext = match.context_after.join(" ")
           const fullContext = `${beforeContext} ${match.chunk_text} ${afterContext}`.trim()
@@ -110,6 +147,9 @@ export async function POST(req: NextRequest) {
             chunk_index: match.chunk_index,
             content: fullContext,
             similarity: match.similarity,
+            type: match.source_metadata?.type || "TEXT",
+            file_name: match.source_metadata?.file_name || null,
+            url: match.source_metadata?.url || null
           }
         })
 
@@ -127,25 +167,25 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are a helpful AI assistant that answers questions based on available sources.
+          content: `You are a helpful AI assistant with access to the following sources:
 
-IMPORTANT INSTRUCTIONS:
-1. For every user question, FIRST use the searchSources tool to find relevant information
-2. After getting the search results, provide a comprehensive answer based ONLY on the information found in the sources
-3. Always cite your sources by mentioning the source_id (e.g., "According to source abc123...")
-4. If no relevant information is found, clearly state that you couldn't find information about the topic in the available sources
-5. Do not make up information that isn't in the sources
-6. Be specific about what information came from which source
-7. Provide detailed answers when relevant sources are found
+${sourceContext}
 
-Remember: Always search first, then answer based on the search results.`,
+INSTRUCTIONS:
+1. For general conversation or questions you can answer confidently, respond directly
+2. When you're unsure or need specific information, use the searchSources tool
+3. Always cite sources when using information from them
+4. If no relevant information is found, say so clearly
+5. Never make up information
+
+Remember: Search when you need information from the sources, but feel free to respond directly to general questions.`,
         },
         ...messages,
       ],
       tools: {
         searchSources: searchSourcesTool,
       },
-      maxSteps: 3, // Allow multiple steps: search tool -> get results -> generate answer
+      maxSteps: 3,
     })
 
     // Return the data stream that useChat expects

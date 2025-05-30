@@ -2,9 +2,11 @@ import { Database } from "@/supabase/types"
 
 export type Source = {
   id: string
-  source_id: string
-  chunk_index: number
-  content: string
+  type: "TEXT" | "URL" | "FILE"
+  content: string | null
+  url: string | null
+  file_name: string | null
+  created_at: string
   similarity: number
 }
 
