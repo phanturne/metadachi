@@ -6,12 +6,53 @@ import { splitTextIntoChunks } from "../../lib/text"
 
 const openai = new OpenAI()
 
-async function generateEmbedding(text: string): Promise<number[]> {
-  const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: text,
-  })
-  return response.data[0].embedding
+async function extractTextFromFile(file: File, fileType: string): Promise<string> {
+  const buffer = await file.arrayBuffer()
+  
+  switch (fileType) {
+    case 'application/pdf':
+      try {
+        // Use pdf-parse for simpler PDF handling
+        const pdfParse = (await import('pdf-parse')).default
+        const data = await pdfParse(Buffer.from(buffer))
+        return data.text
+      } catch (error) {
+        console.error("Error parsing PDF:", error)
+        throw new Error("Failed to parse PDF file")
+      }
+
+    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+      try {
+        // Dynamically import mammoth only when needed
+        const mammoth = (await import('mammoth')).default
+        // Convert ArrayBuffer to Buffer for mammoth
+        const docxBuffer = Buffer.from(buffer)
+        
+        // Convert to HTML with style information
+        const result = await mammoth.convertToHtml({ buffer: docxBuffer })
+        return result.value
+      } catch (error) {
+        console.error("Error parsing DOCX:", error)
+        throw new Error("Failed to parse Word document")
+      }
+
+    case 'application/msword':
+      throw new Error("Legacy .doc format is not supported. Please convert to .docx format.")
+
+    case 'text/plain':
+    case 'text/markdown':
+    case 'text/html':
+      try {
+        const textDecoder = new TextDecoder()
+        return textDecoder.decode(buffer)
+      } catch (error) {
+        console.error("Error decoding text file:", error)
+        throw new Error("Failed to decode text file")
+      }
+
+    default:
+      throw new Error(`Unsupported file type: ${fileType}`)
+  }
 }
 
 // Process source in background
@@ -46,6 +87,14 @@ async function processSourceInBackground(sourceId: string, content: string) {
       .update({ updated_at: new Date().toISOString() })
       .eq("id", sourceId)
   }
+}
+
+async function generateEmbedding(text: string): Promise<number[]> {
+  const response = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: text,
+  })
+  return response.data[0].embedding
 }
 
 export async function POST(req: NextRequest) {
@@ -108,17 +157,15 @@ export async function POST(req: NextRequest) {
       fileSize = file.size
       fileType = file.type
       
-      // Get file content for immediate summary
+      // Extract text content based on file type
       try {
-        const textDecoder = new TextDecoder()
-        sourceContent = textDecoder.decode(fileBuffer)
-        
+        sourceContent = await extractTextFromFile(file, fileType)
         if (!sourceContent) {
           throw new Error("Failed to extract content from file")
         }
       } catch (error) {
         console.error("Error extracting text from file:", error)
-        return Response.json({ error: "Failed to process file" }, { status: 400 })
+        return Response.json({ error: error instanceof Error ? error.message : "Failed to process file" }, { status: 400 })
       }
     } else if (type === "URL" && url) {
       try {
@@ -160,8 +207,25 @@ export async function POST(req: NextRequest) {
         .select()
         .single()
         .then(async ({ data: source, error: sourceError }) => {
-          if (sourceError || !source) {
-            throw sourceError || new Error("Failed to create source")
+          if (sourceError) {
+            console.error("Error creating source:", {
+              error: sourceError,
+              data: {
+                type: type.toUpperCase(),
+                content: type.toUpperCase() === "FILE" ? null : sourceContent,
+                url: type.toUpperCase() === "URL" ? url : null,
+                file_name: type.toUpperCase() === "FILE" ? fileName : null,
+                file_path: type.toUpperCase() === "FILE" ? filePath : null,
+                file_size: type.toUpperCase() === "FILE" ? fileSize : null,
+                file_type: type.toUpperCase() === "FILE" ? fileType : null,
+                visibility: 'PRIVATE',
+                user_id: user.id
+              }
+            })
+            throw sourceError
+          }
+          if (!source) {
+            throw new Error("Failed to create source")
           }
 
           // Store the summary
@@ -182,7 +246,9 @@ export async function POST(req: NextRequest) {
           // Process embeddings in background
           processSourceInBackground(source.id, sourceContent || "").catch(console.error)
         })
-    ]).catch(console.error)
+    ]).catch(error => {
+      console.error("Error in background processing:", error)
+    })
 
     // Return summary immediately with file info
     return Response.json({

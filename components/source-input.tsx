@@ -19,15 +19,6 @@ export type SourceInput = {
   file: File | null
 }
 
-const ALLOWED_FILE_TYPES = [
-  'text/plain',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'text/markdown',
-  'text/html',
-]
-
 interface SourceInputProps {
   onSourceSubmit: (source: SourceInput) => Promise<void>
   isSubmitting?: boolean
