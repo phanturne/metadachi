@@ -1,6 +1,7 @@
 "use client"
 
 import { ChatPanel } from "@/components/chat-panel"
+import { SourceDetail } from "@/components/source-detail"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -32,7 +33,14 @@ interface Source {
   content: string | null
   url: string | null
   file_name: string | null
+  file_path?: string | null
   created_at: string
+  summary?: {
+    summary_text: string
+    key_points: string[]
+    quotes: string[]
+    tags: string[]
+  } | null
 }
 
 export default function NotebookPage({ params }: { params: Promise<{ id: string }> }) {
@@ -46,6 +54,9 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
   const [availableSources, setAvailableSources] = useState<Source[]>([])
   const [sourcesToAdd, setSourcesToAdd] = useState<string[]>([])
   const [hasAccess, setHasAccess] = useState(false)
+  const [selectedSource, setSelectedSource] = useState<Source | null>(null)
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
+  const [summary, setSummary] = useState("")
 
   useEffect(() => {
     const loadNotebook = async () => {
@@ -94,14 +105,19 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
               content,
               url,
               file_name,
-              created_at
+              file_path,
+              created_at,
+              summary:summaries(*)
             )
           `)
           .eq("notebook_id", id)
           .order("order_index")
 
         if (error) throw error
-        setNotebookSources(data?.map(item => item.sources) || [])
+        setNotebookSources(data?.map(item => ({
+          ...item.sources,
+          summary: item.sources.summary?.[0] || null
+        })) || [])
       } catch (error) {
         console.error("Error loading notebook sources:", error)
         toast.error("Failed to load notebook sources")
@@ -119,7 +135,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
       const supabase = createClient()
       let query = supabase
         .from("sources")
-        .select("*")
+        .select("id, type, content, url, file_name, file_path, created_at")
         .order("created_at", { ascending: false })
 
       // Only add the NOT IN clause if there are existing sources
@@ -182,14 +198,19 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
             content,
             url,
             file_name,
-            created_at
+            file_path,
+            created_at,
+            summary:summaries(*)
           )
         `)
         .eq("notebook_id", id)
         .order("order_index")
 
       if (reloadError) throw reloadError
-      setNotebookSources(data?.map(item => item.sources) || [])
+      setNotebookSources(data?.map(item => ({
+        ...item.sources,
+        summary: item.sources.summary?.[0] || null
+      })) || [])
       
       setSourcesToAdd([])
       setIsAddSourceDialogOpen(false)
@@ -197,6 +218,25 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
     } catch (error) {
       console.error("Error adding sources:", error)
       toast.error("Failed to add sources")
+    }
+  }
+
+  const fetchFileContent = async (filePath: string) => {
+    try {
+      setIsGeneratingSummary(true)
+      const supabase = createClient()
+      const { data, error } = await supabase.storage
+        .from('source_files')
+        .download(filePath)
+
+      if (error) throw error
+      const content = await data.text()
+      setSummary(content)
+    } catch (error) {
+      console.error("Error fetching file content:", error)
+      toast.error("Failed to load file content")
+    } finally {
+      setIsGeneratingSummary(false)
     }
   }
 
@@ -260,8 +300,8 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
 
   return (
     <div className="h-[calc(100vh-var(--navbar-height))] overflow-hidden bg-gradient-to-b from-background to-muted/20">
-      <div className="container mx-auto h-full py-8 px-4 flex flex-col">
-        <div className="flex items-center gap-4 mb-6 flex-shrink-0">
+      <div className="h-full py-4 px-4 md:px-6 flex flex-col">
+        <div className="flex items-center gap-2 mb-4 flex-shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -271,7 +311,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+            <h1 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
               {notebook.title}
             </h1>
             {notebook.description && (
@@ -282,51 +322,79 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6 flex-1 min-h-0">
+        <div className="grid grid-cols-12 gap-4 flex-1 min-h-0">
           {/* Left panel - Source selection */}
-          <div className="col-span-4 bg-card rounded-lg border shadow-sm p-4 flex flex-col min-h-0">
-            <div className="flex justify-between items-center mb-4 flex-shrink-0">
-              <h2 className="text-lg font-semibold">Sources</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  loadAvailableSources()
-                  setIsAddSourceDialogOpen(true)
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Source
-              </Button>
-            </div>
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="space-y-2">
-                {notebookSources.map((source) => (
-                  <div
-                    key={source.id}
-                    className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+          <div className={`bg-card rounded-lg border shadow-sm p-3 flex flex-col min-h-0 transition-[width,grid-column] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${selectedSource ? 'col-span-6' : 'col-span-4'}`}>
+            {selectedSource ? (
+              <>
+                <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedSource(null)}
+                    className="h-7 w-7"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {source.file_name || source.url || "Text Source"}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {source.type.toLowerCase()} • {new Date(source.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <h2 className="text-base font-semibold">Source Details</h2>
+                </div>
+                <ScrollArea className="flex-1 min-h-0">
+                  <SourceDetail
+                    source={selectedSource}
+                    onLoadFileContent={fetchFileContent}
+                    isGeneratingSummary={isGeneratingSummary}
+                    summary={summary}
+                  />
+                </ScrollArea>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between items-center mb-3 flex-shrink-0">
+                  <h2 className="text-base font-semibold">Sources</h2>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      loadAvailableSources()
+                      setIsAddSourceDialogOpen(true)
+                    }}
+                    className="h-7 md:w-auto w-7"
+                  >
+                    <Plus className="w-4 h-4 md:mr-2" />
+                    <span className="hidden md:inline">Add Source</span>
+                  </Button>
+                </div>
+                <ScrollArea className="flex-1 min-h-0">
+                  <div className="space-y-1.5">
+                    {notebookSources.map((source) => (
+                      <div
+                        key={source.id}
+                        className="flex items-start space-x-3 p-2 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                        onClick={() => setSelectedSource(source)}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {source.file_name || source.url || "Text Source"}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {source.type.toLowerCase()} • {new Date(source.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    {notebookSources.length === 0 && (
+                      <div className="text-center py-6 text-muted-foreground">
+                        No sources added yet
+                      </div>
+                    )}
                   </div>
-                ))}
-                {notebookSources.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No sources added yet
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
+                </ScrollArea>
+              </>
+            )}
           </div>
 
           {/* Right panel - Chat interface */}
-          <div className="col-span-8 bg-card rounded-lg border shadow-sm p-4 flex flex-col min-h-0">
+          <div className={`bg-card rounded-lg border shadow-sm p-3 flex flex-col min-h-0 transition-[width,grid-column] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${selectedSource ? 'col-span-6' : 'col-span-8'}`}>
             <ChatPanel selectedSources={notebookSources.map(s => s.id)} />
           </div>
         </div>

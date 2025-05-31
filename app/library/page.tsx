@@ -1,5 +1,6 @@
 "use client"
 
+import { SourceDetail } from "@/components/source-detail"
 import { SourceInput as SourceInputType } from "@/components/source-input"
 import { SourceModal } from "@/components/source-modal"
 import {
@@ -64,7 +65,6 @@ export default function LibraryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [sourceToDelete, setSourceToDelete] = useState<Source | null>(null)
-  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false)
   const [summary, setSummary] = useState("")
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
   const supabase = createClient()
@@ -667,117 +667,18 @@ export default function LibraryPage() {
                 onClick={() => {
                   setSelectedSource(null)
                   setSummary("")
-                  setIsSummaryModalOpen(false)
                 }}
                 className="h-8 w-8 hover:bg-muted"
               >
                 ×
               </Button>
             </div>
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium text-muted-foreground">Content</div>
-                  {selectedSource.type === "FILE" && !isGeneratingSummary && !summary && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => selectedSource.file_path && fetchFileContent(selectedSource.file_path)}
-                      className="h-8"
-                    >
-                      Load File Content
-                    </Button>
-                  )}
-                </div>
-                {selectedSource.type === "FILE" ? (
-                  <div>
-                    {isGeneratingSummary ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                      </div>
-                    ) : summary ? (
-                      <div className="relative">
-                        <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isSummaryModalOpen ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
-                          {summary}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="absolute bottom-0 right-0 bg-gradient-to-t from-background to-transparent px-4 py-2 hover:bg-transparent"
-                          onClick={() => setIsSummaryModalOpen(!isSummaryModalOpen)}
-                        >
-                          {isSummaryModalOpen ? 'Collapse' : 'Expand'}
-                        </Button>
-                      </div>
-                    ) : null}
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isSummaryModalOpen ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
-                      {selectedSource.content || selectedSource.url}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute bottom-0 right-0 bg-gradient-to-t from-background to-transparent px-4 py-2 hover:bg-transparent"
-                      onClick={() => setIsSummaryModalOpen(!isSummaryModalOpen)}
-                    >
-                      {isSummaryModalOpen ? 'Collapse' : 'Expand'}
-                    </Button>
-                  </div>
-                )}
-              </div>
-              {selectedSource.summary && (
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center gap-2 text-primary mb-2">
-                      <Sparkles className="w-4 h-4" />
-                      <span className="font-medium">Summary</span>
-                    </div>
-                    <div className="whitespace-pre-wrap text-muted-foreground">
-                      {selectedSource.summary.summary_text}
-                    </div>
-                  </div>
-                  {selectedSource.summary.key_points.length > 0 && (
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-2">Key Points</div>
-                      <ul className="list-disc list-inside space-y-1.5 text-muted-foreground">
-                        {selectedSource.summary.key_points.map((point, index) => (
-                          <li key={index}>{point}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {selectedSource.summary.quotes.length > 0 && (
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-2">Notable Quotes</div>
-                      <div className="space-y-2">
-                        {selectedSource.summary.quotes.map((quote, index) => (
-                          <blockquote key={index} className="border-l-4 border-primary/20 pl-4 italic text-muted-foreground">
-                            {quote}
-                          </blockquote>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {selectedSource.summary.tags && selectedSource.summary.tags.length > 0 && (
-                    <div>
-                      <div className="text-sm font-medium text-muted-foreground mb-2">Tags</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {selectedSource.summary.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <SourceDetail
+              source={selectedSource}
+              onLoadFileContent={fetchFileContent}
+              isGeneratingSummary={isGeneratingSummary}
+              summary={summary}
+            />
           </div>
         </div>
       )}
