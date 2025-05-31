@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Link as LinkIcon, Loader2, Sparkles, Type, Upload } from "lucide-react"
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
+import { FileUpload } from "./file-upload"
 
 export type SummaryResponse = {
   summary: string
@@ -39,15 +40,6 @@ export const SUMMARY_PRESETS = {
 
 export type SummaryPreset = keyof typeof SUMMARY_PRESETS
 
-const ALLOWED_FILE_TYPES = [
-  'text/plain',
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'text/markdown',
-  'text/html',
-]
-
 interface SummarizeToolProps {
   onSummaryGenerated?: (summary: SummaryResponse) => void
   className?: string
@@ -62,25 +54,6 @@ export function SummarizeTool({ onSummaryGenerated, className = "", showTitle = 
   const [isGenerating, setIsGenerating] = useState<boolean>(false)
   const [, setSummary] = useState<SummaryResponse | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      toast.error("Unsupported file type. Please upload a text file, PDF, or Word document.")
-      return
-    }
-
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      toast.error("File size too large. Please upload a file smaller than 10MB.")
-      return
-    }
-
-    setSelectedFile(file)
-    setInput(file.name)
-  }
 
   const handlePresetChange = (preset: SummaryPreset) => {
     setSelectedPreset(preset)
@@ -196,44 +169,14 @@ export function SummarizeTool({ onSummaryGenerated, className = "", showTitle = 
             {inputType === "text" ? "Enter your text" : inputType === "url" ? "Enter URL" : "Upload file"}
           </Label>
           {inputType === "file" ? (
-            <div className="flex flex-col gap-4">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept={ALLOWED_FILE_TYPES.join(",")}
-                className="hidden"
-              />
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex-1"
-                >
-                  Choose File
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedFile(null)
-                    setInput("")
-                    if (fileInputRef.current) {
-                      fileInputRef.current.value = ""
-                    }
-                  }}
-                  disabled={!selectedFile}
-                >
-                  Clear
-                </Button>
-              </div>
-              {selectedFile && (
-                <div className="text-sm text-muted-foreground">
-                  Selected file: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)}MB)
-                </div>
-              )}
-            </div>
+            <FileUpload
+              selectedFile={selectedFile}
+              onFileSelect={(file) => {
+                setSelectedFile(file)
+                setInput(file?.name || "")
+              }}
+              disabled={isGenerating}
+            />
           ) : (
             <Textarea
               id="input"

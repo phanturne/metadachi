@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Book, FileText, Globe, Loader2, Upload } from "lucide-react"
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
+import { FileUpload } from "./file-upload"
 
 export type SourceType = "TEXT" | "URL" | "FILE"
 
@@ -45,24 +46,6 @@ export function SourceInput({
     url: "",
     file: null,
   })
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      toast.error("Unsupported file type. Please upload a text file, PDF, or Word document.")
-      return
-    }
-
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      toast.error("File size too large. Please upload a file smaller than 10MB.")
-      return
-    }
-
-    setCurrentSource(prev => ({ ...prev, file }))
-  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -144,43 +127,11 @@ export function SourceInput({
             <TabsContent value="file" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="file" className="text-sm font-medium">File</Label>
-                <div className="flex flex-col gap-4">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept={ALLOWED_FILE_TYPES.join(",")}
-                    className="hidden"
-                  />
-                  <div className="flex gap-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex-1"
-                    >
-                      Choose File
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setCurrentSource(prev => ({ ...prev, file: null }))
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = ""
-                        }
-                      }}
-                      disabled={!currentSource.file}
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                  {currentSource.file && (
-                    <div className="text-sm text-muted-foreground">
-                      Selected file: {currentSource.file.name} ({(currentSource.file.size / 1024 / 1024).toFixed(2)}MB)
-                    </div>
-                  )}
-                </div>
+                <FileUpload
+                  selectedFile={currentSource.file}
+                  onFileSelect={(file) => setCurrentSource(prev => ({ ...prev, file }))}
+                  disabled={isSubmitting}
+                />
               </div>
             </TabsContent>
           </div>
