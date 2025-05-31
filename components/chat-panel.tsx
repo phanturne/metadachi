@@ -2,6 +2,12 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -18,6 +24,7 @@ interface ChatPanelProps {
 export function ChatPanel({ selectedSources }: ChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedSource, setSelectedSource] = useState<Source | null>(null)
 
   const {
     messages,
@@ -107,9 +114,13 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
                       {toolInvocation.result.success ? (
                         <div className="space-y-3">
                           <p className="text-green-600 truncate text-xs">{toolInvocation.result.message}</p>
-                          <div className="grid grid-cols-5 gap-2">
+                          <div className="grid grid-cols-4 gap-2">
                             {toolInvocation.result.sources.map((source: Source) => (
-                              <div key={source.id} className="bg-white dark:bg-blue-950/40 rounded p-2">
+                              <div 
+                                key={source.id} 
+                                className="bg-white dark:bg-blue-950/40 rounded p-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/60 transition-colors"
+                                onClick={() => setSelectedSource(source)}
+                              >
                                 <div className="flex items-center gap-2">
                                   <div className="flex-1 min-w-0">
                                     <p className="text-xs font-medium truncate">
@@ -165,6 +176,29 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
           <Send className="h-4 w-4" />
         </Button>
       </form>
+
+      {/* Source Content Modal */}
+      <Dialog open={!!selectedSource} onOpenChange={() => setSelectedSource(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="truncate">
+                {selectedSource?.file_name || selectedSource?.url || "Text Source"}
+              </span>
+              <Badge variant="secondary" className="text-xs">
+                {selectedSource?.type.toLowerCase()}
+              </Badge>
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 pr-4 -mr-4">
+            <div className="prose dark:prose-invert max-w-none">
+              <pre className="whitespace-pre-wrap text-sm">
+                {selectedSource?.content}
+              </pre>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
