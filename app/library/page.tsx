@@ -58,7 +58,7 @@ interface Source {
 }
 
 export default function LibraryPage() {
-  const { user, createAnonymousAccount } = useAuth()
+  const { user } = useAuth()
   const [sources, setSources] = useState<Source[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -227,11 +227,6 @@ export default function LibraryPage() {
     try {
       setIsSubmitting(true)
 
-      // Create anonymous account if user is not logged in
-      if (!user) {
-        await createAnonymousAccount()
-      }
-
       const formData = new FormData()
       formData.append("type", source.type)
       
@@ -251,6 +246,15 @@ export default function LibraryPage() {
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.error || "Failed to add source")
+      }
+
+      const data = await response.json()
+      
+      // If this is a guest account, show the appropriate message
+      if (data.isGuest && !user) {
+        toast.info("We've created a temporary guest account to save your sources. Add an email to keep them forever!", {
+          duration: 5000,
+        })
       }
 
       toast.success("Source added successfully")

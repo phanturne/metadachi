@@ -8,7 +8,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export default function SummarizePage() {
-  const { user, createAnonymousAccount } = useAuth()
+  const { user } = useAuth()
   const [summary, setSummary] = useState<SummaryResponse | null>(null)
   const [isGuest, setIsGuest] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -33,15 +33,11 @@ export default function SummarizePage() {
     setSummary(newSummary)
     
     if (!user) {
-      try {
-        await createAnonymousAccount()
-        setIsGuest(true)
-        toast.info("We've created a temporary guest account to save your summaries. Add an email to keep them forever!", {
-          duration: 5000,
-        })
-      } catch {
-        toast.error("Failed to create guest account. Please try again.")
-      }
+      // The API will handle creating a guest account
+      setIsGuest(true)
+      toast.info("We've created a temporary guest account to save your summaries. Add an email to keep them forever!", {
+        duration: 5000,
+      })
     }
   }
 

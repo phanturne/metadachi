@@ -113,14 +113,29 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Get user first to ensure authentication
-    const { data: { user: existingUser }, error: userError } = await supabase.auth.getUser()
-    if (userError || !existingUser) {
-      // Try to sign in anonymously if no user exists
-      const { data: guestData, error: guestError } = await supabase.auth.signInAnonymously()
-      if (guestError || !guestData.user) {
-        return Response.json({ error: "Unauthorized" }, { status: 401 })
+    // Get or create user
+    let user = null
+    try {
+      // First try to get existing user
+      const { data: { user: existingUser }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !existingUser) {
+        // If no user exists, create an anonymous account
+        const { data: guestData, error: guestError } = await supabase.auth.signInAnonymously()
+        if (guestError || !guestData.user) {
+          return Response.json({ error: "Failed to create guest account" }, { status: 401 })
+        }
+        user = guestData.user
+      } else {
+        user = existingUser
       }
+    } catch (error) {
+      console.error("Error in user authentication:", error)
+      return Response.json({ error: "Authentication failed" }, { status: 401 })
+    }
+
+    if (!user) {
+      return Response.json({ error: "No user found" }, { status: 401 })
     }
 
     let sourceContent = content
@@ -130,17 +145,11 @@ export async function POST(req: NextRequest) {
     let fileType: string | null = null
 
     if (type === "FILE" && file) {
-      // Get the current user (either existing or newly created guest)
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      if (!currentUser) {
-        return Response.json({ error: "Unauthorized" }, { status: 401 })
-      }
-
       // Upload file to Supabase Storage with user's ID in the path
       const fileBuffer = await file.arrayBuffer()
       const fileExt = file.name.split('.').pop()
       const uniqueFileName = `${Date.now()}.${fileExt}`
-      filePath = `${currentUser.id}/${uniqueFileName}`
+      filePath = `${user.id}/${uniqueFileName}`
       fileName = file.name // Store original file name
 
       const { error: uploadError } = await supabase.storage
@@ -183,74 +192,51 @@ export async function POST(req: NextRequest) {
     // Generate summary immediately
     const summary = await generateSummary(sourceContent || "", customInstructions || undefined)
 
-    // Create source in background
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 })
+    // Create source and summary in a single transaction
+    const { data: source, error: sourceError } = await supabase
+      .from("sources")
+      .insert({
+        type: type.toUpperCase() as Database["public"]["Enums"]["source_type"],
+        title: type.toUpperCase() === "FILE" ? fileName || "Untitled" : summary.title,
+        content: type.toUpperCase() === "FILE" ? null : sourceContent,
+        url: type.toUpperCase() === "URL" ? url : null,
+        file_name: type.toUpperCase() === "FILE" ? fileName : null,
+        file_path: type.toUpperCase() === "FILE" ? filePath : null,
+        file_size: type.toUpperCase() === "FILE" ? fileSize : null,
+        file_type: type.toUpperCase() === "FILE" ? fileType : null,
+        visibility: "PRIVATE" as Database["public"]["Enums"]["visibility_type"],
+        user_id: user.id
+      })
+      .select()
+      .single()
+
+    if (sourceError || !source) {
+      console.error("Error creating source:", sourceError)
+      return Response.json({ error: "Failed to create source" }, { status: 500 })
     }
 
-    // Start background processing for database operations
-    Promise.all([
-      // Create source record
-      supabase
-        .from("sources")
-        .insert({
-          type: type.toUpperCase() as Database["public"]["Enums"]["source_type"],
-          title: type.toUpperCase() === "FILE" ? fileName || "Untitled" : summary.title,
-          content: type.toUpperCase() === "FILE" ? null : sourceContent,
-          url: type.toUpperCase() === "URL" ? url : null,
-          file_name: type.toUpperCase() === "FILE" ? fileName : null,
-          file_path: type.toUpperCase() === "FILE" ? filePath : null,
-          file_size: type.toUpperCase() === "FILE" ? fileSize : null,
-          file_type: type.toUpperCase() === "FILE" ? fileType : null,
-          visibility: "PRIVATE" as Database["public"]["Enums"]["visibility_type"],
-          user_id: user.id
-        })
-        .select()
-        .single()
-        .then(async ({ data: source, error: sourceError }) => {
-          if (sourceError) {
-            console.error("Error creating source:", {
-              error: sourceError,
-              data: {
-                type: type.toUpperCase(),
-                content: type.toUpperCase() === "FILE" ? null : sourceContent,
-                url: type.toUpperCase() === "URL" ? url : null,
-                file_name: type.toUpperCase() === "FILE" ? fileName : null,
-                file_path: type.toUpperCase() === "FILE" ? filePath : null,
-                file_size: type.toUpperCase() === "FILE" ? fileSize : null,
-                file_type: type.toUpperCase() === "FILE" ? fileType : null,
-                visibility: 'PRIVATE',
-                user_id: user.id
-              }
-            })
-            throw sourceError
-          }
-          if (!source) {
-            throw new Error("Failed to create source")
-          }
+    // Store the summary
+    const { error: summaryError } = await supabase
+      .from("summaries")
+      .insert({
+        source_id: source.id,
+        summary_text: summary.summary,
+        key_points: summary.keyPoints,
+        quotes: summary.quotes,
+        tags: summary.tags,
+        style: "default",
+        user_id: user.id,
+        visibility: 'PRIVATE',
+        custom_instructions: customInstructions
+      })
 
-          // Store the summary
-          await supabase
-            .from("summaries")
-            .insert({
-              source_id: source.id,
-              summary_text: summary.summary,
-              key_points: summary.keyPoints,
-              quotes: summary.quotes,
-              tags: summary.tags,
-              style: "default",
-              user_id: user.id,
-              visibility: 'PRIVATE',
-              custom_instructions: customInstructions
-            })
+    if (summaryError) {
+      console.error("Error creating summary:", summaryError)
+      return Response.json({ error: "Failed to create summary" }, { status: 500 })
+    }
 
-          // Process embeddings in background
-          processSourceInBackground(source.id, sourceContent || "").catch(console.error)
-        })
-    ]).catch(error => {
-      console.error("Error in background processing:", error)
-    })
+    // Process embeddings in background
+    processSourceInBackground(source.id, sourceContent || "").catch(console.error)
 
     // Return summary immediately with file info
     return Response.json({
@@ -260,7 +246,8 @@ export async function POST(req: NextRequest) {
       quotes: summary.quotes,
       tags: summary.tags,
       fileSize: fileSize,
-      fileName: fileName
+      fileName: fileName,
+      isGuest: !user.email // Indicate if this is a guest account
     })
   } catch (error) {
     console.error("Error creating source:", error)

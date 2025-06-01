@@ -93,7 +93,7 @@ export function SourceDetail({
       })
       setIsEditing(false)
       toast.success("Changes saved successfully")
-    } catch (error) {
+    } catch {
       toast.error("Failed to save changes. Please try again.")
     } finally {
       setIsSaving(false)

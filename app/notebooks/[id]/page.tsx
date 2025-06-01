@@ -37,6 +37,7 @@ interface Source {
   created_at: string
   title: string
   summary?: {
+    id: string
     summary_text: string
     key_points: string[]
     quotes: string[]
