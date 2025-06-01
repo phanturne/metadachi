@@ -24,6 +24,7 @@ export async function generateSummary(text: string, customInstructions?: string)
   const { object } = await generateObject({
     model: aiOpenai("gpt-4.1-nano"),
     schema: z.object({
+      title: z.string().describe("A concise title that captures the main topic or theme"),
       summary: z.string().describe("A concise summary in 2-3 paragraphs"),
       keyPoints: z.array(z.string()).describe("An array of key insights as bullet points"),
       quotes: z.array(z.string()).describe("An array of notable quotes or statistics"),

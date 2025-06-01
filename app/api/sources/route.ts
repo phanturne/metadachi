@@ -1,3 +1,4 @@
+import { Database } from "@/supabase/types"
 import { createClient } from "@/utils/supabase/server"
 import { NextRequest } from "next/server"
 import OpenAI from "openai"
@@ -194,14 +195,15 @@ export async function POST(req: NextRequest) {
       supabase
         .from("sources")
         .insert({
-          type: type.toUpperCase() as "TEXT" | "URL" | "FILE",
+          type: type.toUpperCase() as Database["public"]["Enums"]["source_type"],
+          title: type.toUpperCase() === "FILE" ? fileName || "Untitled" : summary.title,
           content: type.toUpperCase() === "FILE" ? null : sourceContent,
           url: type.toUpperCase() === "URL" ? url : null,
           file_name: type.toUpperCase() === "FILE" ? fileName : null,
           file_path: type.toUpperCase() === "FILE" ? filePath : null,
           file_size: type.toUpperCase() === "FILE" ? fileSize : null,
           file_type: type.toUpperCase() === "FILE" ? fileType : null,
-          visibility: 'PRIVATE',
+          visibility: "PRIVATE" as Database["public"]["Enums"]["visibility_type"],
           user_id: user.id
         })
         .select()
@@ -252,6 +254,7 @@ export async function POST(req: NextRequest) {
 
     // Return summary immediately with file info
     return Response.json({
+      title: type.toUpperCase() === "FILE" ? fileName : summary.title,
       summary: summary.summary,
       keyPoints: summary.keyPoints,
       quotes: summary.quotes,

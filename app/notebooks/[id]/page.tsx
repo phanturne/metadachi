@@ -35,6 +35,7 @@ interface Source {
   file_name: string | null
   file_path?: string | null
   created_at: string
+  title: string
   summary?: {
     summary_text: string
     key_points: string[]
@@ -107,6 +108,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
               file_name,
               file_path,
               created_at,
+              title,
               summary:summaries(*)
             )
           `)
@@ -135,7 +137,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
       const supabase = createClient()
       let query = supabase
         .from("sources")
-        .select("id, type, content, url, file_name, file_path, created_at")
+        .select("id, type, content, url, file_name, file_path, created_at, title")
         .order("created_at", { ascending: false })
 
       // Only add the NOT IN clause if there are existing sources
@@ -200,6 +202,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
             file_name,
             file_path,
             created_at,
+            title,
             summary:summaries(*)
           )
         `)
@@ -374,7 +377,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
                       >
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {source.file_name || source.url || "Text Source"}
+                            {source.title}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
                             {source.type.toLowerCase()} • {new Date(source.created_at).toLocaleDateString()}
@@ -425,7 +428,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {source.file_name || source.url || "Text Source"}
+                      {source.title}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {source.type.toLowerCase()} • {new Date(source.created_at).toLocaleDateString()}

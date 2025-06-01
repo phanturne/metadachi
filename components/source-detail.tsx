@@ -10,6 +10,7 @@ interface Source {
   file_name: string | null
   file_path?: string | null
   created_at: string
+  title: string
   summary?: {
     summary_text: string
     key_points: string[]
@@ -63,7 +64,7 @@ export function SourceDetail({
           </div>
           <div>
             <h3 className="text-lg font-semibold">
-              {source.file_name || source.url || "Text Source"}
+              {source.title}
             </h3>
             <div className="text-sm text-muted-foreground">
               {formatDate(source.created_at)}

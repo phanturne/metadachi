@@ -3,6 +3,7 @@ import { Database } from "@/supabase/types"
 export type Source = {
   id: string
   type: "TEXT" | "URL" | "FILE"
+  title: string
   content: string | null
   url: string | null
   file_name: string | null

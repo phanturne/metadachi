@@ -170,6 +170,7 @@ export type Database = {
           file_size: number | null
           file_type: string | null
           id: string
+          title: string
           type: Database["public"]["Enums"]["source_type"]
           updated_at: string
           url: string | null
@@ -184,6 +185,7 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           id?: string
+          title: string
           type: Database["public"]["Enums"]["source_type"]
           updated_at?: string
           url?: string | null
@@ -198,6 +200,7 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           id?: string
+          title?: string
           type?: Database["public"]["Enums"]["source_type"]
           updated_at?: string
           url?: string | null

@@ -46,6 +46,8 @@ interface Source {
   file_type: string | null
   created_at: string
   user_id: string
+  title: string
+  visibility: "PRIVATE" | "PUBLIC" | "SHARED"
   summary?: {
     summary_text: string
     key_points: string[]
@@ -508,7 +510,7 @@ export default function LibraryPage() {
                           </Button>
                         </div>
                         <div className="text-lg font-medium line-clamp-1 group-hover:text-primary transition-colors">
-                          {source.content?.slice(0, 100) + (source.content && source.content.length > 100 ? "..." : "")}
+                          {source.title}
                         </div>
                         {source.summary && (
                           <div className="mt-2">
@@ -556,7 +558,7 @@ export default function LibraryPage() {
                           </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-lg font-medium mb-3 line-clamp-1 group-hover:text-primary transition-colors">
-                            {source.content?.slice(0, 100) + (source.content && source.content.length > 100 ? "..." : "")}
+                            {source.title}
                           </div>
                           {source.summary && (
                             <div className="mt-4 pt-4 border-t border-border/50">

@@ -15,6 +15,7 @@ type Source = {
   url: string | null
   file_name: string | null
   created_at: string
+  title: string
 }
 
 interface SourceListProps {
@@ -98,7 +99,7 @@ export function SourceList({ selectedSources, onSourceSelect }: SourceListProps)
               />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
-                  {source.file_name || source.url || "Text Source"}
+                  {source.title}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {source.type.toLowerCase()} • {new Date(source.created_at).toLocaleDateString()}

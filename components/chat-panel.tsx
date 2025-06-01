@@ -124,7 +124,7 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
                                 <div className="flex items-center gap-2">
                                   <div className="flex-1 min-w-0">
                                     <p className="text-xs font-medium truncate">
-                                      {source.file_name || source.url || "Text Source"}
+                                      {source.title}
                                     </p>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
