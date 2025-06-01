@@ -491,7 +491,7 @@ export default function LibraryPage() {
                   className="h-9 gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Add Source
+                  <span className="hidden sm:inline">Add Source</span>
                 </Button>
               </div>
             </div>
@@ -537,67 +537,67 @@ export default function LibraryPage() {
               No sources found
             </div>
           ) : (
-            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-6"}>
+            <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-2"}>
               {filteredAndSortedSources.map((source) => (
                 <div
                   key={source.id}
-                  className={`bg-card rounded-xl shadow-lg p-6 border border-border/50 hover:border-primary/50 transition-all duration-200 ${
-                    viewMode === "list" ? "flex items-start gap-4" : ""
+                  className={`bg-card rounded-xl shadow-lg border border-border/50 hover:border-primary/50 transition-all duration-200 ${
+                    viewMode === "list" ? "p-2" : "p-6"
                   }`}
                 >
                   <div 
-                    className={`${viewMode === "list" ? "flex items-start gap-4 flex-1" : ""} cursor-pointer group relative`}
+                    className={`${viewMode === "list" ? "flex items-center gap-2" : ""} cursor-pointer group relative`}
                     onClick={() => setSelectedSource(source)}
                   >
                     {viewMode === "list" ? (
-                      <div className="flex flex-col gap-2 flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-primary/10 rounded-md text-primary">
-                              {getSourceIcon(source.type)}
-                            </div>
-                            <span className="text-sm text-muted-foreground">{formatDate(source.created_at)}</span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSourceToDelete(source);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                      <>
+                        <div className="p-1 bg-primary/10 rounded-md text-primary shrink-0">
+                          {getSourceIcon(source.type)}
                         </div>
-                        <div className="text-lg font-medium line-clamp-1 group-hover:text-primary transition-colors">
-                          {source.title}
-                        </div>
-                        {source.summary && (
-                          <div className="mt-2">
-                            <div className="flex items-center gap-2 text-primary mb-1">
-                              <Sparkles className="w-4 h-4" />
-                              <span className="font-medium text-sm">Summary</span>
-                            </div>
-                            <div className="text-muted-foreground line-clamp-2 text-sm">
-                              {source.summary.summary_text}
-                            </div>
-                            {source.summary.tags && source.summary.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 mt-2">
-                                {source.summary.tags.map((tag, index) => (
-                                  <span
-                                    key={index}
-                                    className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                                {source.title}
                               </div>
-                            )}
+                              <div className="text-xs text-muted-foreground/80 shrink-0">
+                                {formatDate(source.created_at)}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {source.summary?.tags && source.summary.tags.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  {source.summary.tags.slice(0, 2).map((tag, index) => (
+                                    <span
+                                      key={index}
+                                      className="px-1.5 py-0.5 bg-primary/5 text-primary/80 rounded-full text-xs shrink-0"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                  {source.summary.tags.length > 2 && (
+                                    <span className="text-xs text-muted-foreground/60">
+                                      +{source.summary.tags.length - 2}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSourceToDelete(source);
+                                  setIsDeleteDialogOpen(true);
+                                }}
+                                className="h-6 w-6 text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      </>
                     ) : (
                       <>
                         <div className="flex items-center justify-between text-muted-foreground">
