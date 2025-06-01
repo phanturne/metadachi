@@ -49,6 +49,7 @@ interface Source {
   title: string
   visibility: "PRIVATE" | "PUBLIC" | "SHARED"
   summary?: {
+    id: string
     summary_text: string
     key_points: string[]
     quotes: string[]
@@ -262,6 +263,63 @@ export default function LibraryPage() {
       setIsSubmitting(false)
     }
   }
+
+  const handleSaveSource = async (updates: {
+    title: string;
+    summary?: {
+      summary_text: string;
+      key_points: string[];
+      quotes: string[];
+      tags: string[];
+    };
+  }) => {
+    if (!selectedSource) return;
+
+    try {
+      // Update source title
+      const { error: sourceError } = await supabase
+        .from('sources')
+        .update({ title: updates.title })
+        .eq('id', selectedSource.id);
+
+      if (sourceError) throw sourceError;
+
+      // Update summary if it exists
+      if (updates.summary && selectedSource.summary) {
+        const { error: summaryError } = await supabase
+          .from('summaries')
+          .update({
+            summary_text: updates.summary.summary_text,
+            key_points: updates.summary.key_points,
+            quotes: updates.summary.quotes,
+            tags: updates.summary.tags
+          })
+          .eq('id', selectedSource.summary.id);
+
+        if (summaryError) throw summaryError;
+      }
+
+      // Reload sources to get updated data
+      await loadSources();
+      
+      // Update selected source with new data
+      setSelectedSource(prev => prev ? {
+        ...prev,
+        title: updates.title,
+        summary: prev.summary ? {
+          ...prev.summary,
+          summary_text: updates.summary?.summary_text || prev.summary.summary_text,
+          key_points: updates.summary?.key_points || prev.summary.key_points,
+          quotes: updates.summary?.quotes || prev.summary.quotes,
+          tags: updates.summary?.tags || prev.summary.tags
+        } : null
+      } : null);
+
+    } catch (error) {
+      console.error("Error updating source:", error);
+      throw error;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -636,6 +694,7 @@ export default function LibraryPage() {
                 onLoadFileContent={fetchFileContent}
                 isGeneratingSummary={isGeneratingSummary}
                 summary={summary}
+                onSave={handleSaveSource}
               />
             </div>
           )}
