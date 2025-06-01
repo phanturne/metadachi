@@ -15,6 +15,10 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent
+} from "@/components/ui/dialog"
+import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -196,32 +200,6 @@ export default function LibraryPage() {
       hour: "2-digit",
       minute: "2-digit"
     })
-  }
-
-  const getSourcePreview = (source: Source) => {
-    if (source.type === "URL") return source.url
-    if (source.type === "FILE") {
-      const fileSize = source.file_size ? formatFileSize(source.file_size) : null
-      return (
-        <div className="flex items-center gap-2">
-          <span className="truncate">{source.file_name}</span>
-          {fileSize && (
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              ({fileSize})
-            </span>
-          )}
-        </div>
-      )
-    }
-    return source.content?.slice(0, 100) + (source.content && source.content.length > 100 ? "..." : "")
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 B'
-    const k = 1024
-    const sizes = ['B', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
   }
 
   const fetchFileContent = async (filePath: string) => {
@@ -530,7 +508,7 @@ export default function LibraryPage() {
                           </Button>
                         </div>
                         <div className="text-lg font-medium line-clamp-1 group-hover:text-primary transition-colors">
-                          {getSourcePreview(source)}
+                          {source.content?.slice(0, 100) + (source.content && source.content.length > 100 ? "..." : "")}
                         </div>
                         {source.summary && (
                           <div className="mt-2">
@@ -561,7 +539,7 @@ export default function LibraryPage() {
                         <div className="flex items-center justify-between text-muted-foreground">
                           <div className="flex items-center gap-2">
                             {getSourceIcon(source.type)}
-                            <span className="text-sm">{formatDate(source.created_at)}</span>
+                            <span className="text-sm text-muted-foreground">{formatDate(source.created_at)}</span>
                           </div>
                             <Button
                               variant="ghost"
@@ -578,7 +556,7 @@ export default function LibraryPage() {
                           </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-lg font-medium mb-3 line-clamp-1 group-hover:text-primary transition-colors">
-                            {getSourcePreview(source)}
+                            {source.content?.slice(0, 100) + (source.content && source.content.length > 100 ? "..." : "")}
                           </div>
                           {source.summary && (
                             <div className="mt-4 pt-4 border-t border-border/50">
@@ -643,45 +621,24 @@ export default function LibraryPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Source Detail Modal */}
-      {selectedSource && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-card rounded-xl shadow-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  {getSourceIcon(selectedSource.type)}
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold">
-                    {selectedSource.type === "FILE" ? selectedSource.file_name : "Source Details"}
-                  </h2>
-                  <div className="text-sm text-muted-foreground">
-                    {formatDate(selectedSource.created_at)}
-                  </div>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setSelectedSource(null)
-                  setSummary("")
-                }}
-                className="h-8 w-8 hover:bg-muted"
-              >
-                ×
-              </Button>
+      {/* Source Detail Dialog */}
+      <Dialog open={!!selectedSource} onOpenChange={() => {
+        setSelectedSource(null)
+        setSummary("")
+      }}>
+        <DialogContent className="sm:max-w-6xl max-h-[80vh] overflow-y-auto">
+          {selectedSource && (
+            <div className="w-full">
+              <SourceDetail
+                source={selectedSource}
+                onLoadFileContent={fetchFileContent}
+                isGeneratingSummary={isGeneratingSummary}
+                summary={summary}
+              />
             </div>
-            <SourceDetail
-              source={selectedSource}
-              onLoadFileContent={fetchFileContent}
-              isGeneratingSummary={isGeneratingSummary}
-              summary={summary}
-            />
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 
