@@ -98,9 +98,34 @@ export function SummarizeTool({ onSummaryGenerated, className = "", showTitle = 
       const sourceData = await sourceResponse.json()
 
       if (!sourceResponse.ok) {
-        toast.error(sourceData.error || "Failed to create source")
+        if (sourceResponse.status === 429) {
+          // Rate limit exceeded
+          toast.error(
+            <div className="space-y-1">
+              <p className="font-medium">Rate Limit Exceeded</p>
+              <p className="text-sm text-muted-foreground">{sourceData.message}</p>
+              {sourceData.reset && (
+                <p className="text-sm text-muted-foreground">
+                  Resets in {new Date(sourceData.reset).toLocaleTimeString()}
+                </p>
+              )}
+            </div>,
+            {
+              duration: 8000, // Show for 8 seconds
+            }
+          )
+        } else {
+          toast.error(sourceData.error || "Failed to create source")
+        }
         setIsGenerating(false)
         return
+      }
+
+      // Show transition message if we're using a smaller model
+      if (sourceData.rateLimit?.isTransitioningToSmallerModel) {
+        toast.info(sourceData.rateLimit.transitionMessage, {
+          duration: 5000, // Show for 5 seconds
+        })
       }
 
       const newSummary = {

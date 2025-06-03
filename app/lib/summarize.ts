@@ -20,9 +20,13 @@ export async function extractTextFromUrl(url: string) {
 }
 
 // Shared summarization function
-export async function generateSummary(text: string, customInstructions?: string) {
+export async function generateSummary(
+  text: string, 
+  customInstructions?: string,
+  model: "gpt-4o-mini" | "gpt-4o-nano" = "gpt-4o-mini"
+) {
   const { object } = await generateObject({
-    model: aiOpenai("gpt-4.1-nano"),
+    model: aiOpenai(model),
     schema: z.object({
       title: z.string().describe("A concise title that captures the main topic or theme"),
       summary: z.string().describe("A concise summary in 2-3 paragraphs"),

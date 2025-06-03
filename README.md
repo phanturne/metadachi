@@ -18,6 +18,7 @@ Metadachi is an AI-powered knowledge management platform that helps you extract 
 - Generate summaries and insights from your sources
 - Create embeddings for semantic search
 - Chat with your content using AI
+- Rate limiting to ensure fair usage and prevent abuse
 
 ### 📓 Notebooks
 
@@ -28,7 +29,7 @@ Metadachi is an AI-powered knowledge management platform that helps you extract 
 ### 💬 Chat Interface
 
 - Interactive chat with your sources
-- 🚧 Tag and reference specific sources
+- Tag and reference specific sources
 - Semantic search for relevant content
 
 ## 🎯 Use Cases
@@ -64,10 +65,11 @@ Metadachi is an AI-powered knowledge management platform that helps you extract 
 | Technology    | Description                                                   |
 | ------------- | ------------------------------------------------------------- |
 | Next.js v15   | React framework for server and static rendering               |
-| Vercel        | Deployment platform for Next.js applications                  |
 | Vercel AI SDK | AI integration toolkit for TypeScript                         |
 | Supabase      | Open source database, auth and storage (Firebase alternative) |
 | Shadcn        | Reusable UI component library                                 |
+| Upstash       | Rate limiting                                                 |
+| Vercel        | Deployment platform for Next.js applications                  |
 
 ## 🚀 Getting Started
 
@@ -96,7 +98,17 @@ pnpm install
   supabase db push
   ```
 
-### 4. Deploy on Vercel
+### 4. Configure Upstash Redis
+
+- Create a database on [Upstash](https://upstash.com/)
+- Get your Redis URL and token from the Upstash dashboard
+- Add these environment variables to your `.env` file:
+  ```
+  UPSTASH_REDIS_REST_URL=your_redis_url
+  UPSTASH_REDIS_REST_TOKEN=your_redis_token
+  ```
+
+### 5. Deploy on Vercel
 
 - Create a project on [Vercel](https://vercel.com/)
 - Import your GitHub repo

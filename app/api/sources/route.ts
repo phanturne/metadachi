@@ -2,6 +2,7 @@ import { Database } from "@/supabase/types"
 import { createClient } from "@/utils/supabase/server"
 import { NextRequest } from "next/server"
 import OpenAI from "openai"
+import { checkRateLimit, createRateLimitResponse, shouldUseSmallerModel } from "../../lib/rate-limit"
 import { extractTextFromUrl, generateSummary } from "../../lib/summarize"
 import { splitTextIntoChunks } from "../../lib/text"
 
@@ -138,6 +139,14 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "No user found" }, { status: 401 })
     }
 
+    // Check rate limit
+    const rateLimitInfo = await checkRateLimit("sources", user.id, !!user.email)
+    const rateLimitResponse = createRateLimitResponse(rateLimitInfo)
+    
+    if (rateLimitResponse instanceof Response) {
+      return rateLimitResponse
+    }
+
     let sourceContent = content
     let fileName: string | null = null
     let filePath: string | null = null
@@ -189,8 +198,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate summary immediately
-    const summary = await generateSummary(sourceContent || "", customInstructions || undefined)
+    // Generate summary with model fallback
+    const useSmallerModel = shouldUseSmallerModel(rateLimitInfo)
+    const summary = await generateSummary(
+      sourceContent || "", 
+      customInstructions || undefined,
+      useSmallerModel ? "gpt-4o-nano" : "gpt-4o-mini"
+    )
 
     // Create source and summary in a single transaction
     const { data: source, error: sourceError } = await supabase
@@ -238,7 +252,7 @@ export async function POST(req: NextRequest) {
     // Process embeddings in background
     processSourceInBackground(source.id, sourceContent || "").catch(console.error)
 
-    // Return summary immediately with file info
+    // Add rate limit headers to the response
     return Response.json({
       title: type.toUpperCase() === "FILE" ? fileName : summary.title,
       summary: summary.summary,
@@ -247,7 +261,16 @@ export async function POST(req: NextRequest) {
       tags: summary.tags,
       fileSize: fileSize,
       fileName: fileName,
-      isGuest: !user.email // Indicate if this is a guest account
+      isGuest: !user.email,
+      usedSmallerModel: useSmallerModel,
+      rateLimit: {
+        remaining: rateLimitInfo.remaining,
+        limit: rateLimitInfo.limit,
+        transitionMessage: rateLimitResponse.transitionMessage,
+        isTransitioningToSmallerModel: rateLimitResponse.isTransitioningToSmallerModel
+      }
+    }, {
+      headers: rateLimitResponse.headers
     })
   } catch (error) {
     console.error("Error creating source:", error)

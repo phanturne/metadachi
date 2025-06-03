@@ -243,13 +243,38 @@ export default function LibraryPage() {
         body: formData,
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Failed to add source")
+        if (response.status === 429) {
+          // Rate limit exceeded
+          toast.error(
+            <div className="space-y-1">
+              <p className="font-medium">Rate Limit Exceeded</p>
+              <p className="text-sm text-muted-foreground">{data.message}</p>
+              {data.reset && (
+                <p className="text-sm text-muted-foreground">
+                  Resets in {new Date(data.reset).toLocaleTimeString()}
+                </p>
+              )}
+            </div>,
+            {
+              duration: 8000, // Show for 8 seconds
+            }
+          )
+        } else {
+          toast.error(data.error || "Failed to add source")
+        }
+        return
+      }
+      
+      // Show transition message if we're using a smaller model
+      if (data.rateLimit?.isTransitioningToSmallerModel) {
+        toast.info(data.rateLimit.transitionMessage, {
+          duration: 5000, // Show for 5 seconds
+        })
       }
 
-      const data = await response.json()
-      
       // If this is a guest account, show the appropriate message
       if (data.isGuest && !user) {
         toast.info("We've created a temporary guest account to save your sources. Add an email to keep them forever!", {
