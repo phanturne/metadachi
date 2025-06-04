@@ -131,8 +131,8 @@ export function SourceDetail({
   }
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-6 w-full max-w-full overflow-hidden">
+      <div className="w-full max-w-full overflow-hidden">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             {getSourceIcon(source.type)}
@@ -194,7 +194,7 @@ export function SourceDetail({
                 </div>
               ) : summary ? (
                 <div className="relative">
-                  <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isContentExpanded ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
+                  <div className={`whitespace-pre-wrap break-words bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isContentExpanded ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
                     {summary}
                   </div>
                   <Button
@@ -209,9 +209,11 @@ export function SourceDetail({
               ) : null}
             </div>
           ) : (
-            <div className="relative">
-              <div className={`whitespace-pre-wrap bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isContentExpanded ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto`}>
-                {source.content || source.url}
+            <div className="relative w-full max-w-full overflow-hidden">
+              <div className={`whitespace-pre-wrap break-words bg-muted/50 p-4 rounded-lg transition-all duration-200 ${isContentExpanded ? 'max-h-none' : 'max-h-[300px]'} overflow-y-auto w-full max-w-full`}>
+                <div className="break-all">
+                  {source.content || source.url}
+                </div>
               </div>
               <Button
                 variant="ghost"

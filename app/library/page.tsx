@@ -715,7 +715,7 @@ export default function LibraryPage() {
         setSelectedSource(null)
         setSummary("")
       }}>
-        <DialogContent className="sm:max-w-6xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-6xl max-h-[80vh] overflow-y-auto" showClose={false}>
           {selectedSource && (
             <div className="w-full">
               <SourceDetail
