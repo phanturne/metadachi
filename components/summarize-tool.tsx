@@ -201,6 +201,7 @@ export function SummarizeTool({ onSummaryGenerated, className = "", showTitle = 
                 setInput(file?.name || "")
               }}
               disabled={isGenerating}
+              className="w-full"
             />
           ) : (
             <Textarea
@@ -263,50 +264,6 @@ export function SummarizeTool({ onSummaryGenerated, className = "", showTitle = 
           )}
         </Button>
       </form>
-
-      {selectedFile && (
-        <div className="mt-8 space-y-6">
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Summary</h3>
-            <p className="text-muted-foreground">{selectedFile.name}</p>
-          </div>
-
-          {selectedFile.name.endsWith('.pdf') && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Key Points</h3>
-              <p className="text-muted-foreground">Extracted key points from the PDF file.</p>
-            </div>
-          )}
-
-          {selectedFile.name.endsWith('.doc') || selectedFile.name.endsWith('.docx') && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Key Points</h3>
-              <p className="text-muted-foreground">Extracted key points from the Word document.</p>
-            </div>
-          )}
-
-          {selectedFile.name.endsWith('.txt') && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Key Points</h3>
-              <p className="text-muted-foreground">Extracted key points from the text file.</p>
-            </div>
-          )}
-
-          {selectedFile.name.endsWith('.md') && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Key Points</h3>
-              <p className="text-muted-foreground">Extracted key points from the Markdown file.</p>
-            </div>
-          )}
-
-          {selectedFile.name.endsWith('.html') && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Key Points</h3>
-              <p className="text-muted-foreground">Extracted key points from the HTML file.</p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 } 
