@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Book, Edit2, FileText, Globe, Loader2, Save, Sparkles, X } from "lucide-react"
+import { Book, Edit2, ExternalLink, FileText, Globe, Loader2, Save, Sparkles, X } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -174,7 +174,20 @@ export function SourceDetail({
         </div>
         <div>
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium text-muted-foreground">Content</div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm font-medium text-muted-foreground">Content</div>
+              {source.type === "URL" && source.url && (
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline flex items-center gap-1"
+                >
+                  {source.url}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
             {source.type === "FILE" && !isGeneratingSummary && !summary && onLoadFileContent && (
               <Button
                 variant="outline"
