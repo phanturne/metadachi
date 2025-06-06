@@ -13,11 +13,7 @@ export const signUpAction = async (formData: FormData) => {
   const origin = (await headers()).get('origin');
 
   if (!email || !password) {
-    return encodedRedirect(
-      'error',
-      ROUTES.REGISTER,
-      'Email and password are required',
-    );
+    return encodedRedirect('error', ROUTES.REGISTER, 'Email and password are required');
   }
 
   const { error } = await supabase.auth.signUp({
@@ -35,7 +31,7 @@ export const signUpAction = async (formData: FormData) => {
     return encodedRedirect(
       'success',
       ROUTES.REGISTER,
-      'Thanks for signing up! Please check your email for a verification link.',
+      'Thanks for signing up! Please check your email for a verification link.'
     );
   }
 };
@@ -64,11 +60,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   const callbackUrl = formData.get('callbackUrl')?.toString();
 
   if (!email) {
-    return encodedRedirect(
-      'error',
-      ROUTES.FORGOT_PASSWORD,
-      'Email is required',
-    );
+    return encodedRedirect('error', ROUTES.FORGOT_PASSWORD, 'Email is required');
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -77,11 +69,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
 
   if (error) {
     console.error(error.message);
-    return encodedRedirect(
-      'error',
-      ROUTES.FORGOT_PASSWORD,
-      'Could not reset password',
-    );
+    return encodedRedirect('error', ROUTES.FORGOT_PASSWORD, 'Could not reset password');
   }
 
   if (callbackUrl) {
@@ -91,7 +79,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   return encodedRedirect(
     'success',
     ROUTES.FORGOT_PASSWORD,
-    'Check your email for a link to reset your password.',
+    'Check your email for a link to reset your password.'
   );
 };
 
@@ -105,7 +93,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     return encodedRedirect(
       'error',
       ROUTES.RESET_PASSWORD,
-      'Password and confirm password are required',
+      'Password and confirm password are required'
     );
   }
 

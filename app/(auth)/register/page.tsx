@@ -19,14 +19,11 @@ export default async function RegisterPage({
           <FormMessage message={params} />
         </div>
       ) : (
-        <form className="flex flex-col gap-6 rounded-lg bg-card p-8 shadow-lg">
+        <form className="bg-card flex flex-col gap-6 rounded-lg p-8 shadow-lg">
           <h1 className="text-center text-3xl font-semibold">Sign up</h1>
           <p className="text-center text-sm">
             Already have an account?{' '}
-            <Link
-              className="font-medium text-primary underline"
-              href={ROUTES.LOGIN}
-            >
+            <Link className="text-primary font-medium underline" href={ROUTES.LOGIN}>
               Sign in
             </Link>
           </p>

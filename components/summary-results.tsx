@@ -1,30 +1,32 @@
-"use client"
+'use client';
 
-import { Sparkles } from "lucide-react"
-import { SummaryResponse } from "./summarize-tool"
+import { Sparkles } from 'lucide-react';
+import { SummaryResponse } from './summarize-tool';
 
 interface SummaryResultsProps {
-  summary: SummaryResponse
-  className?: string
+  summary: SummaryResponse;
+  className?: string;
 }
 
-export function SummaryResults({ summary, className = "" }: SummaryResultsProps) {
+export function SummaryResults({ summary, className = '' }: SummaryResultsProps) {
   return (
-    <div className={`space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${className}`}>
-      <div className="bg-card rounded-xl p-6 border border-border/50">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
+    <div
+      className={`animate-in fade-in slide-in-from-bottom-4 space-y-6 duration-500 ${className}`}
+    >
+      <div className="bg-card border-border/50 rounded-xl border p-6">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
+          <Sparkles className="text-primary h-5 w-5" />
           Summary
         </h2>
-        <div className="prose prose-sm max-w-none prose-headings:font-semibold prose-p:leading-relaxed">
+        <div className="prose prose-sm prose-headings:font-semibold prose-p:leading-relaxed max-w-none">
           {summary.summary}
         </div>
       </div>
 
-      <div className="bg-card rounded-xl p-6 border border-border/50">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+      <div className="bg-card border-border/50 rounded-xl border p-6">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
           <svg
-            className="w-5 h-5 text-primary"
+            className="text-primary h-5 w-5"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -36,18 +38,18 @@ export function SummaryResults({ summary, className = "" }: SummaryResultsProps)
         </h2>
         <ul className="space-y-2">
           {summary.keyPoints.map((point, index) => (
-            <li key={index} className="flex gap-3 items-start">
-              <span className="text-primary font-semibold mt-1">•</span>
+            <li key={index} className="flex items-start gap-3">
+              <span className="text-primary mt-1 font-semibold">•</span>
               <span className="prose prose-sm max-w-none">{point}</span>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="bg-card rounded-xl p-6 border border-border/50">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+      <div className="bg-card border-border/50 rounded-xl border p-6">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
           <svg
-            className="w-5 h-5 text-primary"
+            className="text-primary h-5 w-5"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -59,10 +61,7 @@ export function SummaryResults({ summary, className = "" }: SummaryResultsProps)
         </h2>
         <div className="flex flex-wrap gap-2">
           {summary.tags.map((tag, index) => (
-            <span
-              key={index}
-              className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-            >
+            <span key={index} className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm">
               {tag}
             </span>
           ))}
@@ -70,10 +69,10 @@ export function SummaryResults({ summary, className = "" }: SummaryResultsProps)
       </div>
 
       {summary.quotes.length > 0 && (
-        <div className="bg-card rounded-xl p-6 border border-border/50">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <div className="bg-card border-border/50 rounded-xl border p-6">
+          <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
             <svg
-              className="w-5 h-5 text-primary"
+              className="text-primary h-5 w-5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -85,7 +84,10 @@ export function SummaryResults({ summary, className = "" }: SummaryResultsProps)
           </h2>
           <div className="space-y-3">
             {summary.quotes.map((quote, index) => (
-              <blockquote key={index} className="border-l-4 border-primary/20 pl-4 italic text-muted-foreground">
+              <blockquote
+                key={index}
+                className="border-primary/20 text-muted-foreground border-l-4 pl-4 italic"
+              >
                 &ldquo;{quote}&rdquo;
               </blockquote>
             ))}
@@ -93,5 +95,5 @@ export function SummaryResults({ summary, className = "" }: SummaryResultsProps)
         </div>
       )}
     </div>
-  )
-} 
+  );
+}

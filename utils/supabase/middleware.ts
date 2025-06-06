@@ -24,26 +24,24 @@ export const updateSession = async (request: NextRequest) => {
             return request.cookies.getAll();
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value),
-            );
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
             response = NextResponse.next({
               request,
             });
             cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
+              response.cookies.set(name, value, options)
             );
           },
         },
-      },
+      }
     );
 
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
     const user = await supabase.auth.getUser();
 
-    const isProtectedRoute = PROTECTED_ROUTES.some((page) =>
-      request.nextUrl.pathname.startsWith(page),
+    const isProtectedRoute = PROTECTED_ROUTES.some(page =>
+      request.nextUrl.pathname.startsWith(page)
     );
 
     if (user.error && isProtectedRoute) {
@@ -51,9 +49,7 @@ export const updateSession = async (request: NextRequest) => {
     }
 
     // If the user is logged in,
-    const isAuthPage = AUTH_ROUTES.some((page) =>
-      request.nextUrl.pathname.startsWith(page),
-    );
+    const isAuthPage = AUTH_ROUTES.some(page => request.nextUrl.pathname.startsWith(page));
 
     if (user.data.user && isAuthPage) {
       return NextResponse.redirect(new URL(ROUTES.HOME, request.url));

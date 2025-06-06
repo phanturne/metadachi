@@ -5,42 +5,42 @@
  * @returns Array of text chunks
  */
 export function splitTextIntoChunks(text: string, maxChunkSize: number = 1000): string[] {
-  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text]
-  const chunks: string[] = []
-  let currentChunk = ""
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  const chunks: string[] = [];
+  let currentChunk = '';
 
   for (const sentence of sentences) {
     if (currentChunk.length + sentence.length > maxChunkSize) {
       if (currentChunk) {
-        chunks.push(currentChunk.trim())
-        currentChunk = ""
+        chunks.push(currentChunk.trim());
+        currentChunk = '';
       }
       // If a single sentence is longer than maxChunkSize, split it into words
       if (sentence.length > maxChunkSize) {
-        const words = sentence.split(/\s+/)
-        let tempChunk = ""
+        const words = sentence.split(/\s+/);
+        let tempChunk = '';
         for (const word of words) {
           if (tempChunk.length + word.length + 1 > maxChunkSize) {
-            chunks.push(tempChunk.trim())
-            tempChunk = word
+            chunks.push(tempChunk.trim());
+            tempChunk = word;
           } else {
-            tempChunk += (tempChunk ? " " : "") + word
+            tempChunk += (tempChunk ? ' ' : '') + word;
           }
         }
         if (tempChunk) {
-          currentChunk = tempChunk
+          currentChunk = tempChunk;
         }
       } else {
-        currentChunk = sentence
+        currentChunk = sentence;
       }
     } else {
-      currentChunk += (currentChunk ? " " : "") + sentence
+      currentChunk += (currentChunk ? ' ' : '') + sentence;
     }
   }
 
   if (currentChunk) {
-    chunks.push(currentChunk.trim())
+    chunks.push(currentChunk.trim());
   }
 
-  return chunks
-} 
+  return chunks;
+}

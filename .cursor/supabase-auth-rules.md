@@ -11,7 +11,7 @@
 ### 1. Anonymous Auth
 
 ```typescript
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from '@/utils/supabase/server';
 
 async function getOrCreateUser() {
   const supabase = await createClient();
@@ -21,10 +21,8 @@ async function getOrCreateUser() {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    const { data: guestData, error: guestError } =
-      await supabase.auth.signInAnonymously();
-    if (guestError || !guestData.user)
-      throw new Error("Failed to create guest account");
+    const { data: guestData, error: guestError } = await supabase.auth.signInAnonymously();
+    if (guestError || !guestData.user) throw new Error('Failed to create guest account');
     return guestData.user;
   }
 
@@ -35,8 +33,8 @@ async function getOrCreateUser() {
 ### 2. Protected API Routes
 
 ```typescript
-import { createClient } from "@/utils/supabase/server";
-import { NextResponse } from "next/server";
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   const supabase = await createClient();
@@ -46,11 +44,11 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   // Protected route logic here
-  return NextResponse.json({ data: "Protected data" });
+  return NextResponse.json({ data: 'Protected data' });
 }
 ```
 
@@ -73,8 +71,8 @@ export default async function ProtectedComponent() {
 ### 4. Client-Side Auth State
 
 ```typescript
-import { createClient } from "@/utils/supabase/client";
-import { useEffect, useState } from "react";
+import { createClient } from '@/utils/supabase/client';
+import { useEffect, useState } from 'react';
 
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -103,7 +101,7 @@ export function useAuth() {
 ### 5. Sign Out
 
 ```typescript
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from '@/utils/supabase/client';
 
 export async function signOut() {
   const supabase = createClient();

@@ -1,30 +1,25 @@
-"use client"
+'use client';
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Skeleton } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
-import { Source } from "@/types/chat"
-import { useChat } from "ai/react"
-import { Search, Send } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import { Source } from '@/types/chat';
+import { useChat } from 'ai/react';
+import { Search, Send } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface ChatPanelProps {
-  selectedSources: string[]
+  selectedSources: string[];
 }
 
 export function ChatPanel({ selectedSources }: ChatPanelProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedSource, setSelectedSource] = useState<Source | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedSource, setSelectedSource] = useState<Source | null>(null);
 
   const {
     messages,
@@ -34,26 +29,26 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
     isLoading: isChatLoading,
     error,
   } = useChat({
-    api: "/api/chat",
+    api: '/api/chat',
     body: {
       sourceIds: selectedSources,
     },
-    onError: (error) => {
-      console.error("Chat error:", error)
+    onError: error => {
+      console.error('Chat error:', error);
     },
-  })
+  });
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages])
+  }, [messages]);
 
   useEffect(() => {
     // Simulate loading state
-    const timer = setTimeout(() => setIsLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [])
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (isLoading) {
     return (
@@ -64,73 +59,85 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <ScrollArea ref={scrollRef} className="flex-1 min-h-0">
+    <div className="flex h-full min-h-0 flex-col">
+      <ScrollArea ref={scrollRef} className="min-h-0 flex-1">
         <div className="space-y-4 pr-4">
           {messages.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
+            <div className="text-muted-foreground py-8 text-center">
               <div className="mb-4">
-                <Search className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <Search className="mx-auto mb-2 h-12 w-12 opacity-50" />
               </div>
-              <p className="text-lg font-medium mb-2">Start a conversation</p>
-              <p className="text-sm">Ask questions about your sources and I&apos;ll search for relevant information.</p>
+              <p className="mb-2 text-lg font-medium">Start a conversation</p>
+              <p className="text-sm">
+                Ask questions about your sources and I&apos;ll search for relevant information.
+              </p>
             </div>
           )}
-          {messages.map((message) => (
+          {messages.map(message => (
             <div key={message.id} className="space-y-2">
               <div
                 className={cn(
-                  "flex rounded-lg px-4 py-2",
-                  message.role === "user" 
-                    ? "ml-auto bg-primary text-primary-foreground max-w-[85%]" 
-                    : "bg-muted max-w-[85%]"
+                  'flex rounded-lg px-4 py-2',
+                  message.role === 'user'
+                    ? 'bg-primary text-primary-foreground ml-auto max-w-[85%]'
+                    : 'bg-muted max-w-[85%]'
                 )}
               >
-                <div className="whitespace-pre-wrap break-words">{message.content}</div>
+                <div className="break-words whitespace-pre-wrap">{message.content}</div>
               </div>
 
               {/* Show tool calls */}
-              {message.toolInvocations?.map((toolInvocation) => (
-                <div key={toolInvocation.toolCallId} className={cn(
-                  "space-y-2 w-full max-w-[85%]",
-                  message.role === "user" ? "ml-auto" : "ml-4"
-                )}>
-                  {toolInvocation.state === "call" && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {message.toolInvocations?.map(toolInvocation => (
+                <div
+                  key={toolInvocation.toolCallId}
+                  className={cn(
+                    'w-full max-w-[85%] space-y-2',
+                    message.role === 'user' ? 'ml-auto' : 'ml-4'
+                  )}
+                >
+                  {toolInvocation.state === 'call' && (
+                    <div className="text-muted-foreground flex items-center gap-2 text-sm">
                       <Search className="h-4 w-4 animate-spin" />
-                      <span className="truncate">Searching sources for: &quot;{toolInvocation.args.query}&quot;</span>
+                      <span className="truncate">
+                        Searching sources for: &quot;{toolInvocation.args.query}&quot;
+                      </span>
                     </div>
                   )}
-                  {toolInvocation.state === "result" && (
-                    <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 text-sm">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Search className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                        <span className="font-medium text-blue-600 truncate">Source Search Results</span>
+                  {toolInvocation.state === 'result' && (
+                    <div className="rounded-lg bg-blue-50 p-3 text-sm dark:bg-blue-950/20">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Search className="h-4 w-4 flex-shrink-0 text-blue-600" />
+                        <span className="truncate font-medium text-blue-600">
+                          Source Search Results
+                        </span>
                       </div>
                       {toolInvocation.result.success ? (
                         <div className="space-y-3">
-                          <p className="text-green-600 truncate text-xs">{toolInvocation.result.message}</p>
+                          <p className="truncate text-xs text-green-600">
+                            {toolInvocation.result.message}
+                          </p>
                           <div className="grid grid-cols-4 gap-2">
                             {toolInvocation.result.sources.map((source: Source) => (
-                              <div 
-                                key={source.id} 
-                                className="bg-white dark:bg-blue-950/40 rounded p-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/60 transition-colors"
+                              <div
+                                key={source.id}
+                                className="cursor-pointer rounded bg-white p-2 transition-colors hover:bg-blue-50 dark:bg-blue-950/40 dark:hover:bg-blue-950/60"
                                 onClick={() => setSelectedSource(source)}
                               >
                                 <div className="flex items-center gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-medium truncate">
-                                      {source.title}
-                                    </p>
-                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-xs font-medium">{source.title}</p>
+                                    <div className="mt-0.5 flex items-center gap-1.5">
+                                      <Badge
+                                        variant="secondary"
+                                        className="h-4 px-1.5 py-0 text-[10px]"
+                                      >
                                         {source.type.toLowerCase()}
                                       </Badge>
-                                      <span className="text-[10px] text-muted-foreground">
+                                      <span className="text-muted-foreground text-[10px]">
                                         {Math.round(source.similarity * 100)}% match
                                       </span>
                                     </div>
@@ -141,7 +148,7 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
                           </div>
                         </div>
                       ) : (
-                        <p className="text-amber-600 truncate">{toolInvocation.result.message}</p>
+                        <p className="truncate text-amber-600">{toolInvocation.result.message}</p>
                       )}
                     </div>
                   )}
@@ -150,21 +157,23 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
             </div>
           ))}
           {isChatLoading && (
-            <div className="flex rounded-lg px-4 py-2 bg-muted max-w-[85%]">
+            <div className="bg-muted flex max-w-[85%] rounded-lg px-4 py-2">
               <div className="flex space-x-2">
-                <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" />
-                <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0.2s]" />
-                <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0.4s]" />
+                <div className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full" />
+                <div className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:0.2s]" />
+                <div className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:0.4s]" />
               </div>
             </div>
           )}
           {error && (
-            <div className="bg-destructive/10 text-destructive px-4 py-2 rounded-lg max-w-[85%]">Error: {error.message}</div>
+            <div className="bg-destructive/10 text-destructive max-w-[85%] rounded-lg px-4 py-2">
+              Error: {error.message}
+            </div>
           )}
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSubmit} className="flex items-center space-x-2 mt-4 flex-shrink-0">
+      <form onSubmit={handleSubmit} className="mt-4 flex flex-shrink-0 items-center space-x-2">
         <Input
           value={input}
           onChange={handleInputChange}
@@ -172,33 +181,34 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
           disabled={isChatLoading || selectedSources.length === 0}
           className="flex-1"
         />
-        <Button type="submit" disabled={isChatLoading || selectedSources.length === 0 || !input.trim()}>
+        <Button
+          type="submit"
+          disabled={isChatLoading || selectedSources.length === 0 || !input.trim()}
+        >
           <Send className="h-4 w-4" />
         </Button>
       </form>
 
       {/* Source Content Modal */}
       <Dialog open={!!selectedSource} onOpenChange={() => setSelectedSource(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] flex flex-col">
+        <DialogContent className="flex max-h-[80vh] max-w-3xl flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <span className="truncate">
-                {selectedSource?.file_name || selectedSource?.url || "Text Source"}
+                {selectedSource?.file_name || selectedSource?.url || 'Text Source'}
               </span>
               <Badge variant="secondary" className="text-xs">
                 {selectedSource?.type.toLowerCase()}
               </Badge>
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4 -mr-4">
+          <ScrollArea className="-mr-4 flex-1 pr-4">
             <div className="prose dark:prose-invert max-w-none">
-              <pre className="whitespace-pre-wrap text-sm">
-                {selectedSource?.content}
-              </pre>
+              <pre className="text-sm whitespace-pre-wrap">{selectedSource?.content}</pre>
             </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

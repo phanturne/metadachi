@@ -1,19 +1,19 @@
-import { Ratelimit } from "@upstash/ratelimit"
-import { NextResponse } from "next/server"
-import { redis } from "./redis"
+import { Ratelimit } from '@upstash/ratelimit';
+import { NextResponse } from 'next/server';
+import { redis } from './redis';
 
 // Define rate limit configurations for different endpoints
 const rateLimitConfigs = {
   sources: {
     anonymous: {
       limit: 10,
-      window: "1 d",
-      prefix: "ratelimit:sources:anonymous",
+      window: '1 d',
+      prefix: 'ratelimit:sources:anonymous',
     },
     authenticated: {
       limit: 30,
-      window: "1 d",
-      prefix: "ratelimit:sources:authenticated",
+      window: '1 d',
+      prefix: 'ratelimit:sources:authenticated',
     },
   },
   // Add more endpoints as needed, for example:
@@ -29,7 +29,7 @@ const rateLimitConfigs = {
   //     prefix: "ratelimit:chat:authenticated",
   //   },
   // },
-} as const
+} as const;
 
 // Create rate limiters for each endpoint
 const rateLimiters = Object.entries(rateLimitConfigs).reduce(
@@ -51,7 +51,7 @@ const rateLimiters = Object.entries(rateLimitConfigs).reduce(
     },
   }),
   {} as Record<string, { anonymous: Ratelimit; authenticated: Ratelimit }>
-)
+);
 
 export async function checkRateLimit(
   endpoint: keyof typeof rateLimitConfigs,
@@ -60,9 +60,9 @@ export async function checkRateLimit(
 ) {
   const limiter = isAuthenticated
     ? rateLimiters[endpoint].authenticated
-    : rateLimiters[endpoint].anonymous
+    : rateLimiters[endpoint].anonymous;
 
-  const { success, limit, reset, remaining } = await limiter.limit(userId)
+  const { success, limit, reset, remaining } = await limiter.limit(userId);
 
   return {
     success,
@@ -70,26 +70,26 @@ export async function checkRateLimit(
     reset,
     remaining,
     isAuthenticated,
-  }
+  };
 }
 
 export function createRateLimitResponse(rateLimitInfo: {
-  success: boolean
-  limit: number
-  reset: number
-  remaining: number
-  isAuthenticated: boolean
+  success: boolean;
+  limit: number;
+  reset: number;
+  remaining: number;
+  isAuthenticated: boolean;
 }) {
   const headers = {
-    "X-RateLimit-Limit": rateLimitInfo.limit.toString(),
-    "X-RateLimit-Remaining": rateLimitInfo.remaining.toString(),
-    "X-RateLimit-Reset": rateLimitInfo.reset.toString(),
-  }
+    'X-RateLimit-Limit': rateLimitInfo.limit.toString(),
+    'X-RateLimit-Remaining': rateLimitInfo.remaining.toString(),
+    'X-RateLimit-Reset': rateLimitInfo.reset.toString(),
+  };
 
   if (!rateLimitInfo.success) {
     return NextResponse.json(
       {
-        error: "Rate limit exceeded",
+        error: 'Rate limit exceeded',
         message: `You have exceeded your daily limit of ${rateLimitInfo.limit} requests. Please try again later.`,
         reset: rateLimitInfo.reset,
       },
@@ -97,37 +97,37 @@ export function createRateLimitResponse(rateLimitInfo: {
         status: 429,
         headers,
       }
-    )
+    );
   }
 
   // Check if we're transitioning to smaller model
-  const isTransitioningToSmallerModel = shouldUseSmallerModel(rateLimitInfo)
+  const isTransitioningToSmallerModel = shouldUseSmallerModel(rateLimitInfo);
   const transitionMessage = isTransitioningToSmallerModel
     ? `You have ${rateLimitInfo.remaining} requests remaining today. Using a faster model to conserve your remaining requests.`
-    : null
+    : null;
 
-  return { 
+  return {
     headers,
     transitionMessage,
-    isTransitioningToSmallerModel
-  }
+    isTransitioningToSmallerModel,
+  };
 }
 
 // Helper to determine if we should use a smaller model
 export function shouldUseSmallerModel(rateLimitInfo: {
-  success: boolean
-  remaining: number
-  isAuthenticated: boolean
+  success: boolean;
+  remaining: number;
+  isAuthenticated: boolean;
 }) {
   // For authenticated users, use smaller model when less than 10 requests remaining
   if (rateLimitInfo.isAuthenticated && rateLimitInfo.remaining <= 10) {
-    return true
-  }
-  
-  // For anonymous users, use smaller model for last 5 requests
-  if (!rateLimitInfo.isAuthenticated && rateLimitInfo.remaining <= 5) {
-    return true
+    return true;
   }
 
-  return false
-} 
+  // For anonymous users, use smaller model for last 5 requests
+  if (!rateLimitInfo.isAuthenticated && rateLimitInfo.remaining <= 5) {
+    return true;
+  }
+
+  return false;
+}

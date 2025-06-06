@@ -6,5 +6,5 @@ export const createClient = () =>
     // biome-ignore lint: Forbidden non-null assertion.
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     // biome-ignore lint: Forbidden non-null assertion.
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );

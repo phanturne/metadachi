@@ -11,28 +11,14 @@ export default async function ResetPasswordPage({
 }) {
   const params = (await searchParams) as Message;
   return (
-    <form className="flex flex-col w-full max-w-md p-4 gap-2 [&>input]:mb-4">
+    <form className="flex w-full max-w-md flex-col gap-2 p-4 [&>input]:mb-4">
       <h1 className="text-2xl font-medium">Reset password</h1>
-      <p className="text-sm text-foreground/60">
-        Please enter your new password below.
-      </p>
+      <p className="text-foreground/60 text-sm">Please enter your new password below.</p>
       <Label htmlFor="password">New password</Label>
-      <Input
-        type="password"
-        name="password"
-        placeholder="New password"
-        required
-      />
+      <Input type="password" name="password" placeholder="New password" required />
       <Label htmlFor="confirmPassword">Confirm password</Label>
-      <Input
-        type="password"
-        name="confirmPassword"
-        placeholder="Confirm password"
-        required
-      />
-      <SubmitButton formAction={resetPasswordAction}>
-        Reset password
-      </SubmitButton>
+      <Input type="password" name="confirmPassword" placeholder="Confirm password" required />
+      <SubmitButton formAction={resetPasswordAction}>Reset password</SubmitButton>
       <FormMessage message={params} />
     </form>
   );

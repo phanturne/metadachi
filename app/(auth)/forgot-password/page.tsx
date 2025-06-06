@@ -28,9 +28,7 @@ export default async function ForgotPasswordPage({
         <div className="mt-6 flex flex-col gap-4">
           <Label htmlFor="email">Email</Label>
           <Input name="email" placeholder="you@example.com" required />
-          <SubmitButton formAction={forgotPasswordAction}>
-            Reset Password
-          </SubmitButton>
+          <SubmitButton formAction={forgotPasswordAction}>Reset Password</SubmitButton>
           <FormMessage message={params} />
         </div>
       </form>

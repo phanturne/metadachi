@@ -13,14 +13,11 @@ export default async function LoginPage({
 }) {
   const params = (await searchParams) as Message;
   return (
-    <form className="flex flex-col gap-6 rounded-lg bg-card p-8 shadow-lg">
+    <form className="bg-card flex flex-col gap-6 rounded-lg p-8 shadow-lg">
       <h1 className="text-center text-3xl font-semibold">Sign in</h1>
       <p className="text-center text-sm">
         Don&#39;t have an account?{' '}
-        <Link
-          className="font-medium text-primary underline"
-          href={ROUTES.REGISTER}
-        >
+        <Link className="text-primary font-medium underline" href={ROUTES.REGISTER}>
           Sign up
         </Link>
       </p>
@@ -29,19 +26,11 @@ export default async function LoginPage({
         <Input name="email" placeholder="you@example.com" required />
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Password</Label>
-          <Link
-            className="text-xs text-primary underline"
-            href={ROUTES.FORGOT_PASSWORD}
-          >
+          <Link className="text-primary text-xs underline" href={ROUTES.FORGOT_PASSWORD}>
             Forgot Password?
           </Link>
         </div>
-        <Input
-          type="password"
-          name="password"
-          placeholder="Your password"
-          required
-        />
+        <Input type="password" name="password" placeholder="Your password" required />
         <SubmitButton pendingText="Signing In..." formAction={signInAction}>
           Sign in
         </SubmitButton>

@@ -15,4 +15,4 @@ declare module 'turndown' {
   }
 
   export default TurndownService;
-} 
+}

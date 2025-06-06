@@ -1,14 +1,10 @@
-import { Navbar } from "@/components/navbar"
-import { AuthProvider } from "@/contexts/auth-context"
-import { ThemeProvider } from "@/lib/theme-provider"
-import { Toaster } from "sonner"
-import "./globals.css"
+import { Navbar } from '@/components/navbar';
+import { AuthProvider } from '@/contexts/auth-context';
+import { ThemeProvider } from '@/lib/theme-provider';
+import { Toaster } from 'sonner';
+import './globals.css';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -26,5 +22,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
