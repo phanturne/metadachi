@@ -57,18 +57,82 @@ async function extractTextFromFile(file: File, fileType: string): Promise<string
   }
 }
 
+interface Summary {
+  title: string;
+  summary: string;
+  keyPoints: string[];
+  quotes: string[];
+  tags: string[];
+}
+
 // Process source in background
-async function processSourceInBackground(sourceId: string, content: string) {
+async function processSourceInBackground(
+  userId: string,
+  type: string,
+  sourceContent: string,
+  summary: Summary,
+  fileInfo: {
+    fileName: string | null,
+    filePath: string | null,
+    fileSize: number | null,
+    fileType: string | null,
+    url: string | null
+  },
+  customInstructions: string | null
+) {
   const supabase = await createClient()
   
   try {
+    // Create source
+    const sourceResult = await supabase
+      .from("sources")
+      .insert({
+        type: type.toUpperCase() as Database["public"]["Enums"]["source_type"],
+        title: type.toUpperCase() === "FILE" ? fileInfo.fileName || "Untitled" : summary.title,
+        content: type.toUpperCase() === "FILE" ? null : sourceContent,
+        url: type.toUpperCase() === "URL" ? fileInfo.url : null,
+        file_name: type.toUpperCase() === "FILE" ? fileInfo.fileName : null,
+        file_path: type.toUpperCase() === "FILE" ? fileInfo.filePath : null,
+        file_size: type.toUpperCase() === "FILE" ? fileInfo.fileSize : null,
+        file_type: type.toUpperCase() === "FILE" ? fileInfo.fileType : null,
+        visibility: "PRIVATE" as Database["public"]["Enums"]["visibility_type"],
+        user_id: userId
+      })
+      .select()
+      .single()
+
+    if (sourceResult.error || !sourceResult.data) {
+      console.error("Error creating source:", sourceResult.error)
+      return
+    }
+
+    // Create summary
+    const summaryResult = await supabase
+      .from("summaries")
+      .insert({
+        source_id: sourceResult.data.id,
+        summary_text: summary.summary,
+        key_points: summary.keyPoints,
+        quotes: summary.quotes,
+        tags: summary.tags,
+        style: "default",
+        user_id: userId,
+        visibility: 'PRIVATE',
+        custom_instructions: customInstructions
+      })
+
+    if (summaryResult.error) {
+      console.error("Error creating summary:", summaryResult.error)
+      return
+    }
+
     // Generate embeddings for text chunks
-    const chunks = splitTextIntoChunks(content)
+    const chunks = splitTextIntoChunks(sourceContent)
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i]
       const embedding = await generateEmbedding(chunk)
       await supabase.from("source_embeddings").insert({
-        source_id: sourceId,
+        source_id: sourceResult.data.id,
         chunk_index: i,
         chunk_text: chunk,
         embedding: JSON.stringify(embedding)
@@ -79,15 +143,10 @@ async function processSourceInBackground(sourceId: string, content: string) {
     await supabase
       .from("sources")
       .update({ updated_at: new Date().toISOString() })
-      .eq("id", sourceId)
+      .eq("id", sourceResult.data.id)
 
   } catch (error) {
-    console.error("Error processing source:", error)
-    const supabase = await createClient()
-    await supabase
-      .from("sources")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", sourceId)
+    console.error("Error processing source in background:", error)
   }
 }
 
@@ -117,11 +176,9 @@ export async function POST(req: NextRequest) {
     // Get or create user
     let user = null
     try {
-      // First try to get existing user
       const { data: { user: existingUser }, error: userError } = await supabase.auth.getUser()
       
       if (userError || !existingUser) {
-        // If no user exists, create an anonymous account
         const { data: guestData, error: guestError } = await supabase.auth.signInAnonymously()
         if (guestError || !guestData.user) {
           return Response.json({ error: "Failed to create guest account" }, { status: 401 })
@@ -139,7 +196,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "No user found" }, { status: 401 })
     }
 
-    // Check rate limit
+    // Check rate limit early
     const rateLimitInfo = await checkRateLimit("sources", user.id, !!user.email)
     const rateLimitResponse = createRateLimitResponse(rateLimitInfo)
     
@@ -147,6 +204,7 @@ export async function POST(req: NextRequest) {
       return rateLimitResponse
     }
 
+    // Process content
     let sourceContent = content
     let fileName: string | null = null
     let filePath: string | null = null
@@ -154,38 +212,34 @@ export async function POST(req: NextRequest) {
     let fileType: string | null = null
 
     if (type === "FILE" && file) {
-      // Upload file to Supabase Storage with user's ID in the path
       const fileBuffer = await file.arrayBuffer()
       const fileExt = file.name.split('.').pop()
       const uniqueFileName = `${Date.now()}.${fileExt}`
       filePath = `${user.id}/${uniqueFileName}`
-      fileName = file.name // Store original file name
+      fileName = file.name
+      fileSize = file.size
+      fileType = file.type
 
-      const { error: uploadError } = await supabase.storage
-        .from('source_files')
-        .upload(filePath, fileBuffer, {
-          contentType: file.type,
-          upsert: true
-        })
+      // Upload file and extract content in parallel
+      const [uploadResult, extractedContent] = await Promise.all([
+        supabase.storage
+          .from('source_files')
+          .upload(filePath, fileBuffer, {
+            contentType: file.type,
+            upsert: true
+          }),
+        extractTextFromFile(file, fileType)
+      ])
 
-      if (uploadError) {
-        console.error("Error uploading file:", uploadError)
+      if (uploadResult.error) {
+        console.error("Error uploading file:", uploadResult.error)
         return Response.json({ error: "Failed to upload file" }, { status: 500 })
       }
 
-      fileSize = file.size
-      fileType = file.type
-      
-      // Extract text content based on file type
-      try {
-        sourceContent = await extractTextFromFile(file, fileType)
-        if (!sourceContent) {
-          throw new Error("Failed to extract content from file")
-        }
-      } catch (error) {
-        console.error("Error extracting text from file:", error)
-        return Response.json({ error: error instanceof Error ? error.message : "Failed to process file" }, { status: 400 })
+      if (!extractedContent) {
+        throw new Error("Failed to extract content from file")
       }
+      sourceContent = extractedContent
     } else if (type === "URL" && url) {
       try {
         sourceContent = await extractTextFromUrl(url)
@@ -203,56 +257,26 @@ export async function POST(req: NextRequest) {
     const summary = await generateSummary(
       sourceContent || "", 
       customInstructions || undefined,
-      useSmallerModel ? "gpt-4o-nano" : "gpt-4o-mini"
+      useSmallerModel ? "gpt-4.1-nano" : "gpt-4.1-mini"
     )
 
-    // Create source and summary in a single transaction
-    const { data: source, error: sourceError } = await supabase
-      .from("sources")
-      .insert({
-        type: type.toUpperCase() as Database["public"]["Enums"]["source_type"],
-        title: type.toUpperCase() === "FILE" ? fileName || "Untitled" : summary.title,
-        content: type.toUpperCase() === "FILE" ? null : sourceContent,
-        url: type.toUpperCase() === "URL" ? url : null,
-        file_name: type.toUpperCase() === "FILE" ? fileName : null,
-        file_path: type.toUpperCase() === "FILE" ? filePath : null,
-        file_size: type.toUpperCase() === "FILE" ? fileSize : null,
-        file_type: type.toUpperCase() === "FILE" ? fileType : null,
-        visibility: "PRIVATE" as Database["public"]["Enums"]["visibility_type"],
-        user_id: user.id
-      })
-      .select()
-      .single()
+    // Process everything in background
+    processSourceInBackground(
+      user.id,
+      type,
+      sourceContent || "",
+      summary,
+      {
+        fileName,
+        filePath,
+        fileSize,
+        fileType,
+        url: type === "URL" ? url : null
+      },
+      customInstructions
+    ).catch(console.error)
 
-    if (sourceError || !source) {
-      console.error("Error creating source:", sourceError)
-      return Response.json({ error: "Failed to create source" }, { status: 500 })
-    }
-
-    // Store the summary
-    const { error: summaryError } = await supabase
-      .from("summaries")
-      .insert({
-        source_id: source.id,
-        summary_text: summary.summary,
-        key_points: summary.keyPoints,
-        quotes: summary.quotes,
-        tags: summary.tags,
-        style: "default",
-        user_id: user.id,
-        visibility: 'PRIVATE',
-        custom_instructions: customInstructions
-      })
-
-    if (summaryError) {
-      console.error("Error creating summary:", summaryError)
-      return Response.json({ error: "Failed to create summary" }, { status: 500 })
-    }
-
-    // Process embeddings in background
-    processSourceInBackground(source.id, sourceContent || "").catch(console.error)
-
-    // Add rate limit headers to the response
+    // Return response immediately
     return Response.json({
       title: type.toUpperCase() === "FILE" ? fileName : summary.title,
       summary: summary.summary,

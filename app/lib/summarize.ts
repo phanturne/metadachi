@@ -23,7 +23,7 @@ export async function extractTextFromUrl(url: string) {
 export async function generateSummary(
   text: string, 
   customInstructions?: string,
-  model: "gpt-4o-mini" | "gpt-4o-nano" = "gpt-4o-mini"
+  model: "gpt-4.1-mini" | "gpt-4.1-nano" = "gpt-4.1-mini"
 ) {
   const { object } = await generateObject({
     model: aiOpenai(model),

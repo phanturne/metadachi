@@ -2,14 +2,12 @@
 
 import { SummarizeTool, SummaryResponse } from "@/components/summarize-tool"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/contexts/auth-context"
 import { motion, useScroll, useSpring } from "framer-motion"
 import { ArrowRight, BookOpen, Brain, FileText, Sparkles, Star } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function Home() {
-  const { user } = useAuth()
   const [isNavigating, setIsNavigating] = useState(false)
   const router = useRouter()
   const { scrollYProgress } = useScroll()
@@ -18,12 +16,6 @@ export default function Home() {
     damping: 30,
     restDelta: 0.001
   })
-
-  // Immediate redirect if user is authenticated
-  if (user) {
-    router.replace('/home')
-    return null
-  }
 
   const handleSummaryGenerated = (newSummary: SummaryResponse) => {
     localStorage.setItem('pendingSummary', JSON.stringify(newSummary))

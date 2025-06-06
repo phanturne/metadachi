@@ -5,20 +5,21 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    // Get user first to ensure authentication
-    const { data: { user: existingUser }, error: userError } = await supabase.auth.getUser();
-    if (userError || !existingUser) {
-      // Try to sign in anonymously if no user exists
-      const { data: guestData, error: guestError } = await supabase.auth.signInAnonymously();
-      if (guestError || !guestData.user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-    }
-
-    // Get the current user (either existing or newly created guest)
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Get user to check authentication
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    // If no authenticated user, return default data
+    if (userError || !user) {
+      return NextResponse.json({
+        counts: {
+          total: 0,
+          text: 0,
+          url: 0,
+          file: 0,
+        },
+        recentSources: [],
+        popularTags: []
+      });
     }
 
     // Get source counts by type

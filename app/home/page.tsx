@@ -171,7 +171,7 @@ export default function HomePage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <Button asChild>
-          <Link href="/library">
+          <Link href="/summarize">
             <Plus className="h-4 w-4 mr-2" />
             Add Source
           </Link>
@@ -230,40 +230,59 @@ export default function HomePage() {
             <CardTitle>Recent Sources</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {data.recentSources.map((source) => (
-                <div key={source.id} className="flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-                  <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
-                    {source.type === "URL" ? (
-                      <Globe className="h-3.5 w-3.5" />
-                    ) : (
-                      <FileText className="h-3.5 w-3.5" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{source.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(source.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {source.hasSummary && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 bg-primary/10 rounded-full">
-                        <Sparkles className="h-3 w-3 text-primary" />
-                        <span className="text-xs text-primary">Summarized</span>
+            <div className="h-[300px] overflow-y-auto">
+              <div className="space-y-2">
+                {data.recentSources.length > 0 ? (
+                  data.recentSources.map((source) => (
+                    <div key={source.id} className="flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                      <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
+                        {source.type === "URL" ? (
+                          <Globe className="h-3.5 w-3.5" />
+                        ) : (
+                          <FileText className="h-3.5 w-3.5" />
+                        )}
                       </div>
-                    )}
-                    <Button variant="ghost" size="sm" className="h-7 px-2" asChild>
-                      <Link href={`/library`}>View</Link>
-                    </Button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{source.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(source.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          })}
+                        </p>
+                      </div>
+                      {source.hasSummary && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Sparkles className="h-3 w-3" />
+                          <span>Summarized</span>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center">
+                    <div className="text-center space-y-4 -mt-8">
+                      <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Plus className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="font-medium">No sources yet</h3>
+                        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                          Start by adding your first source. You can paste text, add URLs, or upload files.
+                        </p>
+                      </div>
+                      <Button asChild variant="outline" className="mt-4">
+                        <Link href="/summarize">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Your First Source
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -275,27 +294,21 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/library">
-                  <FileText className="mr-2 h-4 w-4" />
-                  View All Sources
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/summarize">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Summarize Text
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/library?type=text">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Add Text Source
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/summarize">
+                  <Globe className="h-4 w-4 mr-2" />
+                  Add URL
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/library?type=url">
-                  <Globe className="mr-2 h-4 w-4" />
-                  Add URL Source
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/library?type=file">
-                  <FileText className="mr-2 h-4 w-4" />
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/summarize">
+                  <FileText className="h-4 w-4 mr-2" />
                   Upload File
                 </Link>
               </Button>
@@ -310,16 +323,32 @@ export default function HomePage() {
           <CardTitle>Popular Tags</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {data.popularTags.map((tag) => (
-              <div
-                key={tag}
-                className="flex items-center gap-1 px-3 py-1 bg-primary/10 rounded-full text-sm text-primary"
-              >
-                <Tag className="h-3 w-3" />
-                {tag}
+          <div className="h-[100px] overflow-y-auto">
+            {data.popularTags.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {data.popularTags.map((tag) => (
+                  <div
+                    key={tag}
+                    className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm flex items-center gap-1"
+                  >
+                    <Tag className="h-3 w-3" />
+                    {tag}
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="h-[100px] flex items-center justify-center">
+                <div className="text-center -mt-4">
+                  <div className="mx-auto w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                    <Tag className="h-4 w-4 text-primary" />
+                  </div>
+                  <h3 className="font-medium text-sm">No tags yet</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Tags will appear here as you add and summarize sources
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
