@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/contexts/auth-context';
+import { useAnonymousAuth } from '@/hooks/use-anonymous-auth';
 import { createClient } from '@/utils/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
@@ -32,46 +32,20 @@ interface NotebookModalProps {
 }
 
 export function NotebookModal({ isOpen, onClose, onNotebookCreated }: NotebookModalProps) {
-  const { user, createAnonymousAccount } = useAuth();
+  const { ensureAuthenticated, isGuest } = useAnonymousAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [visibility, setVisibility] = useState<'PRIVATE' | 'PUBLIC' | 'SHARED'>('PRIVATE');
   const [isLoading, setIsLoading] = useState(false);
-  const [isGuest, setIsGuest] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (!user) {
-        try {
-          await createAnonymousAccount();
-          setIsGuest(true);
-          toast.info(
-            "We've created a temporary guest account to save your notebooks. Add an email to keep them forever!",
-            {
-              duration: 5000,
-            }
-          );
-        } catch (error) {
-          console.error('Error creating guest account:', error);
-          toast.error('Failed to create guest account. Please try again.');
-          setIsLoading(false);
-          return;
-        }
-      }
+      const { user: currentUser } = await ensureAuthenticated();
 
-      // Get the current user from the auth context
       const supabase = createClient();
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-
-      if (!currentUser) {
-        throw new Error('Not authenticated');
-      }
-
       const { error } = await supabase.from('notebooks').insert({
         title,
         description,

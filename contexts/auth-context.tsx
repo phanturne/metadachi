@@ -8,7 +8,7 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  createAnonymousAccount: () => Promise<User>;
+  signInAnonymously: () => Promise<User>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const createAnonymousAccount = async () => {
+  const signInAnonymously = async () => {
     try {
       console.log('Attempting anonymous sign in...');
 
@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     isLoading,
     signOut,
-    createAnonymousAccount,
+    signInAnonymously,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

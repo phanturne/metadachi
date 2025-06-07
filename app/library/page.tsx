@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/auth-context';
+import { useAnonymousAuth } from '@/hooks/use-anonymous-auth';
 import { createClient } from '@/utils/supabase/client';
 import {
   Book,
@@ -85,9 +86,15 @@ export default function LibraryPage() {
   const [summary, setSummary] = useState('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const supabase = createClient();
+  const { ensureAuthenticated } = useAnonymousAuth();
 
   const loadSources = useCallback(async () => {
     try {
+      if (!user?.id) {
+        setSources([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('sources')
         .select(
@@ -96,6 +103,7 @@ export default function LibraryPage() {
           summary:summaries(*)
         `
         )
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -112,7 +120,7 @@ export default function LibraryPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, user?.id]);
 
   useEffect(() => {
     loadSources();
@@ -227,6 +235,9 @@ export default function LibraryPage() {
     try {
       setIsSubmitting(true);
 
+      // Ensure user is authenticated before proceeding
+      await ensureAuthenticated();
+
       const formData = new FormData();
       formData.append('type', source.type);
 
@@ -273,16 +284,6 @@ export default function LibraryPage() {
         toast.info(data.rateLimit.transitionMessage, {
           duration: 5000, // Show for 5 seconds
         });
-      }
-
-      // If this is a guest account, show the appropriate message
-      if (data.isGuest && !user) {
-        toast.info(
-          "We've created a temporary guest account to save your sources. Add an email to keep them forever!",
-          {
-            duration: 5000,
-          }
-        );
       }
 
       toast.success('Source added successfully');

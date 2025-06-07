@@ -1,17 +1,38 @@
+'use client';
+
 import { signInAction } from '@/app/(auth)/actions';
 import { FormMessage, type Message } from '@/components/form/form-message';
 import { SubmitButton } from '@/components/form/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Link from 'next/link';
+import { useAuth } from '@/contexts/auth-context';
 import { ROUTES } from '@/lib/constants';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default async function LoginPage({
-  searchParams,
-}: {
+interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const params = (await searchParams) as Message;
+}
+
+export default function LoginPage({ searchParams }: PageProps) {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [params, setParams] = useState<Message | null>(null);
+
+  useEffect(() => {
+    // Handle async searchParams
+    searchParams.then(resolvedParams => {
+      setParams(resolvedParams as Message);
+    });
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (user) {
+      router.push(ROUTES.HOME);
+    }
+  }, [user, router]);
+
   return (
     <form className="bg-card flex flex-col gap-6 rounded-lg p-8 shadow-lg">
       <h1 className="text-center text-3xl font-semibold">Sign in</h1>
@@ -34,7 +55,7 @@ export default async function LoginPage({
         <SubmitButton pendingText="Signing In..." formAction={signInAction}>
           Sign in
         </SubmitButton>
-        <FormMessage message={params} />
+        {params && <FormMessage message={params} />}
       </div>
     </form>
   );

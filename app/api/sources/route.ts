@@ -174,30 +174,14 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get or create user
-    let user = null;
-    try {
-      const {
-        data: { user: existingUser },
-        error: userError,
-      } = await supabase.auth.getUser();
+    // Get user from session cookie
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-      if (userError || !existingUser) {
-        const { data: guestData, error: guestError } = await supabase.auth.signInAnonymously();
-        if (guestError || !guestData.user) {
-          return Response.json({ error: 'Failed to create guest account' }, { status: 401 });
-        }
-        user = guestData.user;
-      } else {
-        user = existingUser;
-      }
-    } catch (error) {
-      console.error('Error in user authentication:', error);
-      return Response.json({ error: 'Authentication failed' }, { status: 401 });
-    }
-
-    if (!user) {
-      return Response.json({ error: 'No user found' }, { status: 401 });
+    if (userError || !user) {
+      return Response.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     // Check rate limit early

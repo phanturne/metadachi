@@ -1,16 +1,12 @@
-'use server';
-
 import { ROUTES } from '@/lib/constants';
 import { encodedRedirect } from '@/utils/navigation';
-import { createClient } from '@/utils/supabase/server';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
   const password = formData.get('password')?.toString();
-  const supabase = await createClient();
-  const origin = (await headers()).get('origin');
+  const supabase = createClient();
+  const origin = window.location.origin;
 
   if (!email || !password) {
     return encodedRedirect('error', ROUTES.REGISTER, 'Email and password are required');
@@ -39,7 +35,7 @@ export const signUpAction = async (formData: FormData) => {
 export const signInAction = async (formData: FormData) => {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -50,13 +46,13 @@ export const signInAction = async (formData: FormData) => {
     return encodedRedirect('error', ROUTES.LOGIN, error.message);
   }
 
-  return redirect(ROUTES.HOME);
+  window.location.href = ROUTES.HOME;
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
-  const supabase = await createClient();
-  const origin = (await headers()).get('origin');
+  const supabase = createClient();
+  const origin = window.location.origin;
   const callbackUrl = formData.get('callbackUrl')?.toString();
 
   if (!email) {
@@ -73,7 +69,8 @@ export const forgotPasswordAction = async (formData: FormData) => {
   }
 
   if (callbackUrl) {
-    return redirect(callbackUrl);
+    window.location.href = callbackUrl;
+    return;
   }
 
   return encodedRedirect(
@@ -84,7 +81,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
 };
 
 export const resetPasswordAction = async (formData: FormData) => {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
@@ -113,7 +110,7 @@ export const resetPasswordAction = async (formData: FormData) => {
 };
 
 export const signOutAction = async () => {
-  const supabase = await createClient();
+  const supabase = createClient();
   await supabase.auth.signOut();
-  return redirect(ROUTES.LOGIN);
+  window.location.href = ROUTES.LOGIN;
 };

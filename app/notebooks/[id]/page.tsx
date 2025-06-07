@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/auth-context';
+import { useAnonymousAuth } from '@/hooks/use-anonymous-auth';
 import { createClient } from '@/utils/supabase/client';
 import { ArrowLeft, Lock, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -42,7 +43,8 @@ interface Source {
 
 export default function NotebookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { user, createAnonymousAccount } = useAuth();
+  const { ensureAuthenticated } = useAnonymousAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [notebook, setNotebook] = useState<Notebook | null>(null);
   const [notebookSources, setNotebookSources] = useState<Source[]>([]);
@@ -154,10 +156,8 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
 
   const handleAddSources = async () => {
     try {
-      // Create anonymous account if user is not logged in
-      if (!user) {
-        await createAnonymousAccount();
-      }
+      // Ensure user is authenticated before proceeding
+      const { user: authenticatedUser } = await ensureAuthenticated();
 
       const supabase = createClient();
 
@@ -178,7 +178,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
           notebook_id: id,
           source_id: sourceId,
           order_index: startOrderIndex + index,
-          added_by: user?.id,
+          added_by: authenticatedUser.id,
         }))
       );
 
@@ -299,25 +299,6 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="from-background to-muted/20 h-[calc(100vh-var(--navbar-height))] overflow-hidden bg-gradient-to-b">
       <div className="flex h-full flex-col px-4 py-4 md:px-6">
-        <div className="mb-4 flex flex-shrink-0 items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push('/notebooks')}
-            className="h-8 w-8"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="from-primary to-primary/60 bg-gradient-to-r bg-clip-text text-xl font-semibold text-transparent">
-              {notebook.title}
-            </h1>
-            {notebook.description && (
-              <p className="text-muted-foreground line-clamp-1 text-sm">{notebook.description}</p>
-            )}
-          </div>
-        </div>
-
         <div className="grid min-h-0 flex-1 grid-cols-12 gap-4">
           {/* Left panel - Source selection */}
           <div
@@ -349,18 +330,20 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
               <>
                 <div className="mb-3 flex flex-shrink-0 items-center justify-between">
                   <h2 className="text-base font-semibold">Sources</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      loadAvailableSources();
-                      setIsAddSourceDialogOpen(true);
-                    }}
-                    className="h-7 w-7 md:w-auto"
-                  >
-                    <Plus className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Add Source</span>
-                  </Button>
+                  {user && user.id === notebook.user_id && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        loadAvailableSources();
+                        setIsAddSourceDialogOpen(true);
+                      }}
+                      className="h-7 w-7 md:w-auto"
+                    >
+                      <Plus className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Add Source</span>
+                    </Button>
+                  )}
                 </div>
                 <ScrollArea className="min-h-0 flex-1">
                   <div className="space-y-1.5">

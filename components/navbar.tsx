@@ -142,8 +142,8 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" asChild>
-              <Link href="/login">Sign in</Link>
+            <Button variant="default" asChild>
+              <Link href="/login">Get Started</Link>
             </Button>
           )}
         </div>

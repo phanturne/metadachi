@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useAnonymousAuth } from '@/hooks/use-anonymous-auth';
 import { Link as LinkIcon, Loader2, Sparkles, Type, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -55,6 +56,7 @@ export function SummarizeTool({
   className = '',
   showTitle = false,
 }: SummarizeToolProps) {
+  const { ensureAuthenticated } = useAnonymousAuth();
   const [inputType, setInputType] = useState<'text' | 'url' | 'file'>('text');
   const [input, setInput] = useState('');
   const [customInstructions, setCustomInstructions] = useState('');
@@ -84,6 +86,9 @@ export function SummarizeTool({
     setSummary(null);
 
     try {
+      // Ensure user is authenticated before proceeding
+      await ensureAuthenticated();
+
       const formData = new FormData();
       formData.append('type', inputType.toUpperCase());
 

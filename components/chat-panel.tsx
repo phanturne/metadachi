@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Source } from '@/types/chat';
 import { useChat } from 'ai/react';
-import { Search, Send } from 'lucide-react';
+import { MessageSquare, Search, Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface ChatPanelProps {
@@ -64,114 +64,118 @@ export function ChatPanel({ selectedSources }: ChatPanelProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <ScrollArea ref={scrollRef} className="min-h-0 flex-1">
-        <div className="space-y-4 pr-4">
-          {messages.length === 0 && (
-            <div className="text-muted-foreground py-8 text-center">
-              <div className="mb-4">
-                <Search className="mx-auto mb-2 h-12 w-12 opacity-50" />
-              </div>
-              <p className="mb-2 text-lg font-medium">Start a conversation</p>
-              <p className="text-sm">
-                Ask questions about your sources and I&apos;ll search for relevant information.
-              </p>
+      {messages.length === 0 ? (
+        <div className="flex h-full flex-1 items-center justify-center">
+          <div className="text-muted-foreground text-center">
+            <div className="mb-4">
+              <MessageSquare className="mx-auto mb-2 h-12 w-12 opacity-50" />
             </div>
-          )}
-          {messages.map(message => (
-            <div key={message.id} className="space-y-2">
-              <div
-                className={cn(
-                  'flex rounded-lg px-4 py-2',
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground ml-auto max-w-[85%]'
-                    : 'bg-muted max-w-[85%]'
-                )}
-              >
-                <div className="break-words whitespace-pre-wrap">{message.content}</div>
-              </div>
-
-              {/* Show tool calls */}
-              {message.toolInvocations?.map(toolInvocation => (
+            <p className="mb-2 text-lg font-medium">Welcome to AI Chat</p>
+            <p className="text-sm">
+              I&apos;m here to help you explore and understand your sources. What would you like to
+              know?
+            </p>
+          </div>
+        </div>
+      ) : (
+        <ScrollArea ref={scrollRef} className="min-h-0 flex-1">
+          <div className="flex h-full flex-col space-y-4 pr-4">
+            {messages.map(message => (
+              <div key={message.id} className="space-y-2">
                 <div
-                  key={toolInvocation.toolCallId}
                   className={cn(
-                    'w-full max-w-[85%] space-y-2',
-                    message.role === 'user' ? 'ml-auto' : 'ml-4'
+                    'flex rounded-lg px-4 py-2',
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground ml-auto max-w-[85%]'
+                      : 'bg-muted max-w-[85%]'
                   )}
                 >
-                  {toolInvocation.state === 'call' && (
-                    <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                      <Search className="h-4 w-4 animate-spin" />
-                      <span className="truncate">
-                        Searching sources for: &quot;{toolInvocation.args.query}&quot;
-                      </span>
-                    </div>
-                  )}
-                  {toolInvocation.state === 'result' && (
-                    <div className="rounded-lg bg-blue-50 p-3 text-sm dark:bg-blue-950/20">
-                      <div className="mb-2 flex items-center gap-2">
-                        <Search className="h-4 w-4 flex-shrink-0 text-blue-600" />
-                        <span className="truncate font-medium text-blue-600">
-                          Source Search Results
+                  <div className="break-words whitespace-pre-wrap">{message.content}</div>
+                </div>
+
+                {/* Show tool calls */}
+                {message.toolInvocations?.map(toolInvocation => (
+                  <div
+                    key={toolInvocation.toolCallId}
+                    className={cn(
+                      'w-full max-w-[85%] space-y-2',
+                      message.role === 'user' ? 'ml-auto' : 'ml-4'
+                    )}
+                  >
+                    {toolInvocation.state === 'call' && (
+                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <Search className="h-4 w-4 animate-spin" />
+                        <span className="truncate">
+                          Searching sources for: &quot;{toolInvocation.args.query}&quot;
                         </span>
                       </div>
-                      {toolInvocation.result.success ? (
-                        <div className="space-y-3">
-                          <p className="truncate text-xs text-green-600">
-                            {toolInvocation.result.message}
-                          </p>
-                          <div className="grid grid-cols-4 gap-2">
-                            {toolInvocation.result.sources.map((source: Source) => (
-                              <div
-                                key={source.id}
-                                className="cursor-pointer rounded bg-white p-2 transition-colors hover:bg-blue-50 dark:bg-blue-950/40 dark:hover:bg-blue-950/60"
-                                onClick={() => setSelectedSource(source)}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <div className="min-w-0 flex-1">
-                                    <p className="truncate text-xs font-medium">{source.title}</p>
-                                    <div className="mt-0.5 flex items-center gap-1.5">
-                                      <Badge
-                                        variant="secondary"
-                                        className="h-4 px-1.5 py-0 text-[10px]"
-                                      >
-                                        {source.type.toLowerCase()}
-                                      </Badge>
-                                      <span className="text-muted-foreground text-[10px]">
-                                        {Math.round(source.similarity * 100)}% match
-                                      </span>
+                    )}
+                    {toolInvocation.state === 'result' && (
+                      <div className="rounded-lg bg-blue-50 p-3 text-sm dark:bg-blue-950/20">
+                        <div className="mb-2 flex items-center gap-2">
+                          <Search className="h-4 w-4 flex-shrink-0 text-blue-600" />
+                          <span className="truncate font-medium text-blue-600">
+                            Source Search Results
+                          </span>
+                        </div>
+                        {toolInvocation.result.success ? (
+                          <div className="space-y-3">
+                            <p className="truncate text-xs text-green-600">
+                              {toolInvocation.result.message}
+                            </p>
+                            <div className="grid grid-cols-4 gap-2">
+                              {toolInvocation.result.sources.map((source: Source) => (
+                                <div
+                                  key={source.id}
+                                  className="cursor-pointer rounded bg-white p-2 transition-colors hover:bg-blue-50 dark:bg-blue-950/40 dark:hover:bg-blue-950/60"
+                                  onClick={() => setSelectedSource(source)}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate text-xs font-medium">{source.title}</p>
+                                      <div className="mt-0.5 flex items-center gap-1.5">
+                                        <Badge
+                                          variant="secondary"
+                                          className="h-4 px-1.5 py-0 text-[10px]"
+                                        >
+                                          {source.type.toLowerCase()}
+                                        </Badge>
+                                        <span className="text-muted-foreground text-[10px]">
+                                          {Math.round(source.similarity * 100)}% match
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <p className="truncate text-amber-600">{toolInvocation.result.message}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-          {isChatLoading && (
-            <div className="bg-muted flex max-w-[85%] rounded-lg px-4 py-2">
-              <div className="flex space-x-2">
-                <div className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full" />
-                <div className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:0.2s]" />
-                <div className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:0.4s]" />
+                        ) : (
+                          <p className="truncate text-amber-600">{toolInvocation.result.message}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            </div>
-          )}
-          {error && (
-            <div className="bg-destructive/10 text-destructive max-w-[85%] rounded-lg px-4 py-2">
-              Error: {error.message}
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+            ))}
+            {isChatLoading && (
+              <div className="bg-muted flex max-w-[85%] rounded-lg px-4 py-2">
+                <div className="flex space-x-2">
+                  <div className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full" />
+                  <div className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:0.2s]" />
+                  <div className="bg-muted-foreground h-2 w-2 animate-bounce rounded-full [animation-delay:0.4s]" />
+                </div>
+              </div>
+            )}
+            {error && (
+              <div className="bg-destructive/10 text-destructive max-w-[85%] rounded-lg px-4 py-2">
+                Error: {error.message}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-4 flex flex-shrink-0 items-center space-x-2">
         <Input

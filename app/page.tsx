@@ -37,19 +37,31 @@ export default function Home() {
 
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="from-primary/20 via-primary/10 absolute inset-0 bg-gradient-to-r to-transparent opacity-50" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-20">
-          <div className="grid items-center gap-16 lg:grid-cols-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col justify-center"
-            >
-              <h1 className="from-primary to-primary/60 mb-6 bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent">
-                Get Smart Without the Heavy Lifting
+        {/* Optimized background with static gradients */}
+        <div className="absolute inset-0">
+          <div className="from-primary/20 via-primary/10 absolute inset-0 bg-gradient-to-r to-transparent opacity-50" />
+          <div className="from-primary/10 via-background to-background absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))]" />
+          <div className="from-primary/5 via-background to-background absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))]" />
+        </div>
+
+        {/* Static background elements */}
+        <div className="absolute inset-0">
+          <div className="bg-primary/10 absolute top-1/4 -left-4 h-72 w-72 rounded-full blur-3xl" />
+          <div className="bg-primary/10 absolute top-1/3 -right-4 h-72 w-72 rounded-full blur-3xl" />
+          <div className="bg-primary/5 absolute top-1/2 left-1/4 h-48 w-48 rounded-full blur-2xl" />
+        </div>
+
+        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
+          <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
+            <div className="flex flex-col justify-center">
+              <div className="border-primary/20 bg-primary/5 text-primary mb-4 inline-flex items-center rounded-full border px-3 py-1 text-sm">
+                <span className="bg-primary mr-2 flex h-2 w-2 rounded-full" />
+                AI-Powered Knowledge Management
+              </div>
+              <h1 className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-3xl font-bold text-transparent sm:mb-6 sm:text-4xl md:text-5xl">
+                Never Forget What You Never Read
               </h1>
-              <p className="text-muted-foreground mb-8 text-xl leading-relaxed">
+              <p className="text-muted-foreground mb-6 text-base leading-relaxed sm:mb-8 sm:text-lg md:text-xl">
                 Stop pretending you read that whole thing. Let AI give you the good parts so you can
                 sound smart at meetings.
               </p>
@@ -59,15 +71,14 @@ export default function Home() {
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <SummarizeTool onSummaryGenerated={handleSummaryGenerated} />
-            </motion.div>
+            <div className="relative mt-8 lg:mt-0">
+              <div className="from-primary/20 to-primary/10 absolute -inset-4 rounded-2xl bg-gradient-to-r blur-2xl" />
+              <div className="relative">
+                <SummarizeTool onSummaryGenerated={handleSummaryGenerated} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
