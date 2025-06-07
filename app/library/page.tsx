@@ -113,6 +113,7 @@ export default function LibraryPage() {
         summary: source.summary?.[0] || null,
       }));
 
+      console.log('Loading sources:', transformedData.length);
       setSources(transformedData);
     } catch (error) {
       console.error('Error loading sources:', error);
@@ -288,7 +289,11 @@ export default function LibraryPage() {
 
       toast.success('Source added successfully');
       setIsSourceModalOpen(false);
-      loadSources();
+
+      // Force a reload of sources after a short delay to ensure the database has updated
+      setTimeout(() => {
+        loadSources();
+      }, 500);
     } catch (error) {
       console.error('Error adding source:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to add source');

@@ -200,7 +200,6 @@ export async function POST(req: NextRequest) {
     let fileType: string | null = null;
 
     if (type === 'FILE' && file) {
-      const fileBuffer = await file.arrayBuffer();
       const fileExt = file.name.split('.').pop();
       const uniqueFileName = `${Date.now()}.${fileExt}`;
       filePath = `${user.id}/${uniqueFileName}`;
@@ -210,7 +209,7 @@ export async function POST(req: NextRequest) {
 
       // Upload file and extract content in parallel
       const [uploadResult, extractedContent] = await Promise.all([
-        supabase.storage.from('source_files').upload(filePath, fileBuffer, {
+        supabase.storage.from('source_files').upload(filePath, file, {
           contentType: file.type,
           upsert: true,
         }),
