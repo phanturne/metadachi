@@ -1,11 +1,131 @@
 'use client';
 
+import { Marquee } from '@/components/magicui/marquee';
 import { SummarizeTool, SummaryResponse } from '@/components/summarize-tool';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { ArrowRight, BookOpen, Brain, FileText, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, BookOpen, Brain, FileText, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+
+const reviews = [
+  {
+    name: 'William Shakespeare',
+    username: 'Playwright & Drama Addict',
+    body: "By my troth! No more misplaced quill-scratchings about Danish princes. Though it can't cure writing plays about people who won't just talk.",
+    img: 'https://avatar.vercel.sh/shakespeare',
+  },
+  {
+    name: 'Sherlock Holmes',
+    username: 'Consulting Detective',
+    body: 'Elementary! When you eliminate losing your notes, whatever remains must be perfectly catalogued. Watson, fetch my pipe!',
+    img: 'https://avatar.vercel.sh/holmes',
+  },
+  {
+    name: 'Bilbo Baggins',
+    username: 'Hobbit & Reluctant Adventurer',
+    body: "Bless my buttons! No more wandering the Shire for my second breakfast notes. Though it can't explain why adventures interrupt proper meals.",
+    img: 'https://avatar.vercel.sh/bilbo',
+  },
+  {
+    name: 'Spock',
+    username: 'Vulcan & Eyebrow Expert',
+    body: 'Fascinating. Logical efficiency that exceeds human capabilities. Though humans will still create chaos within order. Illogical, yet predictable.',
+    img: 'https://avatar.vercel.sh/spock',
+  },
+  {
+    name: 'Albert Einstein',
+    username: 'Universe Explainer',
+    body: 'Wunderbar! Time is relative, but lost notes are absolutely frustrating. More time for universe contemplation, less searching for calculations.',
+    img: 'https://avatar.vercel.sh/einstein',
+  },
+  {
+    name: 'Alexander the Great',
+    username: 'Ancient Overachiever',
+    body: 'I conquered Macedonia to India but never my scroll chaos! This shows more brilliance than my generals.',
+    img: 'https://avatar.vercel.sh/alexander',
+  },
+  {
+    name: 'Leonardo da Vinci',
+    username: 'Renaissance Genius',
+    body: 'Che cosa! No more scattering inventions like seeds! Though my backwards writing would still confuse any machine.',
+    img: 'https://avatar.vercel.sh/davinci',
+  },
+  {
+    name: 'Rhett Butler',
+    username: 'Charming Scoundrel',
+    body: "Frankly my dear, I don't give a damn about organizing... but this actually makes it effortless. Tomorrow is another day to procrastinate!",
+    img: 'https://avatar.vercel.sh/rhett',
+  },
+  {
+    name: 'Detective from 1920s Noir Film',
+    username: 'Fictional Gumshoe',
+    body: "Listen here, see! This system's the cat's pajamas! No more losing my investigation notes in some speakeasy. Now that's the bee's knees!",
+    img: 'https://avatar.vercel.sh/noir',
+  },
+  {
+    name: 'Batman',
+    username: 'Dark Knight & Gadget Collector',
+    body: "Holy knowledge management, Batman! This could organize the entire Batcave database. Even the Joker couldn't create chaos in this system.",
+    img: 'https://avatar.vercel.sh/batman',
+  },
+  {
+    name: 'Doctor Octopus',
+    username: 'Mad Scientist & Multi-Tasker',
+    body: 'Magnificent! Finally, a system worthy of my genius! Though it still cannot match the organizational prowess of my mechanical spider legs.',
+    img: 'https://avatar.vercel.sh/octopus',
+  },
+  {
+    name: 'Dr. Watson',
+    username: 'Medical Doctor & Professional Note-Taker',
+    body: 'This contraption is most agreeable! No longer shall my detective work be hindered by misplaced evidence. Mrs. Hudson would be most impressed.',
+    img: 'https://avatar.vercel.sh/watson',
+  },
+  {
+    name: 'Inigo Montoya',
+    username: 'Swordsman & Revenge Seeker',
+    body: 'Inconceivable! A system so organized, it makes my plots look simple. Though nothing can organize the chaos of true love and revenge.',
+    img: 'https://avatar.vercel.sh/inigo',
+  },
+];
+
+const firstRow = reviews.slice(0, reviews.length / 2);
+const secondRow = reviews.slice(reviews.length / 2);
+
+const ReviewCard = ({
+  img,
+  name,
+  username,
+  body,
+}: {
+  img: string;
+  name: string;
+  username: string;
+  body: string;
+}) => {
+  return (
+    <figure
+      className={cn(
+        'relative h-full w-64 cursor-pointer overflow-hidden rounded-xl border p-4',
+        // light styles
+        'border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]',
+        // dark styles
+        'dark:border-gray-50/[.1] dark:bg-gray-50/[.10] dark:hover:bg-gray-50/[.15]'
+      )}
+    >
+      <div className="flex flex-row items-center gap-2">
+        <Image className="rounded-full" width={32} height={32} alt={`${name}'s avatar`} src={img} />
+        <div className="flex flex-col">
+          <figcaption className="text-sm font-medium dark:text-white">{name}</figcaption>
+          <p className="text-xs font-medium dark:text-white/40">{username}</p>
+        </div>
+      </div>
+      <blockquote className="mt-2 text-sm">{body}</blockquote>
+    </figure>
+  );
+};
 
 export default function Home() {
   const [isNavigating, setIsNavigating] = useState(false);
@@ -37,17 +157,9 @@ export default function Home() {
 
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        {/* Optimized background with static gradients */}
-        <div className="absolute inset-0">
-          <div className="from-primary/20 via-primary/10 absolute inset-0 bg-gradient-to-r to-transparent opacity-50" />
-          <div className="from-primary/10 via-background to-background absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))]" />
-          <div className="from-primary/5 via-background to-background absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))]" />
-        </div>
-
         {/* Static background elements */}
         <div className="absolute inset-0">
           <div className="bg-primary/10 absolute top-1/4 -left-4 h-72 w-72 rounded-full blur-3xl" />
-          <div className="bg-primary/10 absolute top-1/3 -right-4 h-72 w-72 rounded-full blur-3xl" />
           <div className="bg-primary/5 absolute top-1/2 left-1/4 h-48 w-48 rounded-full blur-2xl" />
         </div>
 
@@ -63,8 +175,13 @@ export default function Home() {
               </h1>
               <p className="text-muted-foreground mb-6 text-base leading-relaxed sm:mb-8 sm:text-lg md:text-xl">
                 Stop pretending you read that whole thing. Let AI give you the good parts so you can
-                sound smart at meetings.
+                sound smart at meetings, impress your boss, and finally win that argument with your
+                know-it-all coworker.
               </p>
+              <p className="text-muted-foreground mb-6 text-base leading-relaxed italic sm:mb-8 sm:text-lg md:text-xl">
+                Life&apos;s too short to read everything, but too long to sound stupid.
+              </p>
+
               <div className="flex flex-col gap-4 sm:flex-row">
                 <Button size="lg" className="gap-2" onClick={() => router.push('/register')}>
                   Get Started
@@ -83,7 +200,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Features Grid with Enhanced Transitions */}
+      {/* Features & Use Cases Section */}
       <div className="relative">
         <div className="from-background via-background to-muted/20 absolute inset-0 bg-gradient-to-b" />
         <div className="relative container mx-auto max-w-7xl px-4 py-20">
@@ -96,7 +213,7 @@ export default function Home() {
             <h2 className="mb-4 text-3xl font-bold">Everything You Need to Manage Knowledge</h2>
             <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
               Powerful features to help you extract, organize, and leverage insights from your
-              content
+              content (like a productivity guru, but with fewer crystals)
             </p>
           </motion.div>
 
@@ -113,7 +230,8 @@ export default function Home() {
               </div>
               <h3 className="mb-3 text-xl font-semibold">Quick Understanding</h3>
               <p className="text-muted-foreground">
-                Skip to the good parts without admitting you didn&apos;t read the whole thing
+                Skip to the good parts without admitting you didn&apos;t read the whole thing.
+                We&apos;re basically CliffsNotes for your ADHD brain.
               </p>
             </motion.div>
 
@@ -130,7 +248,8 @@ export default function Home() {
               </div>
               <h3 className="mb-3 text-xl font-semibold">Knowledge Retention</h3>
               <p className="text-muted-foreground">
-                Save insights before they disappear into the void with your car keys
+                Save insights before they disappear into the void with your car keys and your will
+                to live on Monday mornings.
               </p>
             </motion.div>
 
@@ -147,7 +266,8 @@ export default function Home() {
               </div>
               <h3 className="mb-3 text-xl font-semibold">Interactive Learning</h3>
               <p className="text-muted-foreground">
-                Chat with AI that actually remembers what you fed it (unlike your goldfish)
+                Chat with AI that actually remembers what you fed it (unlike your goldfish, your ex,
+                or your brain after 3 PM on Friday).
               </p>
             </motion.div>
 
@@ -164,14 +284,15 @@ export default function Home() {
               </div>
               <h3 className="mb-3 text-xl font-semibold">Research Organization</h3>
               <p className="text-muted-foreground">
-                Turn your digital hoarding habit into something that looks intentional
+                Turn your digital hoarding habit into organized genius. Like having a personal
+                assistant for your brain, but better.
               </p>
             </motion.div>
           </div>
         </div>
       </div>
 
-      {/* Use Cases Section with Parallax Effect */}
+      {/* Before/After Section with Common Excuses */}
       <div className="relative overflow-hidden">
         <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
         <div className="relative container mx-auto max-w-7xl px-4 py-20">
@@ -181,97 +302,10 @@ export default function Home() {
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <h2 className="mb-4 text-3xl font-bold">Perfect For</h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
-              Whether you&apos;re researching, learning, or organizing information, Metadachi has
-              you covered.
-            </p>
-          </motion.div>
-
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                <FileText className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold">Students</h3>
-              <p className="text-muted-foreground">
-                Cram a semester&apos;s worth of reading into your last brain cell
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                <Brain className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold">Researchers</h3>
-              <p className="text-muted-foreground">
-                Because nobody has time to read 200 papers to find one useful quote
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                <Sparkles className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold">Content Creators</h3>
-              <p className="text-muted-foreground">
-                Turn other people&apos;s thoughts into your content (legally, of course)
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                <BookOpen className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold">Curious Minds</h3>
-              <p className="text-muted-foreground">
-                For people who collect PDFs like Pokemon cards but never actually read them
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* Before/After Section with Enhanced Transitions */}
-      <div className="relative">
-        <div className="from-background via-background to-muted/20 absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16 text-center"
-          >
             <h2 className="mb-4 text-3xl font-bold">The Metadachi Effect</h2>
             <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
-              Real transformations from our users (names changed to protect the guilty)
+              Real transformations from our users (names changed because we&apos;re not monsters,
+              just enablers of productivity)
             </p>
           </motion.div>
 
@@ -282,18 +316,32 @@ export default function Home() {
               viewport={{ once: true }}
               className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
             >
-              <h3 className="mb-4 text-xl font-semibold text-red-500">Before Metadachi</h3>
+              <h3 className="mb-4 text-xl font-semibold text-red-500">
+                The Chaos Era (Before Metadachi)
+              </h3>
               <ul className="text-muted-foreground space-y-3">
                 <li>
-                  • &ldquo;I have 47 browser tabs open and I&apos;m not sure what any of them are
-                  for&rdquo;
+                  • &ldquo;I have 73 browser tabs open and three are playing different songs. I am
+                  become chaos, destroyer of RAM and sanity.&rdquo;
                 </li>
-                <li>• &ldquo;My bookmarks folder is basically a digital graveyard&rdquo;</li>
                 <li>
-                  • &ldquo;I start reading something interesting, then forget where I found
-                  it&rdquo;
+                  • &ldquo;My bookmarks folder looks like a digital hoarder&apos;s paradise crossed
+                  with a tornado aftermath. I&apos;m one click away from a tech intervention
+                  show.&rdquo;
                 </li>
-                <li>• &ldquo;My brain is like a browser with 500 tabs open&rdquo;</li>
+                <li>
+                  • &ldquo;I save articles &apos;for later&apos; like &apos;later&apos; is a magical
+                  realm where I have infinite time, attention span, and motivation to actually
+                  read.&rdquo;
+                </li>
+                <li>
+                  • &ldquo;I bookmark things with the same energy people buy gym memberships—full of
+                  hope, armed with delusions, and doomed to disappointment.&rdquo;
+                </li>
+                <li>
+                  • &ldquo;My &apos;Read Later&apos; folder is basically a graveyard for good
+                  intentions, abandoned dreams, and articles I swore would change my life.&rdquo;
+                </li>
               </ul>
             </motion.div>
 
@@ -303,13 +351,30 @@ export default function Home() {
               viewport={{ once: true }}
               className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
             >
-              <h3 className="mb-4 text-xl font-semibold text-green-500">After Metadachi</h3>
+              <h3 className="mb-4 text-xl font-semibold text-green-500">
+                The Renaissance Era (After Metadachi)
+              </h3>
               <ul className="text-muted-foreground space-y-3">
-                <li>• &ldquo;I can actually find things I saved last week&rdquo;</li>
-                <li>• &ldquo;My bookmarks folder is now a well-organized library&rdquo;</li>
-                <li>• &ldquo;I remember what I read because it&apos;s all connected&rdquo;</li>
                 <li>
-                  • &ldquo;My brain is now a browser with only 50 tabs open (baby steps!)&rdquo;
+                  • &ldquo;I can find things I saved last week without googling &apos;early onset
+                  dementia symptoms&apos; or questioning my life choices.&rdquo;
+                </li>
+                <li>
+                  • &ldquo;My bookmarks folder is so organized, I&apos;m considering putting it on
+                  my resume under &apos;Special Skills&apos; and &apos;Miraculous
+                  Achievements.&apos;&rdquo;
+                </li>
+                <li>
+                  • &ldquo;I actually remember what I read because it&apos;s all connected, like
+                  some beautiful conspiracy theory but for learning instead of lizard people.&rdquo;
+                </li>
+                <li>
+                  • &ldquo;I can focus on actual learning instead of playing digital hide-and-seek
+                  with my own thoughts while crying softly.&rdquo;
+                </li>
+                <li>
+                  • &ldquo;People think I&apos;m smarter now. I&apos;m not, but I can find my smart
+                  thoughts faster than I lose my keys.&rdquo;
                 </li>
               </ul>
             </motion.div>
@@ -317,75 +382,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Common Excuses Section with Enhanced Transitions */}
-      <div className="relative overflow-hidden">
-        <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16 text-center"
-          >
-            <h2 className="mb-4 text-3xl font-bold">Common Excuses (And Why They&apos;re Wrong)</h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
-              We&apos;ve heard them all. Here&apos;s why they don&apos;t hold up
-            </p>
-          </motion.div>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <h3 className="mb-3 text-xl font-semibold">
-                &ldquo;I&apos;ll remember where I saved it&rdquo;
-              </h3>
-              <p className="text-muted-foreground">
-                Spoiler: You won&apos;t. Your brain is already busy forgetting where you left your
-                keys.
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <h3 className="mb-3 text-xl font-semibold">
-                &ldquo;I&apos;ll organize it later&rdquo;
-              </h3>
-              <p className="text-muted-foreground">
-                Later is a mythical place, like Narnia but with more browser tabs.
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <h3 className="mb-3 text-xl font-semibold">
-                &ldquo;I know exactly where everything is&rdquo;
-              </h3>
-              <p className="text-muted-foreground">
-                In your dreams. Your bookmarks folder is basically a digital Bermuda Triangle.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* Warning Labels Section with Enhanced Transitions */}
+      {/* Testimonials Section */}
       <div className="relative">
         <div className="from-background via-background to-muted/20 absolute inset-0 bg-gradient-to-b" />
         <div className="relative container mx-auto max-w-7xl px-4 py-20">
@@ -395,69 +392,33 @@ export default function Home() {
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <h2 className="mb-4 text-3xl font-bold">Warning Labels</h2>
+            <h2 className="mb-4 text-3xl font-bold">
+              What History&apos;s Greatest Minds Would Say About Metadachi
+            </h2>
             <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
-              Read carefully. Side effects may include increased productivity and organization.
+              Time travelers, literary legends, and geniuses throughout history weigh in on our AI
+              knowledge management tool
             </p>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-3">
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-400/10">
-                <span className="text-2xl text-yellow-400">⚠️</span>
-              </div>
-              <h3 className="mb-3 text-xl font-semibold">Side Effects</h3>
-              <p className="text-muted-foreground">
-                May cause sudden bursts of productivity and the ability to find things you saved
-                last week.
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-400/10">
-                <span className="text-2xl text-yellow-400">⚠️</span>
-              </div>
-              <h3 className="mb-3 text-xl font-semibold">Social Impact</h3>
-              <p className="text-muted-foreground">
-                Friends may mistake you for an organized person. Please use responsibly.
-              </p>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-400/10">
-                <span className="text-2xl text-yellow-400">⚠️</span>
-              </div>
-              <h3 className="mb-3 text-xl font-semibold">Addiction Warning</h3>
-              <p className="text-muted-foreground">
-                May lead to excessive organization of other aspects of your life. We&apos;re not
-                sorry.
-              </p>
-            </motion.div>
+          <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
+            <Marquee pauseOnHover className="[--duration:40s]">
+              {firstRow.map(review => (
+                <ReviewCard key={review.username} {...review} />
+              ))}
+            </Marquee>
+            <Marquee reverse pauseOnHover className="[--duration:40s]">
+              {secondRow.map(review => (
+                <ReviewCard key={review.username} {...review} />
+              ))}
+            </Marquee>
+            <div className="from-background pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r"></div>
+            <div className="from-background pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l"></div>
           </div>
         </div>
       </div>
 
-      {/* FAQ Section with Enhanced Transitions */}
+      {/* FAQ Section */}
       <div className="relative overflow-hidden">
         <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
         <div className="relative container mx-auto max-w-7xl px-4 py-20">
@@ -469,7 +430,8 @@ export default function Home() {
           >
             <h2 className="mb-4 text-3xl font-bold">FAQ (Frequently Avoided Questions)</h2>
             <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
-              Questions you were too afraid to ask, answered with brutal honesty
+              Questions you were too afraid to ask, answered with brutal honesty and zero corporate
+              BS
             </p>
           </motion.div>
 
@@ -483,7 +445,8 @@ export default function Home() {
             >
               <h3 className="mb-3 text-xl font-semibold">Will this make me smarter?</h3>
               <p className="text-muted-foreground">
-                No, but it will make you look smarter. Sometimes that&apos;s even better.
+                No, but it will make you look smarter, which is honestly more valuable in most
+                situations. We&apos;re in the business of strategic intelligence theater.
               </p>
             </motion.div>
 
@@ -496,9 +459,13 @@ export default function Home() {
               className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
             >
               <h3 className="mb-3 text-xl font-semibold">
-                Is there a limit to how much I can save?
+                Will it organize my existing digital disaster zone?
               </h3>
-              <p className="text-muted-foreground">Yes, your dignity. But that&apos;s about it.</p>
+              <p className="text-muted-foreground">
+                We&apos;re good, but we&apos;re not miracle workers with magic wands. You&apos;ll
+                need to put in some effort. Think of us as your organizing fairy godmother, but you
+                still have to show up to the ball.
+              </p>
             </motion.div>
 
             <motion.div
@@ -509,10 +476,13 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
             >
-              <h3 className="mb-3 text-xl font-semibold">Will it organize my existing mess?</h3>
+              <h3 className="mb-3 text-xl font-semibold">
+                Is it really worth the effort, or is this just another productivity trap?
+              </h3>
               <p className="text-muted-foreground">
-                We&apos;re good, but we&apos;re not miracle workers. You&apos;ll need to put in some
-                effort.
+                Well, do you enjoy spending 3 hours looking for that one brilliant article you saved
+                last month while questioning your life choices? Didn&apos;t think so. We&apos;re
+                basically therapy for your digital hoarding problem.
               </p>
             </motion.div>
 
@@ -524,99 +494,20 @@ export default function Home() {
               transition={{ delay: 0.3 }}
               className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
             >
-              <h3 className="mb-3 text-xl font-semibold">Is it really worth the effort?</h3>
+              <h3 className="mb-3 text-xl font-semibold">
+                How does this magical knowledge wizardry actually work?
+              </h3>
               <p className="text-muted-foreground">
-                Well, do you enjoy spending hours looking for that one article you saved last month?
-                Didn&apos;t think so.
+                Upload your content, let our AI analyze it like a caffeinated research assistant,
+                and get instant insights. It&apos;s like having a personal librarian who actually
+                remembers where they put things and never judges your 3 AM research binges.
               </p>
             </motion.div>
           </div>
         </div>
       </div>
 
-      {/* Testimonials Section with Enhanced Transitions */}
-      <div className="relative">
-        <div className="from-background via-background to-muted/20 absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16 text-center"
-          >
-            <h2 className="mb-4 text-3xl font-bold">What I Say About My Own Product</h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
-              As the creator, I&apos;m pretty biased but also very honest
-            </p>
-          </motion.div>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="mb-4 flex items-center gap-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <p className="text-muted-foreground mb-4">
-                &ldquo;I made this because my brain was basically a browser with 500 tabs open. Now
-                it&apos;s down to like 50. Baby steps.&rdquo;
-              </p>
-              <div className="font-semibold">Me, The Creator</div>
-              <div className="text-muted-foreground text-sm">Also The First User</div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="mb-4 flex items-center gap-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <p className="text-muted-foreground mb-4">
-                &ldquo;The AI never gets distracted by cat videos halfway through reading. Unlike
-                literally everyone I know, including myself.&rdquo;
-              </p>
-              <div className="font-semibold">Me Again</div>
-              <div className="text-muted-foreground text-sm">Still The Creator</div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
-            >
-              <div className="mb-4 flex items-center gap-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <p className="text-muted-foreground mb-4">
-                &ldquo;I&apos;m not saying it&apos;s perfect, but it&apos;s definitely better than
-                my memory. And my memory is... what was I saying?&rdquo;
-              </p>
-              <div className="font-semibold">Me One More Time</div>
-              <div className="text-muted-foreground text-sm">Yes, Still The Creator</div>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section with Enhanced Transitions */}
+      {/* CTA Section */}
       <div className="relative overflow-hidden">
         <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
         <div className="relative container mx-auto max-w-7xl px-4 py-20">
@@ -628,7 +519,7 @@ export default function Home() {
           >
             <div className="from-primary/10 via-primary/5 absolute inset-0 bg-gradient-to-r to-transparent opacity-50" />
             <div className="relative">
-              <h2 className="mb-6 text-4xl font-bold">Ready to Transform Your Content?</h2>
+              <h2 className="mb-6 text-4xl font-bold">Ready to Transform Your Content Chaos?</h2>
               <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-xl">
                 Join our users who are saving time, gaining insights, and building their knowledge
                 library with our AI-powered platform. Warning: Side effects may include actually
@@ -636,7 +527,7 @@ export default function Home() {
               </p>
               <div className="flex flex-col justify-center gap-4 sm:flex-row">
                 <Button size="lg" className="gap-2" onClick={() => router.push('/register')}>
-                  Get Started Free
+                  Get Started Free (No soul-selling contracts, just pure organizational bliss)
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
