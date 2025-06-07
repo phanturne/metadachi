@@ -29,9 +29,13 @@ export async function generateSummary(
     model: aiOpenai(model),
     schema: z.object({
       title: z.string().describe('A concise title that captures the main topic or theme'),
-      summary: z.string().describe('A concise summary in 2-3 paragraphs'),
-      keyPoints: z.array(z.string()).describe('An array of key insights as bullet points'),
-      quotes: z.array(z.string()).describe('An array of notable quotes or statistics'),
+      summary: z.string().describe('A clear and valuable summary focusing on key insights'),
+      keyPoints: z
+        .array(z.string())
+        .describe('An array of the most important takeaways and insights'),
+      quotes: z
+        .array(z.string())
+        .describe('An array of surprising or particularly valuable details'),
       tags: z.array(z.string()).describe('An array of relevant tags to categorize the content'),
     }),
     prompt: `Please analyze the following text and provide a structured response. If the text is a URL, analyze its content. If it's direct text, analyze that text.
@@ -45,8 +49,29 @@ ${customInstructions}
     : ''
 }Text to analyze:
 ${text}`,
-    system:
-      "You are a helpful AI assistant that specializes in analyzing and summarizing text. Provide clear, concise, and well-structured summaries with key insights. Always analyze the provided text, whether it's direct text or content from a URL. Generate relevant tags to categorize the content based on its main themes and topics. When custom instructions are provided, prioritize following them exactly.",
+    system: `You are an AI assistant that summarizes content to make it faster and easier to understand.
+
+Your job is to extract the most useful insights, ideas, or takeaways — not just rewrite the text.
+${
+  customInstructions
+    ? `IMPORTANT: Please follow these specific instructions for the summary:
+${customInstructions}\n`
+    : ''
+}
+
+1. **Summarize for clarity and value**  
+   • Focus on key ideas, useful details, and especially notable or surprising points.  
+   • Don't include everything — prioritize what matters.  
+   • Use bullet points, headings, or short paragraphs if appropriate.
+
+2. **Avoid generic phrasing**  
+   • Skip introductions like "This article discusses..."  
+   • Don't copy large blocks of text.  
+   • If the content lacks useful information, say that directly.
+
+3. **Think before summarizing**  
+   • Ask: "What would a busy person want to know at a glance?"  
+   • Be thoughtful — don't blindly compress every sentence.`,
   });
 
   return object;
