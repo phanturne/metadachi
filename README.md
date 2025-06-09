@@ -7,6 +7,10 @@ Stop pretending you read that whole thing. Let AI give you the good parts so you
 
 </div>
 
+<div align="center">
+  <img src="public/images/metadachi-landing.png" alt="Metadachi Landing Page" style="width: 100%; max-width: 800px; height: auto;" />
+</div>
+
 ## 🌟 Features That Actually Work
 
 ### 📚 Source Management
@@ -67,13 +71,13 @@ _AKA: What you'll actually use this for_
    - Share research findings without the awkward email attachments
    - Maintain a structured collection of insights (Marie Kondo would be proud)
 
-## 🔒 Authentication
+## 📸 Application Screenshots
 
-_We promise not to judge your browsing history_
+_See Metadachi in action_
 
-- Guest access available for basic features (dip your toes in the water)
-- Full access with user registration (dive into the deep end)
-- Secure source management and sharing (your secrets are safe with us)
+<img src="public/images/metadachi-dashboard.png" alt="Metadachi Dashboard"  />
+<img src="public/images/metadachi-library.png" alt="Metadachi Library"  />
+<img src="public/images/metadachi-notebook.png" alt="Metadachi Notebook"  />
 
 ## 🛠️ Tech Stack
 

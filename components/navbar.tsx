@@ -13,11 +13,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/auth-context';
-import { BookOpen, Github, Home, Library, Menu, Scroll, User } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export function Navbar() {
   const { user, signOut } = useAuth();
+  const pathname = usePathname();
+
+  const isActive = (path: string) => pathname === path;
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
@@ -34,30 +38,42 @@ export function Navbar() {
               <nav className="mt-8 flex flex-col gap-4">
                 <Link
                   href="/home"
-                  className="hover:text-primary flex items-center gap-2 text-lg font-medium transition-colors"
+                  className={`relative px-4 py-2 text-lg font-medium transition-colors ${
+                    isActive('/home')
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                 >
-                  <Home className="h-5 w-5" />
-                  Home
+                  Dashboard
                 </Link>
                 <Link
                   href="/summarize"
-                  className="hover:text-primary flex items-center gap-2 text-lg font-medium transition-colors"
+                  className={`relative px-4 py-2 text-lg font-medium transition-colors ${
+                    isActive('/summarize')
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                 >
-                  <Scroll className="h-5 w-5" />
                   Summarize
                 </Link>
                 <Link
                   href="/library"
-                  className="hover:text-primary flex items-center gap-2 text-lg font-medium transition-colors"
+                  className={`relative px-4 py-2 text-lg font-medium transition-colors ${
+                    isActive('/library')
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                 >
-                  <Library className="h-5 w-5" />
                   Library
                 </Link>
                 <Link
                   href="/notebooks"
-                  className="hover:text-primary flex items-center gap-2 text-lg font-medium transition-colors"
+                  className={`relative px-4 py-2 text-lg font-medium transition-colors ${
+                    isActive('/notebooks')
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                 >
-                  <BookOpen className="h-5 w-5" />
                   Notebooks
                 </Link>
               </nav>
@@ -69,33 +85,41 @@ export function Navbar() {
             </span>
           </Link>
         </div>
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-1 md:flex">
           <Link
             href="/home"
-            className="hover:text-primary flex items-center gap-2 text-sm font-medium transition-colors"
+            className={`relative px-4 py-2 text-sm font-medium transition-colors ${
+              isActive('/home') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <Home className="h-4 w-4" />
-            Home
+            Dashboard
           </Link>
           <Link
             href="/summarize"
-            className="hover:text-primary flex items-center gap-2 text-sm font-medium transition-colors"
+            className={`relative px-4 py-2 text-sm font-medium transition-colors ${
+              isActive('/summarize')
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <Scroll className="h-4 w-4" />
             Summarize
           </Link>
           <Link
             href="/library"
-            className="hover:text-primary flex items-center gap-2 text-sm font-medium transition-colors"
+            className={`relative px-4 py-2 text-sm font-medium transition-colors ${
+              isActive('/library') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <Library className="h-4 w-4" />
             Library
           </Link>
           <Link
             href="/notebooks"
-            className="hover:text-primary flex items-center gap-2 text-sm font-medium transition-colors"
+            className={`relative px-4 py-2 text-sm font-medium transition-colors ${
+              isActive('/notebooks')
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <BookOpen className="h-4 w-4" />
             Notebooks
           </Link>
         </nav>
@@ -106,7 +130,6 @@ export function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Github className="h-5 w-5" />
               <span className="sr-only">GitHub Repository</span>
             </a>
           </Button>
