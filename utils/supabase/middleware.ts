@@ -48,8 +48,19 @@ export const updateSession = async (request: NextRequest) => {
       return NextResponse.redirect(new URL(ROUTES.LOGIN, request.url));
     }
 
-    // If the user is logged in,
-    const isAuthPage = AUTH_ROUTES.some(page => request.nextUrl.pathname.startsWith(page));
+    // Special handling for reset password route
+    if (request.nextUrl.pathname.startsWith(ROUTES.RESET_PASSWORD)) {
+      const token_hash = request.nextUrl.searchParams.get('token_hash');
+      if (!token_hash) {
+        return NextResponse.redirect(new URL(ROUTES.FORGOT_PASSWORD, request.url));
+      }
+      return response;
+    }
+
+    // If the user is logged in and trying to access auth pages (except reset password)
+    const isAuthPage = AUTH_ROUTES.filter(route => route !== ROUTES.RESET_PASSWORD).some(page =>
+      request.nextUrl.pathname.startsWith(page)
+    );
 
     if (user.data.user && isAuthPage) {
       return NextResponse.redirect(new URL(ROUTES.HOME, request.url));

@@ -1,4 +1,8 @@
-export type Message = { success: string } | { error: string } | { message: string };
+export type Message =
+  | { success: string }
+  | { error: string }
+  | { message: string }
+  | { token_hash: string };
 
 export function FormMessage({ message }: { message: Message }) {
   return (

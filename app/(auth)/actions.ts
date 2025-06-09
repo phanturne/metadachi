@@ -1,3 +1,5 @@
+'use client';
+
 import { ROUTES } from '@/lib/constants';
 import { encodedRedirect } from '@/utils/navigation';
 import { createClient } from '@/utils/supabase/client';
@@ -85,6 +87,7 @@ export const resetPasswordAction = async (formData: FormData) => {
 
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
+  const token_hash = formData.get('token_hash') as string;
 
   if (!password || !confirmPassword) {
     return encodedRedirect(
@@ -98,6 +101,10 @@ export const resetPasswordAction = async (formData: FormData) => {
     return encodedRedirect('error', ROUTES.RESET_PASSWORD, 'Passwords do not match');
   }
 
+  if (!token_hash) {
+    return encodedRedirect('error', ROUTES.FORGOT_PASSWORD, 'Invalid reset token');
+  }
+
   const { error } = await supabase.auth.updateUser({
     password: password,
   });
@@ -106,7 +113,11 @@ export const resetPasswordAction = async (formData: FormData) => {
     return encodedRedirect('error', ROUTES.RESET_PASSWORD, 'Password update failed');
   }
 
-  return encodedRedirect('success', ROUTES.RESET_PASSWORD, 'Password updated');
+  return encodedRedirect(
+    'success',
+    ROUTES.LOGIN,
+    'Password updated successfully. Please log in with your new password.'
+  );
 };
 
 export const signOutAction = async () => {
