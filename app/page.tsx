@@ -108,7 +108,7 @@ const ReviewCard = ({
   return (
     <figure
       className={cn(
-        'relative h-full w-64 cursor-pointer overflow-hidden rounded-xl border p-4',
+        'relative h-full w-56 cursor-pointer overflow-hidden rounded-xl border p-3 sm:w-64 sm:p-4',
         // light styles
         'border-gray-950/[.1] bg-gray-950/[.01] hover:bg-gray-950/[.05]',
         // dark styles
@@ -116,13 +116,13 @@ const ReviewCard = ({
       )}
     >
       <div className="flex flex-row items-center gap-2">
-        <Image className="rounded-full" width={32} height={32} alt={`${name}'s avatar`} src={img} />
+        <Image className="rounded-full" width={28} height={28} alt={`${name}'s avatar`} src={img} />
         <div className="flex flex-col">
-          <figcaption className="text-sm font-medium dark:text-white">{name}</figcaption>
-          <p className="text-xs font-medium dark:text-white/40">{username}</p>
+          <figcaption className="text-xs font-medium sm:text-sm dark:text-white">{name}</figcaption>
+          <p className="text-[10px] font-medium sm:text-xs dark:text-white/40">{username}</p>
         </div>
       </div>
-      <blockquote className="mt-2 text-sm">{body}</blockquote>
+      <blockquote className="mt-2 text-xs sm:text-sm">{body}</blockquote>
     </figure>
   );
 };
@@ -170,10 +170,10 @@ export default function Home() {
                 <span className="bg-primary mr-2 flex h-2 w-2 rounded-full" />
                 AI-Powered Knowledge Management
               </div>
-              <h1 className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-3xl font-bold text-transparent sm:mb-6 sm:text-4xl md:text-5xl">
+              <h1 className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-2xl font-bold text-transparent sm:text-3xl md:text-4xl lg:text-5xl">
                 Never Forget What You Never Read
               </h1>
-              <p className="text-muted-foreground mb-6 text-base leading-relaxed sm:mb-8 sm:text-lg md:text-xl">
+              <p className="text-muted-foreground mb-6 text-sm leading-relaxed sm:text-base md:text-lg lg:text-xl">
                 Stop pretending you read that whole thing. Let AI give you the good parts so you can
                 sound smart at meetings, impress your boss, and finally win that argument with your
                 know-it-all coworker.
@@ -203,21 +203,23 @@ export default function Home() {
       {/* Features & Use Cases Section */}
       <div className="relative">
         <div className="from-background via-background to-muted/20 absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-20">
+        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <h2 className="mb-4 text-3xl font-bold">Everything You Need to Manage Knowledge</h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
+              Everything You Need to Manage Knowledge
+            </h2>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-base sm:text-lg md:text-xl">
               Powerful features to help you extract, organize, and leverage insights from your
               content (like a productivity guru, but with fewer crystals)
             </p>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:gap-8 md:grid-cols-2 lg:grid-cols-4">
             <motion.div
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
               initial={{ opacity: 0, y: 20 }}
@@ -295,21 +297,20 @@ export default function Home() {
       {/* Before/After Section with Common Excuses */}
       <div className="relative overflow-hidden">
         <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-20">
+        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <h2 className="mb-4 text-3xl font-bold">The Metadachi Effect</h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
-              Real transformations from our users (names changed because we&apos;re not monsters,
-              just enablers of productivity)
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Protagonist Energy Only</h2>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-base sm:text-lg md:text-xl">
+              Stop being the villain in your own productivity story and start winning
             </p>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-4 sm:gap-8 md:grid-cols-2">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -317,30 +318,23 @@ export default function Home() {
               className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
             >
               <h3 className="mb-4 text-xl font-semibold text-red-500">
-                The Chaos Era (Before Metadachi)
+                The Chaos Days (Before Metadachi)
               </h3>
               <ul className="text-muted-foreground space-y-3">
+                <li>• &ldquo;127 tabs open. My CPU is crying and filing for divorce.&rdquo;</li>
                 <li>
-                  • &ldquo;I have 73 browser tabs open and three are playing different songs. I am
-                  become chaos, destroyer of RAM and sanity.&rdquo;
+                  • &ldquo;My bookmarks hierarchy has more levels than a pyramid scheme.&rdquo;
                 </li>
                 <li>
-                  • &ldquo;My bookmarks folder looks like a digital hoarder&apos;s paradise crossed
-                  with a tornado aftermath. I&apos;m one click away from a tech intervention
-                  show.&rdquo;
+                  • &ldquo;Saving links like a digital doomsday prepper hoarding canned
+                  beans.&rdquo;
                 </li>
                 <li>
-                  • &ldquo;I save articles &apos;for later&apos; like &apos;later&apos; is a magical
-                  realm where I have infinite time, attention span, and motivation to actually
-                  read.&rdquo;
+                  • &ldquo;Searching my notes: &apos;Did drunk me save this as &apos;Important Thing
+                  #47&apos;?&apos;&rdquo;
                 </li>
                 <li>
-                  • &ldquo;I bookmark things with the same energy people buy gym memberships—full of
-                  hope, armed with delusions, and doomed to disappointment.&rdquo;
-                </li>
-                <li>
-                  • &ldquo;My &apos;Read Later&apos; folder is basically a graveyard for good
-                  intentions, abandoned dreams, and articles I swore would change my life.&rdquo;
+                  • &ldquo;My brain&apos;s filing system was designed by a drunk intern.&rdquo;
                 </li>
               </ul>
             </motion.div>
@@ -352,29 +346,23 @@ export default function Home() {
               className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg"
             >
               <h3 className="mb-4 text-xl font-semibold text-green-500">
-                The Renaissance Era (After Metadachi)
+                The Mastery Era (After Metadachi)
               </h3>
               <ul className="text-muted-foreground space-y-3">
                 <li>
-                  • &ldquo;I can find things I saved last week without googling &apos;early onset
-                  dementia symptoms&apos; or questioning my life choices.&rdquo;
+                  • &ldquo;Finding stuff so fast, my FBI agent thinks I&apos;m using cheat
+                  codes.&rdquo;
                 </li>
                 <li>
-                  • &ldquo;My bookmarks folder is so organized, I&apos;m considering putting it on
-                  my resume under &apos;Special Skills&apos; and &apos;Miraculous
-                  Achievements.&apos;&rdquo;
+                  • &ldquo;My brain is now Google but without the sketchy privacy policy.&rdquo;
+                </li>
+                <li>• &ldquo;Went from digital trash panda to knowledge ninja overnight.&rdquo;</li>
+                <li>
+                  • &ldquo;My thoughts are so organized, even my therapist is impressed.&rdquo;
                 </li>
                 <li>
-                  • &ldquo;I actually remember what I read because it&apos;s all connected, like
-                  some beautiful conspiracy theory but for learning instead of lizard people.&rdquo;
-                </li>
-                <li>
-                  • &ldquo;I can focus on actual learning instead of playing digital hide-and-seek
-                  with my own thoughts while crying softly.&rdquo;
-                </li>
-                <li>
-                  • &ldquo;People think I&apos;m smarter now. I&apos;m not, but I can find my smart
-                  thoughts faster than I lose my keys.&rdquo;
+                  • &ldquo;People think I&apos;m smart now. I just stopped losing my own
+                  thoughts.&rdquo;
                 </li>
               </ul>
             </motion.div>
@@ -385,17 +373,17 @@ export default function Home() {
       {/* Testimonials Section */}
       <div className="relative">
         <div className="from-background via-background to-muted/20 absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-20">
+        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <h2 className="mb-4 text-3xl font-bold">
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
               What History&apos;s Greatest Minds Would Say About Metadachi
             </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
+            <p className="text-muted-foreground mx-auto max-w-2xl text-base sm:text-lg md:text-xl">
               Time travelers, literary legends, and geniuses throughout history weigh in on our AI
               knowledge management tool
             </p>
@@ -404,12 +392,16 @@ export default function Home() {
           <div className="relative flex w-full flex-col items-center justify-center overflow-hidden">
             <Marquee pauseOnHover className="[--duration:40s]">
               {firstRow.map(review => (
-                <ReviewCard key={review.username} {...review} />
+                <div key={review.username} className="mx-1 sm:mx-2">
+                  <ReviewCard {...review} />
+                </div>
               ))}
             </Marquee>
             <Marquee reverse pauseOnHover className="[--duration:40s]">
               {secondRow.map(review => (
-                <ReviewCard key={review.username} {...review} />
+                <div key={review.username} className="mx-1 sm:mx-2">
+                  <ReviewCard {...review} />
+                </div>
               ))}
             </Marquee>
             <div className="from-background pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r"></div>
@@ -421,21 +413,23 @@ export default function Home() {
       {/* FAQ Section */}
       <div className="relative overflow-hidden">
         <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-20">
+        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="mb-16 text-center"
           >
-            <h2 className="mb-4 text-3xl font-bold">FAQ (Frequently Avoided Questions)</h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
+              FAQ (Frequently Avoided Questions)
+            </h2>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-base sm:text-lg md:text-xl">
               Questions you were too afraid to ask, answered with brutal honesty and zero corporate
               BS
             </p>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-4 sm:gap-8 md:grid-cols-2">
             <motion.div
               whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
               initial={{ opacity: 0, y: 20 }}
@@ -510,17 +504,19 @@ export default function Home() {
       {/* CTA Section */}
       <div className="relative overflow-hidden">
         <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-20">
+        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-card border-border/50 relative overflow-hidden rounded-2xl border p-12 text-center transition-all hover:shadow-lg"
+            className="bg-card border-border/50 relative overflow-hidden rounded-2xl border p-6 text-center transition-all hover:shadow-lg sm:p-12"
           >
             <div className="from-primary/10 via-primary/5 absolute inset-0 bg-gradient-to-r to-transparent opacity-50" />
             <div className="relative">
-              <h2 className="mb-6 text-4xl font-bold">Ready to Transform Your Content Chaos?</h2>
-              <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-xl">
+              <h2 className="mb-6 text-2xl font-bold sm:text-3xl md:text-4xl">
+                Ready to Transform Your Content Chaos?
+              </h2>
+              <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-base sm:text-lg md:text-xl">
                 Join our users who are saving time, gaining insights, and building their knowledge
                 library with our AI-powered platform. Warning: Side effects may include actually
                 finishing things you start.

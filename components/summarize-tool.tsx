@@ -161,26 +161,26 @@ export function SummarizeTool({
   };
 
   return (
-    <div className={`bg-card border-border/50 rounded-xl border p-6 shadow-lg ${className}`}>
+    <div className={`bg-card border-border/50 rounded-xl border p-4 shadow-lg sm:p-6 ${className}`}>
       {showTitle && (
-        <div className="mb-8 text-center">
-          <h1 className="from-primary to-primary/60 mb-4 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent">
+        <div className="mb-6 text-center sm:mb-8">
+          <h1 className="from-primary to-primary/60 mb-3 bg-gradient-to-r bg-clip-text text-2xl font-bold text-transparent sm:mb-4 sm:text-4xl">
             AI Summary Generator
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base">
             Transform any text, article, or document into a clear, concise summary with key insights
           </p>
         </div>
       )}
 
-      <div className="mb-6 flex gap-3">
+      <div className="mb-4 flex flex-row flex-wrap gap-2 max-[400px]:flex-col sm:mb-6 sm:gap-3">
         <Button
           variant={inputType === 'text' ? 'default' : 'outline'}
           onClick={() => setInputType('text')}
           className="flex-1 gap-2"
         >
           <Type className="h-4 w-4" />
-          Text Input
+          <span className="text-sm sm:text-base">Text Input</span>
         </Button>
         <Button
           variant={inputType === 'url' ? 'default' : 'outline'}
@@ -188,7 +188,7 @@ export function SummarizeTool({
           className="flex-1 gap-2"
         >
           <LinkIcon className="h-4 w-4" />
-          URL Input
+          <span className="text-sm sm:text-base">URL Input</span>
         </Button>
         <Button
           variant={inputType === 'file' ? 'default' : 'outline'}
@@ -196,13 +196,13 @@ export function SummarizeTool({
           className="flex-1 gap-2"
         >
           <Upload className="h-4 w-4" />
-          File Upload
+          <span className="text-sm sm:text-base">File Upload</span>
         </Button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="input" className="text-base">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <div className="space-y-1 sm:space-y-2">
+          <Label htmlFor="input" className="text-sm sm:text-base">
             {inputType === 'text'
               ? 'Enter your text'
               : inputType === 'url'
@@ -227,17 +227,17 @@ export function SummarizeTool({
               placeholder={
                 inputType === 'text' ? 'Paste your text here...' : 'https://example.com/article'
               }
-              className="min-h-[150px] resize-none text-base"
+              className="min-h-[120px] resize-none text-sm sm:min-h-[150px] sm:text-base"
               disabled={isGenerating}
             />
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="customInstructions" className="text-base">
+        <div className="space-y-1 sm:space-y-2">
+          <Label htmlFor="customInstructions" className="text-sm sm:text-base">
             Summary Style
           </Label>
-          <div className="mb-4 flex flex-wrap gap-2">
+          <div className="mb-3 flex flex-wrap gap-1 sm:mb-4 sm:gap-2">
             {Object.entries(SUMMARY_PRESETS).map(([key, { label }]) => (
               <Button
                 key={key}
@@ -245,7 +245,7 @@ export function SummarizeTool({
                 variant={selectedPreset === key ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handlePresetChange(key as SummaryPreset)}
-                className="rounded-full"
+                className="rounded-full text-xs sm:text-sm"
               >
                 {label}
               </Button>
@@ -259,7 +259,7 @@ export function SummarizeTool({
               setSelectedPreset('custom');
             }}
             placeholder="Add any specific requirements to tailor the summary..."
-            className="min-h-[80px] resize-none text-base"
+            className="min-h-[60px] resize-none text-sm sm:min-h-[80px] sm:text-base"
             disabled={isGenerating}
           />
         </div>
@@ -267,17 +267,17 @@ export function SummarizeTool({
         <Button
           type="submit"
           disabled={isGenerating || (inputType === 'file' ? !selectedFile : !input.trim())}
-          className="h-11 w-full gap-2"
+          className="h-10 w-full gap-2 sm:h-11"
         >
           {isGenerating ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Generating...
+              <span className="text-sm sm:text-base">Generating...</span>
             </>
           ) : (
             <>
               <Sparkles className="h-4 w-4" />
-              Generate Summary
+              <span className="text-sm sm:text-base">Generate Summary</span>
             </>
           )}
         </Button>

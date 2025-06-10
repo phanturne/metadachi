@@ -165,13 +165,20 @@ export default function HomePage() {
     <div className="container mx-auto space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Button asChild>
-          <Link href="/summarize">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Source
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
+          <div className="from-primary/5 via-primary/10 to-primary/5 relative overflow-hidden rounded-full border bg-gradient-to-r px-2 py-0.5 sm:px-3 sm:py-1">
+            <div className="animate-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <div className="relative flex items-center gap-1 sm:gap-1.5">
+              <Sparkles className="text-primary h-3 w-3 animate-pulse sm:h-3.5 sm:w-3.5" />
+              <span className="from-primary to-primary/80 bg-gradient-to-r bg-clip-text text-[10px] font-medium text-transparent sm:text-xs">
+                <span className="sm:hidden">WIP</span>
+                <span className="hidden sm:inline">Work in Progress</span>
+              </span>
+              <div className="bg-primary/50 h-0.5 w-0.5 animate-ping rounded-full sm:h-1 sm:w-1" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
