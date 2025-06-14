@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/auth-context';
-import { Menu, User } from 'lucide-react';
+import { Github, Menu, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -130,6 +130,7 @@ export function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
             >
+              <Github className="h-5 w-5" />
               <span className="sr-only">GitHub Repository</span>
             </a>
           </Button>
