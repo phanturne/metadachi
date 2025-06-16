@@ -124,7 +124,7 @@ export function Navbar() {
           </Link>
         </nav>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" asChild className="hidden sm:flex">
             <a
               href="https://github.com/phanturne/metadachi"
               target="_blank"

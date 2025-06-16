@@ -173,14 +173,14 @@ export function SummarizeTool({
         </div>
       )}
 
-      <div className="mb-4 flex flex-row flex-wrap gap-2 max-[400px]:flex-col sm:mb-6 sm:gap-3">
+      <div className="mb-4 flex flex-row gap-2 sm:mb-6 sm:gap-3">
         <Button
           variant={inputType === 'text' ? 'default' : 'outline'}
           onClick={() => setInputType('text')}
           className="flex-1 gap-2"
         >
           <Type className="h-4 w-4" />
-          <span className="text-sm sm:text-base">Text Input</span>
+          <span className="hidden text-sm sm:inline-block sm:text-base">Text Input</span>
         </Button>
         <Button
           variant={inputType === 'url' ? 'default' : 'outline'}
@@ -188,7 +188,7 @@ export function SummarizeTool({
           className="flex-1 gap-2"
         >
           <LinkIcon className="h-4 w-4" />
-          <span className="text-sm sm:text-base">URL Input</span>
+          <span className="hidden text-sm sm:inline-block sm:text-base">URL Input</span>
         </Button>
         <Button
           variant={inputType === 'file' ? 'default' : 'outline'}
@@ -196,7 +196,7 @@ export function SummarizeTool({
           className="flex-1 gap-2"
         >
           <Upload className="h-4 w-4" />
-          <span className="text-sm sm:text-base">File Upload</span>
+          <span className="hidden text-sm sm:inline-block sm:text-base">File Upload</span>
         </Button>
       </div>
 

@@ -1,8 +1,8 @@
 'use client';
 
+import { AnimatedCard } from '@/components/animated-card';
 import { Marquee } from '@/components/magicui/marquee';
 import { SummarizeTool, SummaryResponse } from '@/components/summarize-tool';
-import { AnimatedCard } from '@/components/animated-card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, useScroll, useSpring } from 'framer-motion';
@@ -206,33 +206,35 @@ export default function Home() {
       {/* Features & Use Cases Section */}
       <div className="relative">
         <div className="from-background via-background to-muted/20 absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
+        <div className="relative container mx-auto max-w-7xl px-4 py-8 sm:py-12 md:py-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-16 text-center"
+            className="mb-8 text-center sm:mb-12 md:mb-16"
           >
-            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
+            <h2 className="mb-2 text-xl font-bold sm:mb-4 sm:text-2xl md:text-3xl">
               Everything You Need to Manage Knowledge
             </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-base sm:text-lg md:text-xl">
+            <p className="text-muted-foreground mx-auto max-w-2xl text-sm sm:text-base md:text-lg">
               Powerful features to help you extract, organize, and leverage insights from your
               content (like a productivity guru, but with fewer crystals)
             </p>
           </motion.div>
 
-          <div className="grid gap-4 sm:gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             <AnimatedCard animation="fadeUp" delay={0}>
               <motion.div
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className="bg-card border-border/50 rounded-xl border p-6 transition-shadow hover:shadow-lg"
+                className="bg-card border-border/50 rounded-xl border p-4 transition-shadow hover:shadow-lg sm:p-6"
               >
-                <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                  <FileText className="text-primary h-6 w-6" />
+                <div className="bg-primary/10 mb-3 flex h-10 w-10 items-center justify-center rounded-lg sm:mb-4 sm:h-12 sm:w-12">
+                  <FileText className="text-primary h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-                <h3 className="mb-3 text-xl font-semibold">Quick Understanding</h3>
-                <p className="text-muted-foreground">
+                <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
+                  Quick Understanding
+                </h3>
+                <p className="text-muted-foreground text-sm sm:text-base">
                   Skip to the good parts without admitting you didn&apos;t read the whole thing.
                   We&apos;re basically CliffsNotes for your ADHD brain.
                 </p>
@@ -242,13 +244,15 @@ export default function Home() {
             <AnimatedCard animation="fadeUp" delay={100}>
               <motion.div
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className="bg-card border-border/50 rounded-xl border p-6 transition-shadow hover:shadow-lg"
+                className="bg-card border-border/50 rounded-xl border p-4 transition-shadow hover:shadow-lg sm:p-6"
               >
-                <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                  <Brain className="text-primary h-6 w-6" />
+                <div className="bg-primary/10 mb-3 flex h-10 w-10 items-center justify-center rounded-lg sm:mb-4 sm:h-12 sm:w-12">
+                  <Brain className="text-primary h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-                <h3 className="mb-3 text-xl font-semibold">Knowledge Retention</h3>
-                <p className="text-muted-foreground">
+                <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
+                  Knowledge Retention
+                </h3>
+                <p className="text-muted-foreground text-sm sm:text-base">
                   Save insights before they disappear into the void with your car keys and your will
                   to live on Monday mornings.
                 </p>
@@ -258,13 +262,15 @@ export default function Home() {
             <AnimatedCard animation="fadeUp" delay={200}>
               <motion.div
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className="bg-card border-border/50 rounded-xl border p-6 transition-shadow hover:shadow-lg"
+                className="bg-card border-border/50 rounded-xl border p-4 transition-shadow hover:shadow-lg sm:p-6"
               >
-                <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                  <Sparkles className="text-primary h-6 w-6" />
+                <div className="bg-primary/10 mb-3 flex h-10 w-10 items-center justify-center rounded-lg sm:mb-4 sm:h-12 sm:w-12">
+                  <Sparkles className="text-primary h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-                <h3 className="mb-3 text-xl font-semibold">Interactive Learning</h3>
-                <p className="text-muted-foreground">
+                <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
+                  Interactive Learning
+                </h3>
+                <p className="text-muted-foreground text-sm sm:text-base">
                   Chat with AI that actually remembers what you fed it (unlike your goldfish, your
                   ex, or your brain after 3 PM on Friday).
                 </p>
@@ -274,13 +280,15 @@ export default function Home() {
             <AnimatedCard animation="fadeUp" delay={300}>
               <motion.div
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className="bg-card border-border/50 rounded-xl border p-6 transition-shadow hover:shadow-lg"
+                className="bg-card border-border/50 rounded-xl border p-4 transition-shadow hover:shadow-lg sm:p-6"
               >
-                <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-lg">
-                  <BookOpen className="text-primary h-6 w-6" />
+                <div className="bg-primary/10 mb-3 flex h-10 w-10 items-center justify-center rounded-lg sm:mb-4 sm:h-12 sm:w-12">
+                  <BookOpen className="text-primary h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-                <h3 className="mb-3 text-xl font-semibold">Research Organization</h3>
-                <p className="text-muted-foreground">
+                <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
+                  Research Organization
+                </h3>
+                <p className="text-muted-foreground text-sm sm:text-base">
                   Turn your digital hoarding habit into organized genius. Like having a personal
                   assistant for your brain, but better.
                 </p>
@@ -293,21 +301,23 @@ export default function Home() {
       {/* Before/After Section with Common Excuses */}
       <div className="relative overflow-hidden">
         <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
-          <div className="mb-16 text-center">
-            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Protagonist Energy Only</h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-base sm:text-lg md:text-xl">
+        <div className="relative container mx-auto max-w-7xl px-4 py-8 sm:py-12 md:py-16">
+          <div className="mb-8 text-center sm:mb-12 md:mb-16">
+            <h2 className="mb-2 text-xl font-bold sm:mb-4 sm:text-2xl md:text-3xl">
+              Protagonist Energy Only
+            </h2>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-sm sm:text-base md:text-lg">
               Stop being the villain in your own productivity story and start winning
             </p>
           </div>
 
-          <div className="grid gap-4 sm:gap-8 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 md:gap-8">
             <AnimatedCard animation="slideLeft" delay={0}>
-              <div className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg">
-                <h3 className="mb-4 text-xl font-semibold text-red-500">
+              <div className="bg-card border-border/50 rounded-xl border p-4 transition-all hover:shadow-lg sm:p-6">
+                <h3 className="mb-3 text-lg font-semibold text-red-500 sm:mb-4 sm:text-xl">
                   The Chaos Days (Before Metadachi)
                 </h3>
-                <ul className="text-muted-foreground space-y-3">
+                <ul className="text-muted-foreground space-y-2 text-sm sm:space-y-3 sm:text-base">
                   <li>• &ldquo;127 tabs open. My CPU is crying and filing for divorce.&rdquo;</li>
                   <li>
                     • &ldquo;My bookmarks hierarchy has more levels than a pyramid scheme.&rdquo;
@@ -328,11 +338,11 @@ export default function Home() {
             </AnimatedCard>
 
             <AnimatedCard animation="slideRight" delay={100}>
-              <div className="bg-card border-border/50 rounded-xl border p-6 transition-all hover:shadow-lg">
-                <h3 className="mb-4 text-xl font-semibold text-green-500">
+              <div className="bg-card border-border/50 rounded-xl border p-4 transition-all hover:shadow-lg sm:p-6">
+                <h3 className="mb-3 text-lg font-semibold text-green-500 sm:mb-4 sm:text-xl">
                   The Mastery Era (After Metadachi)
                 </h3>
-                <ul className="text-muted-foreground space-y-3">
+                <ul className="text-muted-foreground space-y-2 text-sm sm:space-y-3 sm:text-base">
                   <li>
                     • &ldquo;Finding stuff so fast, my FBI agent thinks I&apos;m using cheat
                     codes.&rdquo;
@@ -400,22 +410,24 @@ export default function Home() {
       {/* FAQ Section */}
       <div className="relative overflow-hidden">
         <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
-          <div className="mb-16 text-center">
-            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
+        <div className="relative container mx-auto max-w-7xl px-4 py-8 sm:py-12 md:py-16">
+          <div className="mb-8 text-center sm:mb-12 md:mb-16">
+            <h2 className="mb-2 text-xl font-bold sm:mb-4 sm:text-2xl md:text-3xl">
               FAQ (Frequently Avoided Questions)
             </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-base sm:text-lg md:text-xl">
+            <p className="text-muted-foreground mx-auto max-w-2xl text-sm sm:text-base md:text-lg">
               Questions you were too afraid to ask, answered with brutal honesty and zero corporate
               BS
             </p>
           </div>
 
-          <div className="grid gap-4 sm:gap-8 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 md:gap-8">
             <AnimatedCard animation="scale" delay={0}>
-              <div className="bg-card border-border/50 h-full rounded-xl border p-6 transition-all hover:shadow-lg">
-                <h3 className="mb-3 text-xl font-semibold">Will this make me smarter?</h3>
-                <p className="text-muted-foreground">
+              <div className="bg-card border-border/50 h-full rounded-xl border p-4 transition-all hover:shadow-lg sm:p-6">
+                <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
+                  Will this make me smarter?
+                </h3>
+                <p className="text-muted-foreground text-sm sm:text-base">
                   No, but it will make you look smarter, which is honestly more valuable in most
                   situations. We&apos;re in the business of strategic intelligence theater.
                 </p>
@@ -423,11 +435,11 @@ export default function Home() {
             </AnimatedCard>
 
             <AnimatedCard animation="scale" delay={100}>
-              <div className="bg-card border-border/50 h-full rounded-xl border p-6 transition-all hover:shadow-lg">
-                <h3 className="mb-3 text-xl font-semibold">
+              <div className="bg-card border-border/50 h-full rounded-xl border p-4 transition-all hover:shadow-lg sm:p-6">
+                <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
                   Will it organize my existing digital disaster zone?
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm sm:text-base">
                   We&apos;re good, but we&apos;re not miracle workers with magic wands. You&apos;ll
                   need to put in some effort. Think of us as your organizing fairy godmother, but
                   you still have to show up to the ball.
@@ -436,11 +448,11 @@ export default function Home() {
             </AnimatedCard>
 
             <AnimatedCard animation="scale" delay={200}>
-              <div className="bg-card border-border/50 h-full rounded-xl border p-6 transition-all hover:shadow-lg">
-                <h3 className="mb-3 text-xl font-semibold">
+              <div className="bg-card border-border/50 h-full rounded-xl border p-4 transition-all hover:shadow-lg sm:p-6">
+                <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
                   Is it really worth the effort, or is this just another productivity trap?
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm sm:text-base">
                   Well, do you enjoy spending 3 hours looking for that one brilliant article you
                   saved last month while questioning your life choices? Didn&apos;t think so.
                   We&apos;re basically therapy for your digital hoarding problem.
@@ -449,11 +461,11 @@ export default function Home() {
             </AnimatedCard>
 
             <AnimatedCard animation="scale" delay={300}>
-              <div className="bg-card border-border/50 h-full rounded-xl border p-6 transition-all hover:shadow-lg">
-                <h3 className="mb-3 text-xl font-semibold">
+              <div className="bg-card border-border/50 h-full rounded-xl border p-4 transition-all hover:shadow-lg sm:p-6">
+                <h3 className="mb-2 text-lg font-semibold sm:mb-3 sm:text-xl">
                   How does this magical knowledge wizardry actually work?
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm sm:text-base">
                   Upload your content, let our AI analyze it like a caffeinated research assistant,
                   and get instant insights. It&apos;s like having a personal librarian who actually
                   remembers where they put things and never judges your 3 AM research binges.
@@ -467,19 +479,19 @@ export default function Home() {
       {/* CTA Section */}
       <div className="relative overflow-hidden">
         <div className="from-muted/30 to-background absolute inset-0 bg-gradient-to-b" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-12 sm:py-16 md:py-20">
-          <div className="bg-card border-border/50 relative overflow-hidden rounded-2xl border p-6 text-center transition-all hover:shadow-lg sm:p-12">
+        <div className="relative container mx-auto max-w-7xl px-4 py-8 sm:py-12 md:py-16">
+          <div className="bg-card border-border/50 relative overflow-hidden rounded-2xl border p-4 text-center transition-all hover:shadow-lg sm:p-6 md:p-12">
             <div className="from-primary/10 via-primary/5 absolute inset-0 bg-gradient-to-r to-transparent opacity-50" />
             <div className="relative">
-              <h2 className="mb-6 text-2xl font-bold sm:text-3xl md:text-4xl">
+              <h2 className="mb-4 text-xl font-bold sm:mb-6 sm:text-2xl md:text-4xl">
                 Ready to Transform Your Content Chaos?
               </h2>
-              <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-base sm:text-lg md:text-xl">
+              <p className="text-muted-foreground mx-auto mb-6 max-w-2xl text-sm sm:mb-8 sm:text-base md:text-lg">
                 Join our users who are saving time, gaining insights, and building their knowledge
                 library with our AI-powered platform. Warning: Side effects may include actually
                 finishing things you start.
               </p>
-              <div className="flex flex-col justify-center gap-4 sm:flex-row">
+              <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
                 <Button size="lg" className="gap-2" onClick={() => router.push('/register')}>
                   Get Started Free
                   <ArrowRight className="h-4 w-4" />
@@ -491,8 +503,8 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-muted/30 py-8">
-        <div className="text-muted-foreground text-center">
+      <footer className="bg-muted/30 py-4 sm:py-6">
+        <div className="text-muted-foreground text-center text-sm sm:text-base">
           © 2025 Metadachi. All rights reserved.
         </div>
       </footer>

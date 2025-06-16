@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -466,14 +467,15 @@ export default function LibraryPage() {
                         className="h-8"
                       />
                     </div>
-                    <div className="max-h-[200px] overflow-y-auto">
+                    <div className="max-h-[200px] overflow-x-hidden overflow-y-auto">
                       {filteredTags.map(tag => (
                         <DropdownMenuCheckboxItem
                           key={tag}
                           checked={selectedTags.includes(tag)}
                           onCheckedChange={() => toggleTag(tag)}
+                          className="pr-4 pl-2"
                         >
-                          {tag}
+                          <span className="block w-full truncate">{tag}</span>
                         </DropdownMenuCheckboxItem>
                       ))}
                     </div>
@@ -503,33 +505,35 @@ export default function LibraryPage() {
                 </DropdownMenu>
 
                 <div className="flex gap-2">
+                  <ButtonGroup>
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'outline'}
+                      onClick={() => setViewMode('grid')}
+                      size="icon"
+                      className="h-9 w-9 rounded-r-none"
+                    >
+                      <Grid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'outline'}
+                      onClick={() => setViewMode('list')}
+                      size="icon"
+                      className="h-9 w-9 rounded-l-none"
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </ButtonGroup>
+
                   <Button
-                    variant={viewMode === 'grid' ? 'default' : 'outline'}
-                    onClick={() => setViewMode('grid')}
-                    size="icon"
-                    className="h-9 w-9"
+                    onClick={() => {
+                      setIsSourceModalOpen(true);
+                    }}
+                    className="h-9 gap-2"
                   >
-                    <Grid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'outline'}
-                    onClick={() => setViewMode('list')}
-                    size="icon"
-                    className="h-9 w-9"
-                  >
-                    <List className="h-4 w-4" />
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Add Source</span>
                   </Button>
                 </div>
-
-                <Button
-                  onClick={() => {
-                    setIsSourceModalOpen(true);
-                  }}
-                  className="h-9 gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Add Source</span>
-                </Button>
               </div>
             </div>
 
@@ -573,11 +577,11 @@ export default function LibraryPage() {
             <div className="text-muted-foreground py-12 text-center">No sources found</div>
           ) : (
             <div
-              className={
+              className={`grid transition-all duration-300 ease-in-out ${
                 viewMode === 'grid'
-                  ? 'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'
-                  : 'flex flex-col gap-2'
-              }
+                  ? 'grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'
+                  : 'grid-cols-1 gap-2'
+              }`}
             >
               {filteredAndSortedSources.map(source => (
                 <div
