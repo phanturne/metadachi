@@ -90,12 +90,7 @@ export async function GET() {
       recentSources: (recentSources || []).map(source => ({
         id: source.id,
         type: source.type,
-        title:
-          source.type === 'FILE'
-            ? source.file_name
-            : source.type === 'URL'
-              ? source.url
-              : source.content?.slice(0, 50) + '...',
+        title: source.title,
         createdAt: source.created_at,
         hasSummary: source.summaries && source.summaries.length > 0,
         summary: source.summaries?.[0]?.summary_text,

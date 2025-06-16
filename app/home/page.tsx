@@ -1,10 +1,14 @@
 'use client';
 
+import { SourceDetailModal } from '@/components/source-detail-modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Source } from '@/types/source';
+import { createClient } from '@/utils/supabase/client';
 import { FileText, Globe, Plus, Sparkles, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface DashboardData {
   counts: {
@@ -65,6 +69,10 @@ export default function HomePage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSource, setSelectedSource] = useState<Source | null>(null);
+  const [summary, setSummary] = useState('');
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -82,6 +90,89 @@ export default function HomePage() {
 
     fetchDashboardData();
   }, []);
+
+  const fetchFileContent = async (filePath: string) => {
+    try {
+      setIsGeneratingSummary(true);
+      const { data, error } = await supabase.storage.from('source_files').download(filePath);
+
+      if (error) throw error;
+      const content = await data.text();
+      setSummary(content);
+    } catch (error) {
+      console.error('Error fetching file content:', error);
+      toast.error('Failed to load file content');
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
+  const handleSaveSource = async (updates: {
+    title: string;
+    summary?: {
+      summary_text: string;
+      key_points: string[];
+      quotes: string[];
+      tags: string[];
+    };
+  }) => {
+    if (!selectedSource) return;
+
+    try {
+      // Update source title
+      const { error: sourceError } = await supabase
+        .from('sources')
+        .update({ title: updates.title })
+        .eq('id', selectedSource.id);
+
+      if (sourceError) throw sourceError;
+
+      // Update summary if it exists
+      if (updates.summary && selectedSource.summary) {
+        const { error: summaryError } = await supabase
+          .from('summaries')
+          .update({
+            summary_text: updates.summary.summary_text,
+            key_points: updates.summary.key_points,
+            quotes: updates.summary.quotes,
+            tags: updates.summary.tags,
+          })
+          .eq('id', selectedSource.summary.id);
+
+        if (summaryError) throw summaryError;
+      }
+
+      // Update selected source with new data
+      setSelectedSource(prev =>
+        prev
+          ? {
+              ...prev,
+              title: updates.title,
+              summary: prev.summary
+                ? {
+                    ...prev.summary,
+                    summary_text: updates.summary?.summary_text || prev.summary.summary_text,
+                    key_points: updates.summary?.key_points || prev.summary.key_points,
+                    quotes: updates.summary?.quotes || prev.summary.quotes,
+                    tags: updates.summary?.tags || prev.summary.tags,
+                  }
+                : null,
+            }
+          : null
+      );
+
+      // Refresh dashboard data
+      const response = await fetch('/api/dashboard');
+      if (!response.ok) throw new Error('Failed to fetch dashboard data');
+      const newData = await response.json();
+      setData(newData);
+
+      toast.success('Source updated successfully');
+    } catch (error) {
+      console.error('Error updating source:', error);
+      toast.error('Failed to update source');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -239,7 +330,30 @@ export default function HomePage() {
                   data.recentSources.map(source => (
                     <div
                       key={source.id}
-                      className="bg-card hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-2 transition-colors"
+                      className="bg-card hover:bg-muted/50 flex cursor-pointer items-center gap-3 rounded-lg border p-2 transition-colors"
+                      onClick={async () => {
+                        // Fetch full source data
+                        const { data: sourceData, error } = await supabase
+                          .from('sources')
+                          .select(
+                            `
+                            *,
+                            summary:summaries(*)
+                          `
+                          )
+                          .eq('id', source.id)
+                          .single();
+
+                        if (error) {
+                          toast.error('Failed to load source details');
+                          return;
+                        }
+
+                        setSelectedSource({
+                          ...sourceData,
+                          summary: sourceData.summary?.[0] || null,
+                        });
+                      }}
                     >
                       <div className="bg-primary/10 text-primary rounded-lg p-1.5">
                         {source.type === 'URL' ? (
@@ -359,6 +473,19 @@ export default function HomePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Source Detail Modal */}
+      <SourceDetailModal
+        source={selectedSource}
+        onClose={() => {
+          setSelectedSource(null);
+          setSummary('');
+        }}
+        onLoadFileContent={fetchFileContent}
+        isGeneratingSummary={isGeneratingSummary}
+        summary={summary}
+        onSave={handleSaveSource}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { SourceDetail } from '@/components/source-detail';
+import { SourceDetailModal } from '@/components/source-detail-modal';
 import { SourceInput as SourceInputType } from '@/components/source-input';
 import { SourceModal } from '@/components/source-modal';
 import {
@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -27,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/auth-context';
 import { useAnonymousAuth } from '@/hooks/use-anonymous-auth';
+import { Source, SourceType } from '@/types/source';
 import { createClient } from '@/utils/supabase/client';
 import {
   Book,
@@ -44,30 +44,6 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-type SourceType = 'TEXT' | 'URL' | 'FILE';
-
-interface Source {
-  id: string;
-  type: SourceType;
-  content: string | null;
-  url: string | null;
-  file_name: string | null;
-  file_path: string | null;
-  file_size: number | null;
-  file_type: string | null;
-  created_at: string;
-  user_id: string;
-  title: string;
-  visibility: 'PRIVATE' | 'PUBLIC' | 'SHARED';
-  summary?: {
-    id: string;
-    summary_text: string;
-    key_points: string[];
-    quotes: string[];
-    tags: string[];
-  } | null;
-}
 
 export default function LibraryPage() {
   const { user } = useAuth();
@@ -733,27 +709,17 @@ export default function LibraryPage() {
       </AlertDialog>
 
       {/* Source Detail Dialog */}
-      <Dialog
-        open={!!selectedSource}
-        onOpenChange={() => {
+      <SourceDetailModal
+        source={selectedSource}
+        onClose={() => {
           setSelectedSource(null);
           setSummary('');
         }}
-      >
-        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-6xl" showClose={false}>
-          {selectedSource && (
-            <div className="w-full">
-              <SourceDetail
-                source={selectedSource}
-                onLoadFileContent={fetchFileContent}
-                isGeneratingSummary={isGeneratingSummary}
-                summary={summary}
-                onSave={handleSaveSource}
-              />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+        onLoadFileContent={fetchFileContent}
+        isGeneratingSummary={isGeneratingSummary}
+        summary={summary}
+        onSave={handleSaveSource}
+      />
     </div>
   );
 }
