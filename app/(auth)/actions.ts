@@ -125,3 +125,51 @@ export const signOutAction = async () => {
   await supabase.auth.signOut();
   window.location.href = ROUTES.LOGIN;
 };
+
+export const bindAccountAction = async (formData: FormData) => {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+  const supabase = createClient();
+
+  if (!email || !password || !confirmPassword) {
+    return encodedRedirect(
+      'error',
+      ROUTES.BIND_ACCOUNT,
+      'Email, password, and confirm password are required'
+    );
+  }
+
+  if (password !== confirmPassword) {
+    return encodedRedirect('error', ROUTES.BIND_ACCOUNT, 'Passwords do not match');
+  }
+
+  if (password.length < 6) {
+    return encodedRedirect(
+      'error',
+      ROUTES.BIND_ACCOUNT,
+      'Password must be at least 6 characters long'
+    );
+  }
+
+  try {
+    // Update both email and password in a single call
+    const { error: updateError } = await supabase.auth.updateUser({
+      email,
+      password,
+    });
+
+    if (updateError) {
+      return encodedRedirect('error', ROUTES.LOGIN, updateError.message);
+    }
+
+    // Account binding successful - sign out and redirect to login with success message
+    await supabase.auth.signOut();
+
+    // Use window.location.href instead of encodedRedirect to avoid NEXT_REDIRECT error
+    window.location.href = `${ROUTES.LOGIN}?success=${encodeURIComponent('Account successfully bound! Please check your email for verification, then log in with your new credentials.')}`;
+    return;
+  } catch {
+    return encodedRedirect('error', ROUTES.LOGIN, 'An unexpected error occurred');
+  }
+};

@@ -9,6 +9,7 @@ type AuthContextType = {
   isLoading: boolean;
   signOut: () => Promise<void>;
   signInAnonymously: () => Promise<User>;
+  bindAccount: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,11 +85,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const bindAccount = async () => {
+    try {
+      // Redirect to the dedicated bind account page
+      window.location.href = '/bind-account';
+    } catch (error) {
+      console.error('Error binding account:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     isLoading,
     signOut,
     signInAnonymously,
+    bindAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

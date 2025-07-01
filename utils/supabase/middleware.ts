@@ -48,6 +48,15 @@ export const updateSession = async (request: NextRequest) => {
       return NextResponse.redirect(new URL(ROUTES.LOGIN, request.url));
     }
 
+    // Special handling for bind account route - only allow anonymous users
+    if (request.nextUrl.pathname.startsWith(ROUTES.BIND_ACCOUNT)) {
+      if (user.data.user && user.data.user.email) {
+        // User is not anonymous (has email), redirect to home
+        return NextResponse.redirect(new URL(ROUTES.HOME, request.url));
+      }
+      return response;
+    }
+
     // Special handling for reset password route
     if (request.nextUrl.pathname.startsWith(ROUTES.RESET_PASSWORD)) {
       const token_hash = request.nextUrl.searchParams.get('token_hash');
@@ -57,10 +66,10 @@ export const updateSession = async (request: NextRequest) => {
       return response;
     }
 
-    // If the user is logged in and trying to access auth pages (except reset password)
-    const isAuthPage = AUTH_ROUTES.filter(route => route !== ROUTES.RESET_PASSWORD).some(page =>
-      request.nextUrl.pathname.startsWith(page)
-    );
+    // If the user is logged in and trying to access auth pages (except reset password and bind account)
+    const isAuthPage = AUTH_ROUTES.filter(
+      route => route !== ROUTES.RESET_PASSWORD && route !== ROUTES.BIND_ACCOUNT
+    ).some(page => request.nextUrl.pathname.startsWith(page));
 
     if (user.data.user && isAuthPage) {
       return NextResponse.redirect(new URL(ROUTES.HOME, request.url));

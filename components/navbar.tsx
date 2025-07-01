@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export function Navbar() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, bindAccount } = useAuth();
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;
@@ -158,9 +158,7 @@ export function Navbar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {!user.email && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/login">Create Account</Link>
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={bindAccount}>Bind Account</DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={signOut}>Log out</DropdownMenuItem>
               </DropdownMenuContent>
