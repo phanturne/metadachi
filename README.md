@@ -19,8 +19,8 @@ _Because your digital hoarding habit deserves better organization_
 
 - Upload and process various file types (yes, even that PDF you've been avoiding)
 - View original source contents without the existential dread
+- Firecrawl integration for web page parsing
 - 🚧 Bulk file uploads and URL processing (for the overachievers)
-- 🚧 Firecrawl integration for web page parsing (fancy!)
 
 ### 🤖 AI-Powered Insights
 
@@ -71,9 +71,7 @@ _AKA: What you'll actually use this for_
    - Share research findings without the awkward email attachments
    - Maintain a structured collection of insights (Marie Kondo would be proud)
 
-## 📸 Application Screenshots
-
-_See Metadachi in action_
+## Screenshots
 
 <img src="public/images/metadachi-dashboard.png" alt="Metadachi Dashboard"  />
 <img src="public/images/metadachi-library.png" alt="Metadachi Library"  />
@@ -140,7 +138,18 @@ _Because even AI needs boundaries_
   UPSTASH_REDIS_REST_TOKEN=your_redis_token
   ```
 
-### 5. Deploy on Vercel
+### 5. Configure Firecrawl (Optional)
+
+_For enhanced web page parsing_
+
+- Sign up at [Firecrawl](https://firecrawl.dev) and get an API key
+- Add the API key to your `.env` file:
+  ```
+  FIRECRAWL_API_KEY=your_firecrawl_api_key_here
+  ```
+- If not configured, the app falls back to simple fetch requests
+
+### 6. Deploy on Vercel
 
 _The grand finale_
 
