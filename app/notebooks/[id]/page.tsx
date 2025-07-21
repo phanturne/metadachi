@@ -4,7 +4,6 @@ import { ChatPanel } from '@/components/chat-panel';
 import { SourceDetail } from '@/components/source-detail';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/auth-context';
 import { useAnonymousAuth } from '@/hooks/use-anonymous-auth';
 import { createClient } from '@/utils/supabase/client';
@@ -302,7 +301,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
         <div className="grid min-h-0 flex-1 grid-cols-12 gap-4">
           {/* Left panel - Source selection */}
           <div
-            className={`bg-card flex min-h-0 flex-col rounded-lg border p-3 shadow-sm transition-[width,grid-column] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${selectedSource ? 'col-span-6' : 'col-span-4'}`}
+            className={`bg-card flex min-h-0 flex-1 flex-col rounded-lg border p-3 shadow-sm transition-[width,grid-column] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${selectedSource ? 'col-span-6' : 'col-span-4'}`}
           >
             {selectedSource ? (
               <>
@@ -317,14 +316,14 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
                   </Button>
                   <h2 className="text-base font-semibold">Source Details</h2>
                 </div>
-                <ScrollArea className="min-h-0 flex-1">
+                <div className="min-h-0 flex-1">
                   <SourceDetail
                     source={selectedSource}
                     onLoadFileContent={fetchFileContent}
                     isGeneratingSummary={isGeneratingSummary}
                     summary={summary}
                   />
-                </ScrollArea>
+                </div>
               </>
             ) : (
               <>
@@ -345,7 +344,7 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
                     </Button>
                   )}
                 </div>
-                <ScrollArea className="min-h-0 flex-1">
+                <div className="min-h-0 flex-1 overflow-y-auto">
                   <div className="space-y-1.5">
                     {notebookSources.map(source => (
                       <div
@@ -368,14 +367,14 @@ export default function NotebookPage({ params }: { params: Promise<{ id: string 
                       </div>
                     )}
                   </div>
-                </ScrollArea>
+                </div>
               </>
             )}
           </div>
 
           {/* Right panel - Chat interface */}
           <div
-            className={`bg-card flex min-h-0 flex-col rounded-lg border p-3 shadow-sm transition-[width,grid-column] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${selectedSource ? 'col-span-6' : 'col-span-8'}`}
+            className={`bg-card flex min-h-0 flex-1 flex-col rounded-lg border p-3 shadow-sm transition-[width,grid-column] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${selectedSource ? 'col-span-6' : 'col-span-8'}`}
           >
             <ChatPanel selectedSources={notebookSources.map(s => s.id)} />
           </div>
