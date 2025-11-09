@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      notebooks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -44,12 +74,167 @@ export type Database = {
         }
         Relationships: []
       }
+      source_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json
+          source_id: string
+          token_count: number | null
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          source_id: string
+          token_count?: number | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          source_id?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_chunks_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      source_summaries: {
+        Row: {
+          created_at: string
+          id: string
+          key_points: string[]
+          source_id: string
+          summary: string
+          topics: string[]
+          updated_at: string
+          word_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_points?: string[]
+          source_id: string
+          summary: string
+          topics?: string[]
+          updated_at?: string
+          word_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_points?: string[]
+          source_id?: string
+          summary?: string
+          topics?: string[]
+          updated_at?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_summaries_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: true
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sources: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string
+          metadata: Json
+          notebook_id: string
+          source_type: string
+          source_url: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          metadata?: Json
+          notebook_id: string
+          source_type?: string
+          source_url?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          metadata?: Json
+          notebook_id?: string
+          source_type?: string
+          source_url?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sources_notebook_id_fkey"
+            columns: ["notebook_id"]
+            isOneToOne: false
+            referencedRelation: "notebooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_notebook_permission: {
+        Args: { notebook_id_param: string; user_id_param?: string }
+        Returns: string
+      }
+      search_sources: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          notebook_id_param: string
+          query_embedding: string
+        }
+        Returns: {
+          chunk_id: string
+          content: string
+          similarity: number
+          source_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
