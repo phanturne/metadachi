@@ -1,8 +1,8 @@
 # Metadachi
 
-Metadachi is a sleek, dynamic Next.js web application designed to act as a viewer for a local directory of Markdown files (such as an Obsidian Vault or a personal knowledge base).
+Metadachi is a sleek, gallery-style viewer for your OpenClaw memories stored in an Obsidian vault.
 
-It reads local `.md` files, parses their YAML frontmatter and content, categorizes them automatically, and displays them in a clean, interactive Bento Grid UI.
+It reads your local Obsidian `.md` files, parses their YAML frontmatter, categorizes your memories automatically, and displays them in a beautiful, interactive visual gallery.
 
 ## Features
 

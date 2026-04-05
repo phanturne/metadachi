@@ -25,7 +25,7 @@ function inferType(filePath: string, content: string, frontmatter: Record<string
   return 'default';
 }
 
-function parseFile(filePath: string): VaultFile | null {
+export function parseFile(filePath: string): VaultFile | null {
   try {
     const raw = fs.readFileSync(filePath, 'utf-8');
     const { data, content } = matter(raw);
