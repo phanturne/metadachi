@@ -40,6 +40,7 @@ export function parseFile(filePath: string): VaultFile | null {
       created: (data.created as string) || stats.birthtime.toISOString(),
       tags: (data.tags as string[]) || [],
       pinned: (data.pinned as boolean) || false,
+      favorite: (data.favorite as boolean) || false,
     };
 
     return { path: filePath, meta, rawContent: content.trim() };

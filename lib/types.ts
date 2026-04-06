@@ -7,6 +7,7 @@ export interface CardMeta {
   created: string;
   tags: string[];
   pinned: boolean;
+  favorite: boolean;
 }
 
 export interface Card extends CardMeta {

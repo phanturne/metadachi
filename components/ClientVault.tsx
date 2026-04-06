@@ -13,7 +13,8 @@ export function ClientVault() {
   const { cards } = useVault();
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<CardType | 'all'>('all');
-  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const selectedCard = useMemo(() => cards.find(c => c.id === selectedCardId) || null, [cards, selectedCardId]);
 
   const filtered = useMemo(() => {
     return cards.filter(card => {
@@ -34,8 +35,9 @@ export function ClientVault() {
     return c;
   }, [cards]);
 
-  const pinned = useMemo(() => filtered.filter(c => c.pinned), [filtered]);
-  const rest = useMemo(() => filtered.filter(c => !c.pinned), [filtered]);
+  const pinned = useMemo(() => filtered.filter(c => c.pinned && !c.favorite), [filtered]);
+  const favorite = useMemo(() => filtered.filter(c => c.favorite), [filtered]);
+  const rest = useMemo(() => filtered.filter(c => !c.pinned && !c.favorite), [filtered]);
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 sm:p-8">
@@ -48,6 +50,21 @@ export function ClientVault() {
         <FilterBar selected={typeFilter} onSelect={setTypeFilter} counts={counts} />
       </div>
 
+      {favorite.length > 0 && (
+        <section className="mb-8">
+          <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+            ❤️ Favorites
+          </h2>
+          <BentoGrid>
+            {favorite.map(card => (
+              <div key={card.id} onClick={() => setSelectedCardId(card.id)} style={{ cursor: 'pointer' }}>
+                <PolymorphicCard card={card} />
+              </div>
+            ))}
+          </BentoGrid>
+        </section>
+      )}
+
       {pinned.length > 0 && (
         <section className="mb-8">
           <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
@@ -55,7 +72,7 @@ export function ClientVault() {
           </h2>
           <BentoGrid>
             {pinned.map(card => (
-              <div key={card.id} onClick={() => setSelectedCard(card)} style={{ cursor: 'pointer' }}>
+              <div key={card.id} onClick={() => setSelectedCardId(card.id)} style={{ cursor: 'pointer' }}>
                 <PolymorphicCard card={card} />
               </div>
             ))}
@@ -79,7 +96,7 @@ export function ClientVault() {
         ) : (
           <BentoGrid>
             {rest.map(card => (
-              <div key={card.id} onClick={() => setSelectedCard(card)} style={{ cursor: 'pointer' }}>
+              <div key={card.id} onClick={() => setSelectedCardId(card.id)} style={{ cursor: 'pointer' }}>
                 <PolymorphicCard card={card} />
               </div>
             ))}
@@ -87,7 +104,7 @@ export function ClientVault() {
         )}
       </section>
 
-      <CardModal card={selectedCard} onClose={() => setSelectedCard(null)} />
+      <CardModal card={selectedCard} onClose={() => setSelectedCardId(null)} />
     </div>
   );
 }

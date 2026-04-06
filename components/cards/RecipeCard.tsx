@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { Card as CardType } from '@/lib/types';
-import { Clock, ChefHat } from 'lucide-react';
+import { Clock, ChefHat, Heart, Pin } from 'lucide-react';
+import { useVault } from '@/hooks/useVault';
 import { Card as ShadcnCard, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RecipeCardProps {
@@ -10,6 +11,7 @@ interface RecipeCardProps {
 }
 
 export function RecipeCard({ card }: RecipeCardProps) {
+  const { togglePin, toggleFavorite } = useVault();
   const ingredients = card.rawContent.match(/^- .+$/m)?.slice(0, 5) ?? [];
   const hasTimes = card.rawContent.includes('prep') || card.rawContent.includes('cook');
 
@@ -26,7 +28,20 @@ export function RecipeCard({ card }: RecipeCardProps) {
           <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground mb-1">
             <ChefHat size={14} />
             <span>Recipe</span>
-            {card.pinned && <span className="ml-auto">📌</span>}
+            <div className="ml-auto flex gap-1">
+              <button 
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(card.id, !!card.favorite); }}
+                className={`p-1 rounded-md transition-colors ${card.favorite ? "text-red-500" : "text-muted-foreground hover:bg-muted"}`}
+              >
+                <Heart size={14} className={card.favorite ? "fill-current" : ""} />
+              </button>
+              <button 
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); togglePin(card.id, !!card.pinned); }}
+                className={`p-1 rounded-md transition-colors ${card.pinned ? "text-yellow-500" : "text-muted-foreground hover:bg-muted"}`}
+              >
+                <Pin size={14} className={card.pinned ? "fill-current" : ""} />
+              </button>
+            </div>
           </div>
           <CardTitle className="text-lg font-semibold leading-tight text-zinc-100">
             {card.title}
