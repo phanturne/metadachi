@@ -5,6 +5,7 @@ import { CardModal } from '@/components/CardModal';
 import { PolymorphicCard } from '@/components/cards';
 import { FilterBar } from '@/components/FilterBar';
 import { SearchBar } from '@/components/SearchBar';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useVault } from '@/hooks/useVault';
 import { Card, CardType } from '@/lib/types';
 import { useMemo, useState } from 'react';
@@ -41,8 +42,9 @@ export function ClientVault() {
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 sm:p-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-100">Metadachi</h1>
+      <header className="mb-8 flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Metadachi</h1>
+        <ThemeToggle />
       </header>
 
       <div className="flex flex-col gap-4 mb-8">
@@ -83,12 +85,12 @@ export function ClientVault() {
       <section className="mb-8">
         <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
           {typeFilter === 'all' ? 'All Cards' : `${typeFilter} Cards`}
-          <span className="bg-zinc-800 text-zinc-300 text-[0.65rem] px-2 py-0.5 rounded-full font-normal">
+          <span className="bg-secondary text-secondary-foreground text-[0.65rem] px-2 py-0.5 rounded-full font-normal">
             {filtered.length}
           </span>
         </h2>
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground text-sm border hover:border-zinc-700 transition-colors border-dashed border-zinc-800 rounded-xl">
+          <div className="text-center py-16 text-muted-foreground text-sm border hover:border-foreground/20 transition-colors border-dashed border-border rounded-xl">
             {cards.length === 0
               ? 'No cards yet. Add markdown files to your vault to get started.'
               : 'No cards match your search.'}

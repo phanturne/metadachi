@@ -43,7 +43,7 @@ export function Card({ card, className }: CardProps) {
               </button>
             </div>
           </div>
-          <CardTitle className="text-lg font-semibold leading-tight text-zinc-100">
+          <CardTitle className="text-lg font-semibold leading-tight">
             {card.title}
           </CardTitle>
         </CardHeader>
@@ -51,7 +51,7 @@ export function Card({ card, className }: CardProps) {
           {card.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
               {card.tags.map(tag => (
-                <span key={tag} className="text-[0.7rem] text-muted-foreground bg-zinc-800/50 px-1.5 py-0.5 rounded-sm">#{tag}</span>
+                <span key={tag} className="text-[0.7rem] text-secondary-foreground bg-secondary px-1.5 py-0.5 rounded-sm">#{tag}</span>
               ))}
             </div>
           )}
