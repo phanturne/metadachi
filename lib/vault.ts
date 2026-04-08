@@ -3,7 +3,10 @@ import path from 'path';
 import matter from 'gray-matter';
 import { Card, CardMeta, VaultFile, CardType } from './types';
 
-const VAULT_PATH = process.env.VAULT_PATH || '';
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+const rawVaultPath = (isDemoMode ? (process.env.DEMO_VAULT_PATH || './demo-vault') : process.env.VAULT_PATH) || '';
+
+const VAULT_PATH = path.resolve(process.cwd(), rawVaultPath);
 
 function generateId(filePath: string): string {
   // Use relative path as stable ID

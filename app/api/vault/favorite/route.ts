@@ -11,6 +11,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
 
+    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+      return NextResponse.json({ success: true, fake: true });
+    }
+
     // 1. Update the state JSON file
     setState(id, { favorite });
 
