@@ -17,9 +17,10 @@ export function getStates(): VaultStates {
   }
   try {
     const content = fs.readFileSync(STATE_FILE, 'utf-8');
+    if (!content || content.trim() === '') return {};
     return JSON.parse(content) as VaultStates;
   } catch (e) {
-    console.error('Failed to parse .metadachi.json', e);
+    console.warn(`[stateDb] Failed to parse .metadachi.json: ${(e as Error).message}`);
     return {};
   }
 }
