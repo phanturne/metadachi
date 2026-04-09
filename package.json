@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:e2e:normal": "cross-env CI=1 NEXT_PUBLIC_DEMO_MODE=false VAULT_PATH=./demo-vault BASE_URL=http://localhost:3005 playwright test tests/normal-mode.spec.ts",
-    "test:e2e:demo": "cross-env CI=1 NEXT_PUBLIC_DEMO_MODE=true VAULT_PATH=./demo-vault BASE_URL=http://localhost:3006 playwright test tests/demo-mode.spec.ts",
+    "test:e2e:normal": "cross-env CI=1 NEXT_PUBLIC_DEMO_MODE=false VAULT_PATH=./demo-vault BASE_URL=http://localhost:3005 playwright test tests/normal-mode.spec.ts tests/features.spec.ts",
+    "test:e2e:demo": "cross-env CI=1 NEXT_PUBLIC_DEMO_MODE=true VAULT_PATH=./demo-vault BASE_URL=http://localhost:3006 playwright test tests/demo-mode.spec.ts tests/features.spec.ts",
     "test:e2e": "pnpm test:e2e:normal && pnpm test:e2e:demo"
   },
   "dependencies": {

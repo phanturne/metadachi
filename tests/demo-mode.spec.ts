@@ -1,38 +1,13 @@
 import { test, expect } from '@playwright/test';
 import fs from 'fs/promises';
-import path from 'path';
 
-const STATE_FILE_PATH = path.resolve(process.cwd(), 'demo-vault/.metadachi.json');
+import { STATE_FILE_PATH, manageOriginalState, resetStateFile, restoreOriginalState } from './test-utils';
 
 let originalState: string = '{}';
 
 test.beforeAll(async () => {
-  try {
-    originalState = await fs.readFile(STATE_FILE_PATH, 'utf-8');
-  } catch {
-    originalState = '{}';
-  }
+  originalState = await manageOriginalState();
 });
-
-const TEST_STATE = {
-  "demo-chocolate-chip-cookies": {
-    "favorite": true,
-    "pinned": true
-  },
-  "demo-team-sync": {
-    "favorite": true,
-    "pinned": false
-  },
-  "demo-project-ideas": {
-    "favorite": false,
-    "pinned": true
-  }
-};
-
-// Helper to set a deterministic state for testing
-async function resetStateFile() {
-  await fs.writeFile(STATE_FILE_PATH, JSON.stringify(TEST_STATE, null, 2));
-}
 
 test.describe('Demo Mode (localStorage isolation)', () => {
 
@@ -43,7 +18,7 @@ test.describe('Demo Mode (localStorage isolation)', () => {
 
   test.afterAll(async () => {
     // Restore the user's pristine vault state
-    await fs.writeFile(STATE_FILE_PATH, originalState);
+    await restoreOriginalState(originalState);
   });
 
   test('Client Write & FS Isolation: Toggling favorite uses localstorage, ignores FS', async ({ page }) => {

@@ -2,37 +2,13 @@ import { test, expect } from '@playwright/test';
 import fs from 'fs/promises';
 import path from 'path';
 
-const STATE_FILE_PATH = path.resolve(process.cwd(), 'demo-vault/.metadachi.json');
+import { STATE_FILE_PATH, TEST_STATE, manageOriginalState, resetStateFile, restoreOriginalState } from './test-utils';
 
 let originalState: string = '{}';
 
 test.beforeAll(async () => {
-  try {
-    originalState = await fs.readFile(STATE_FILE_PATH, 'utf-8');
-  } catch {
-    originalState = '{}';
-  }
+  originalState = await manageOriginalState();
 });
-
-const TEST_STATE = {
-  "demo-chocolate-chip-cookies": {
-    "favorite": true,
-    "pinned": true
-  },
-  "demo-team-sync": {
-    "favorite": true,
-    "pinned": false
-  },
-  "demo-project-ideas": {
-    "favorite": false,
-    "pinned": true
-  }
-};
-
-// Helper to set a deterministic state for testing
-async function resetStateFile() {
-  await fs.writeFile(STATE_FILE_PATH, JSON.stringify(TEST_STATE, null, 2));
-}
 
 test.describe('Normal Mode (Chokidar & API)', () => {
 
@@ -44,7 +20,7 @@ test.describe('Normal Mode (Chokidar & API)', () => {
 
   test.afterAll(async () => {
     // Restore the user's pristine vault state
-    await fs.writeFile(STATE_FILE_PATH, originalState);
+    await restoreOriginalState(originalState);
   });
 
   test('Client-to-FS Write: Toggling favorite updates the filesystem JSON', async ({ page, request }) => {
@@ -112,6 +88,21 @@ test.describe('Normal Mode (Chokidar & API)', () => {
     const ideaCard = page.locator('.h-full.cursor-pointer', { hasText: 'Project Ideas' }).first();
     const pinButton = ideaCard.locator('button:has(svg.lucide-pin)');
     await expect(pinButton.locator('svg')).toHaveClass(/fill-current/);
+  });
+
+  test('API Resilience: Malformed POST payloads are rejected cleanly', async ({ request }) => {
+    // 1. Missing body entirely
+    const resp1 = await request.post('/api/vault/favorite', { data: {} });
+    expect(resp1.status()).toBe(400);
+
+    // 2. Corrupting explicit payload property types (string boolean)
+    const resp2 = await request.post('/api/vault/pin', {
+      data: {
+        id: 'demo-chocolate-chip-cookies',
+        pinned: "NOT_A_BOOLEAN"
+      }
+    });
+    expect(resp2.status()).toBe(400);
   });
 
 });
