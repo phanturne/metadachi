@@ -59,14 +59,22 @@ export function useVault() {
     queryClient.invalidateQueries({ queryKey: ['vault-cards'] });
   }, [queryClient]);
 
-  // Simple polling fallback — file watching requires a separate mechanism
-  // For now, poll every 10s as a lightweight refresh strategy
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || isDemoMode) return;
     
-    const interval = setInterval(refresh, 10_000);
-    return () => clearInterval(interval);
-  }, [refresh]);
+    // Connect to Server-Sent Events stream for true real-time syncing
+    const eventSource = new EventSource('/api/vault/stream');
+    
+    eventSource.onmessage = (e) => {
+      if (e.data === 'update') {
+        refresh();
+      }
+    };
+    
+    return () => {
+      eventSource.close();
+    };
+  }, [refresh, isDemoMode]);
 
   const togglePinMutation = useMutation({
     mutationFn: async ({ id, pinned }: { id: string; pinned: boolean }) => {

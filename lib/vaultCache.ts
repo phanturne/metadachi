@@ -2,6 +2,7 @@ import chokidar, { FSWatcher } from 'chokidar';
 import { parseFile, readVault, VAULT_PATH } from './vault';
 import { VaultFile } from './types';
 import { getStates } from './stateDb';
+import { EventEmitter } from 'events';
 
 // Prevent multiple instances in development
 const globalForVaultCache = globalThis as unknown as {
@@ -10,6 +11,7 @@ const globalForVaultCache = globalThis as unknown as {
 
 class VaultCacheSingleton {
   public files: Map<string, VaultFile> = new Map();
+  public events = new EventEmitter();
   private isReady: boolean = false;
   private watcher: FSWatcher | null = null;
   private syncDone: boolean = false;
@@ -68,6 +70,7 @@ class VaultCacheSingleton {
         file.meta.favorite = state.favorite ?? false;
         this.files.set(path, file);
       }
+      this.events.emit('update');
       return;
     }
 
@@ -83,11 +86,15 @@ class VaultCacheSingleton {
          parsed.meta.favorite = state.favorite;
       }
       this.files.set(filePath, parsed);
+      this.events.emit('update');
     }
   }
 
   private handleFileRemove(filePath: string) {
-    this.files.delete(filePath);
+    if (this.files.has(filePath)) {
+      this.files.delete(filePath);
+      this.events.emit('update');
+    }
   }
 
   public getVaultFiles(): VaultFile[] {
