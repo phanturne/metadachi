@@ -1,0 +1,14 @@
+{
+  "demo-chocolate-chip-cookies": {
+    "favorite": true,
+    "pinned": true
+  },
+  "demo-team-sync": {
+    "favorite": true,
+    "pinned": false
+  },
+  "demo-project-ideas": {
+    "favorite": false,
+    "pinned": true
+  }
+}

@@ -1,5 +1,5 @@
 import chokidar, { FSWatcher } from 'chokidar';
-import { parseFile, readVault, VAULT_PATH } from './vault';
+import { parseFile, readVault, VAULT_PATH, getVaultConfig } from './vault';
 import { VaultFile } from './types';
 import { getStates } from './stateDb';
 import { EventEmitter } from 'events';
@@ -43,10 +43,14 @@ class VaultCacheSingleton {
 
     this.watcher = chokidar.watch(VAULT_PATH, {
       ignored: (filePath: string) => {
-        // Ignore dotfiles/dotdirectories EXCEPT .metadachi.json
+        // Ignore dotfiles/dotdirectories EXCEPT .metadachi
         const basename = filePath.split(/[\\/]/).pop();
         if (!basename) return false;
-        return basename.startsWith('.') && basename !== '.metadachi.json';
+        // Don't ignore the .metadachi folder or files inside it.
+        // Match only a path segment literally named ".metadachi".
+        const inMetadachiDir = /(^|[\\/])\.metadachi([\\/]|$)/.test(filePath);
+        if (inMetadachiDir) return false;
+        return basename.startsWith('.');
       },
       persistent: true,
       ignoreInitial: true // Initial reads were done synchronously
@@ -59,8 +63,8 @@ class VaultCacheSingleton {
   }
 
   private handleFileEvent(filePath: string) {
-    if (filePath.endsWith('.metadachi.json')) {
-      console.log('[VaultCache] .metadachi.json updated, applying states...');
+    if (filePath.endsWith('state.json') || filePath.endsWith('.metadachi.json')) {
+      console.log('[VaultCache] State updated, applying states...');
       const states = getStates();
       for (const [path, file] of this.files.entries()) {
         const state = states[file.meta.id] || {};
@@ -74,8 +78,26 @@ class VaultCacheSingleton {
       return;
     }
 
+    if (filePath.endsWith('config.json')) {
+      console.log('[VaultCache] config.json updated, re-evaluating core types... (this usually requires full reload of data, emitting update)');
+      // For now, we will just clear and reload or let the client refetch.
+      // Easiest is to force a re-read of the vault files, but let's just re-parse what we have
+      const config = getVaultConfig();
+      for (const [p, file] of this.files.entries()) {
+          const freshParse = parseFile(p, config);
+          if (freshParse) {
+             freshParse.meta.pinned = file.meta.pinned;
+             freshParse.meta.favorite = file.meta.favorite;
+             this.files.set(p, freshParse);
+          }
+      }
+      this.events.emit('update');
+      return;
+    }
+
     if (!filePath.endsWith('.md')) return;
-    const parsed = parseFile(filePath);
+    const config = getVaultConfig();
+    const parsed = parseFile(filePath, config);
     if (parsed) {
       const states = getStates();
       const state = states[parsed.meta.id];

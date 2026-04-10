@@ -1,4 +1,16 @@
-export type CardType = 'recipe' | 'meeting' | 'note' | 'reference' | 'default';
+export type CardType = string;
+
+export interface TypeConfig {
+  id: string;
+  label: string;
+  inferFromPath?: string;
+  inferFromContent?: string;
+}
+
+export interface VaultConfig {
+  types?: TypeConfig[];
+  filterBarOrder?: string[];
+}
 
 export interface CardMeta {
   id: string;

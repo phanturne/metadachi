@@ -1,16 +1,21 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { CardType } from '@/lib/types';
+import { CardType, VaultConfig } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { Reorder } from 'framer-motion';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 interface FilterBarProps {
   selected: CardType | 'all';
   onSelect: (type: CardType | 'all') => void;
   counts: Record<CardType | 'all', number>;
+  config: VaultConfig | null;
+  /** When false, show a placeholder so we never paint the hardcoded default order before real config loads (avoids reorder flash on refresh). */
+  vaultReady: boolean;
 }
 
-const TYPES: Array<{ value: CardType | 'all'; label: string }> = [
+const DEFAULT_TYPES = [
   { value: 'all', label: 'All' },
   { value: 'recipe', label: 'Recipes' },
   { value: 'meeting', label: 'Meetings' },
@@ -19,29 +24,98 @@ const TYPES: Array<{ value: CardType | 'all'; label: string }> = [
   { value: 'default', label: 'Other' },
 ];
 
-export function FilterBar({ selected, onSelect, counts }: FilterBarProps) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {TYPES.map(({ value, label }) => {
-        const isActive = selected === value;
-        return (
-          <Badge
+export function FilterBar({ selected, onSelect, counts, config, vaultReady }: FilterBarProps) {
+  const [items, setItems] = useState<Array<{ value: string; label: string }>>([]);
+  const latestItemsRef = useRef(items);
+  useLayoutEffect(() => {
+    latestItemsRef.current = items;
+  }, [items]);
+
+  useLayoutEffect(() => {
+    if (!vaultReady) return;
+    const order = config?.filterBarOrder;
+    if (order?.length) {
+      const generated = order.map((id) => {
+        if (id === 'all') return { value: 'all', label: 'All' };
+        const found = config?.types?.find((t) => t.id === id);
+        return { value: id, label: found?.label || (id === 'default' ? 'Other' : id) };
+      });
+      setItems(generated);
+    } else {
+      setItems(DEFAULT_TYPES);
+    }
+  }, [config, vaultReady]);
+
+  if (!vaultReady) {
+    return (
+      <div
+        className="flex flex-wrap gap-2 m-0 p-0 list-none"
+        aria-busy="true"
+        aria-label="Loading filters"
+      >
+        {DEFAULT_TYPES.map(({ value }, i) => (
+          <div
             key={value}
-            variant={isActive ? 'default' : 'outline'}
-            onClick={() => onSelect(value)}
             className={cn(
-              "cursor-pointer px-4 py-3 rounded-full transition-all text-sm font-medium"
+              'h-6 rounded-full bg-muted animate-pulse',
+              ['w-10', 'w-[4.25rem]', 'w-[4.75rem]', 'w-12', 'w-20', 'w-14'][i]
             )}
-          >
-            {label}
-            {counts[value] !== undefined && (
-              <span className="ml-1.5 text-[0.65rem] opacity-70 font-normal">
-                {counts[value]}
-              </span>
-            )}
-          </Badge>
+          />
+        ))}
+      </div>
+    );
+  }
+
+  const handleReorder = async (newOrder: Array<{ value: string; label: string }>) => {
+    const prev = latestItemsRef.current;
+    setItems(newOrder); // Optimistic update
+
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filterBarOrder: newOrder.map(i => i.value) }),
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to update config order (${res.status})`);
+      }
+    } catch (e) {
+      console.error('Failed to update config order', e);
+      setItems(prev); // Revert optimistic update if persist failed
+    }
+  };
+
+  return (
+    <Reorder.Group
+      axis="x"
+      values={items}
+      onReorder={handleReorder}
+      className="flex flex-wrap gap-2 m-0 p-0 list-none"
+    >
+      {items.map((item) => {
+        const isActive = selected === item.value;
+        const count = counts[item.value] || 0;
+        return (
+          <Reorder.Item key={item.value} value={item} className="list-none" data-testid={`filter-reorder-${item.value}`}>
+            <Badge
+              variant={isActive ? 'default' : 'outline'}
+              onClick={() => onSelect(item.value)}
+              data-testid={`filter-chip-${item.value}`}
+              className={cn(
+                'cursor-grab active:cursor-grabbing px-4 py-3 rounded-full transition-all text-sm font-medium',
+                isActive && 'shadow-md'
+              )}
+            >
+              {item.label}
+              {count > 0 && (
+                <span className="ml-1.5 text-[0.65rem] opacity-70 font-normal">
+                  {count}
+                </span>
+              )}
+            </Badge>
+          </Reorder.Item>
         );
       })}
-    </div>
+    </Reorder.Group>
   );
 }

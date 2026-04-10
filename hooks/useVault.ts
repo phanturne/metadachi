@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useEffect, useCallback, useRef } from 'react';
-import { Card } from '@/lib/types';
+import { Card, VaultConfig } from '@/lib/types';
 
 const DEMO_LOCAL_STORAGE_KEY = 'metadachi-demo-state';
 
@@ -28,16 +28,20 @@ export function useVault() {
   const watcherRef = useRef<boolean>(false);
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
-  const { data: cards = [] } = useQuery<Card[]>({
+  const { data = { cards: [], config: null }, isPending: isVaultPending } = useQuery<{
+    cards: Card[];
+    config: VaultConfig | null;
+  }>({
     queryKey: ['vault-cards'],
     queryFn: async () => {
       const res = await fetch('/api/vault');
       const json = await res.json();
       const fetchedCards = json.cards as Card[];
+      const config = json.config as VaultConfig;
 
       if (isDemoMode) {
         const demoState = getDemoState();
-        return fetchedCards.map(card => {
+        const demoCards = fetchedCards.map(card => {
           const state = demoState[card.id];
           if (state) {
             return {
@@ -48,12 +52,16 @@ export function useVault() {
           }
           return card;
         });
+        return { cards: demoCards, config };
       }
 
-      return fetchedCards;
+      return { cards: fetchedCards, config };
     },
     staleTime: 30_000,
   });
+
+  const cards = data.cards;
+  const config = data.config;
 
   const refresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['vault-cards'] });
@@ -93,18 +101,21 @@ export function useVault() {
     },
     onMutate: async ({ id, pinned }) => {
       await queryClient.cancelQueries({ queryKey: ['vault-cards'] });
-      const previousCards = queryClient.getQueryData<Card[]>(['vault-cards']);
+      const previous = queryClient.getQueryData<{ cards: Card[]; config: VaultConfig | null }>(['vault-cards']);
       
-      queryClient.setQueryData<Card[]>(['vault-cards'], (old) => {
+      queryClient.setQueryData<{ cards: Card[]; config: VaultConfig | null }>(['vault-cards'], (old) => {
         if (!old) return old;
-        return old.map(card => card.id === id ? { ...card, pinned } : card);
+        return {
+          ...old,
+          cards: old.cards.map(card => card.id === id ? { ...card, pinned } : card),
+        };
       });
       
-      return { previousCards };
+      return { previous };
     },
     onError: (err, variables, context) => {
-      if (context?.previousCards) {
-        queryClient.setQueryData(['vault-cards'], context.previousCards);
+      if (context?.previous) {
+        queryClient.setQueryData(['vault-cards'], context.previous);
       }
     },
     onSettled: () => {
@@ -131,18 +142,21 @@ export function useVault() {
     },
     onMutate: async ({ id, favorite }) => {
       await queryClient.cancelQueries({ queryKey: ['vault-cards'] });
-      const previousCards = queryClient.getQueryData<Card[]>(['vault-cards']);
+      const previous = queryClient.getQueryData<{ cards: Card[]; config: VaultConfig | null }>(['vault-cards']);
       
-      queryClient.setQueryData<Card[]>(['vault-cards'], (old) => {
+      queryClient.setQueryData<{ cards: Card[]; config: VaultConfig | null }>(['vault-cards'], (old) => {
         if (!old) return old;
-        return old.map(card => card.id === id ? { ...card, favorite } : card);
+        return {
+          ...old,
+          cards: old.cards.map(card => card.id === id ? { ...card, favorite } : card),
+        };
       });
       
-      return { previousCards };
+      return { previous };
     },
     onError: (err, variables, context) => {
-      if (context?.previousCards) {
-        queryClient.setQueryData(['vault-cards'], context.previousCards);
+      if (context?.previous) {
+        queryClient.setQueryData(['vault-cards'], context.previous);
       }
     },
     onSettled: () => {
@@ -160,5 +174,5 @@ export function useVault() {
     toggleFavoriteMutation.mutate({ id, favorite: !currentFavorite });
   };
 
-  return { cards, refresh, togglePin, toggleFavorite };
+  return { cards, config, isVaultPending, refresh, togglePin, toggleFavorite };
 }

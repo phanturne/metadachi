@@ -11,7 +11,7 @@ import { Card, CardType } from '@/lib/types';
 import { useMemo, useState } from 'react';
 
 export function ClientVault() {
-  const { cards } = useVault();
+  const { cards, config, isVaultPending } = useVault();
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<CardType | 'all'>('all');
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export function ClientVault() {
   }, [cards, typeFilter, query]);
 
   const counts = useMemo(() => {
-    const c: Record<CardType | 'all', number> = { all: cards.length, recipe: 0, meeting: 0, note: 0, reference: 0, default: 0 };
+    const c: Record<string, number> = { all: cards.length };
     for (const card of cards) {
       c[card.type] = (c[card.type] ?? 0) + 1;
     }
@@ -49,7 +49,13 @@ export function ClientVault() {
 
       <div className="flex flex-col gap-4 mb-8">
         <SearchBar value={query} onChange={setQuery} />
-        <FilterBar selected={typeFilter} onSelect={setTypeFilter} counts={counts} />
+        <FilterBar
+          selected={typeFilter}
+          onSelect={setTypeFilter}
+          counts={counts}
+          config={config}
+          vaultReady={!isVaultPending}
+        />
       </div>
 
       {favorite.length > 0 && (
