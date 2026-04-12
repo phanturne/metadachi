@@ -6,11 +6,12 @@ const port = new URL(baseURL).port || 3000;
 
 export default defineConfig({
   testDir: './tests',
+  timeout: 45_000,
   // Next.js dev server modifies shared files, so we disable parallel runs to keep environment isolation.
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: 1, 
+  retries: process.env.CI ? 1 : 0,
+  workers: 1,
   reporter: 'html',
   use: {
     baseURL,
@@ -25,7 +26,8 @@ export default defineConfig({
   webServer: {
     command: `cross-env NEXT_PUBLIC_DEMO_MODE=${process.env.NEXT_PUBLIC_DEMO_MODE || 'false'} VAULT_PATH=${process.env.VAULT_PATH || './demo-vault'} pnpm run dev --port ${port}`,
     url: baseURL,
-    reuseExistingServer: false,
+    // Set PW_REUSE_SERVER=1 locally if you already have a matching dev server (same port + env).
+    reuseExistingServer: process.env.PW_REUSE_SERVER === '1',
     timeout: 120 * 1000,
   },
 });

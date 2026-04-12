@@ -20,7 +20,7 @@ Welcome to the Metadachi codebase! This document serves as a guide for AI agents
 ## 3. Directory Structure
 
 - `app/`: Next.js App Router pages and layouts. Keep routing logic thin.
-- `components/`: React components specific to the application features (e.g., `ClientVault`, `BentoGrid`, `FilterBar`).
+- `components/`: React components specific to the application features (e.g., `ClientVault`, `BentoGrid`, `FilterBar`, `VaultMarkdownWorkspace` for the file-tree + markdown editor layout, `VaultFileTree` for the sidebar tree).
   - `components/ui/`: Reusable, generic UI components (buttons, dialogs, cards).
   - `components/cards/`: Specialized components for rendering different `CardType` layouts (`PolymorphicCard`).
 - `lib/`: Core business logic, types, and utility functions.

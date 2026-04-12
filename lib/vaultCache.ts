@@ -1,5 +1,5 @@
 import chokidar, { FSWatcher } from 'chokidar';
-import { parseFile, readVault, VAULT_PATH, getVaultConfig } from './vault';
+import { parseFile, readVault, VAULT_PATH, getVaultConfig, canonicalVaultFilePath } from './vault';
 import { VaultFile } from './types';
 import { getStates } from './stateDb';
 import { EventEmitter } from 'events';
@@ -15,6 +15,7 @@ class VaultCacheSingleton {
   private isReady: boolean = false;
   private watcher: FSWatcher | null = null;
   private syncDone: boolean = false;
+  private updateEmitTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.init();
@@ -62,6 +63,15 @@ class VaultCacheSingleton {
       .on('unlink', (filePath: string) => this.handleFileRemove(filePath));
   }
 
+  /** Coalesce rapid FS events so the Node thread is not saturated and SSE clients are not flooded. */
+  private emitUpdate() {
+    if (this.updateEmitTimer) return;
+    this.updateEmitTimer = setTimeout(() => {
+      this.updateEmitTimer = null;
+      this.events.emit('update');
+    }, 100);
+  }
+
   private handleFileEvent(filePath: string) {
     if (filePath.endsWith('state.json') || filePath.endsWith('.metadachi.json')) {
       console.log('[VaultCache] State updated, applying states...');
@@ -74,7 +84,7 @@ class VaultCacheSingleton {
         file.meta.favorite = state.favorite ?? false;
         this.files.set(path, file);
       }
-      this.events.emit('update');
+      this.emitUpdate();
       return;
     }
 
@@ -91,7 +101,7 @@ class VaultCacheSingleton {
              this.files.set(p, freshParse);
           }
       }
-      this.events.emit('update');
+      this.emitUpdate();
       return;
     }
 
@@ -107,15 +117,16 @@ class VaultCacheSingleton {
       if (state && state.favorite !== undefined) {
          parsed.meta.favorite = state.favorite;
       }
-      this.files.set(filePath, parsed);
-      this.events.emit('update');
+      this.files.set(parsed.path, parsed);
+      this.emitUpdate();
     }
   }
 
   private handleFileRemove(filePath: string) {
-    if (this.files.has(filePath)) {
-      this.files.delete(filePath);
-      this.events.emit('update');
+    const key = canonicalVaultFilePath(filePath);
+    if (this.files.has(key)) {
+      this.files.delete(key);
+      this.emitUpdate();
     }
   }
 

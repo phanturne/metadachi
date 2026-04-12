@@ -6,16 +6,37 @@ import { PolymorphicCard } from '@/components/cards';
 import { FilterBar } from '@/components/FilterBar';
 import { SearchBar } from '@/components/SearchBar';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { VaultMarkdownWorkspace } from '@/components/VaultMarkdownWorkspace';
 import { useVault } from '@/hooks/useVault';
-import { Card, CardType } from '@/lib/types';
-import { useMemo, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { CardType } from '@/lib/types';
+import { useEffect, useMemo, useState } from 'react';
+
+const VIEW_STORAGE_KEY = 'metadachi-vault-view';
+
+type VaultViewMode = 'cards' | 'tree';
+
+function readStoredView(): VaultViewMode {
+  if (typeof window === 'undefined') return 'cards';
+  try {
+    const v = localStorage.getItem(VIEW_STORAGE_KEY);
+    if (v === 'tree' || v === 'cards') return v;
+  } catch {
+    /* ignore */
+  }
+  return 'cards';
+}
 
 export function ClientVault() {
   const { cards, config, isVaultPending } = useVault();
+  const [viewMode, setViewMode] = useState<VaultViewMode>('cards');
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<CardType | 'all'>('all');
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const selectedCard = useMemo(() => cards.find(c => c.id === selectedCardId) || null, [cards, selectedCardId]);
+  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
+  const selectedCard = useMemo(
+    () => cards.find(c => c.filePath === selectedFilePath) || null,
+    [cards, selectedFilePath]
+  );
 
   const filtered = useMemo(() => {
     return cards.filter(card => {
@@ -40,6 +61,19 @@ export function ClientVault() {
   const favorite = useMemo(() => filtered.filter(c => c.favorite), [filtered]);
   const rest = useMemo(() => filtered.filter(c => !c.pinned && !c.favorite), [filtered]);
 
+  useEffect(() => {
+    setViewMode(readStoredView());
+  }, []);
+
+  const persistViewMode = (mode: VaultViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, mode);
+    } catch {
+      /* ignore */
+    }
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto p-6 sm:p-8">
       <header className="mb-8 flex justify-between items-center">
@@ -56,8 +90,38 @@ export function ClientVault() {
           config={config}
           vaultReady={!isVaultPending}
         />
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            data-testid="vault-view-cards"
+            aria-pressed={viewMode === 'cards'}
+            onClick={() => persistViewMode('cards')}
+            className={cn(
+              'rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors',
+              viewMode === 'cards' ? 'bg-muted text-foreground' : 'bg-background text-muted-foreground hover:bg-muted/50'
+            )}
+          >
+            Cards
+          </button>
+          <button
+            type="button"
+            data-testid="vault-view-tree"
+            aria-pressed={viewMode === 'tree'}
+            onClick={() => persistViewMode('tree')}
+            className={cn(
+              'rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors',
+              viewMode === 'tree' ? 'bg-muted text-foreground' : 'bg-background text-muted-foreground hover:bg-muted/50'
+            )}
+          >
+            Tree
+          </button>
+        </div>
       </div>
 
+      {viewMode === 'tree' ? (
+        <VaultMarkdownWorkspace cards={filtered} />
+      ) : (
+        <>
       {favorite.length > 0 && (
         <section className="mb-8">
           <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
@@ -65,7 +129,7 @@ export function ClientVault() {
           </h2>
           <BentoGrid>
             {favorite.map(card => (
-              <div key={card.id} onClick={() => setSelectedCardId(card.id)} style={{ cursor: 'pointer' }}>
+              <div key={card.filePath} onClick={() => setSelectedFilePath(card.filePath)} style={{ cursor: 'pointer' }}>
                 <PolymorphicCard card={card} />
               </div>
             ))}
@@ -80,7 +144,7 @@ export function ClientVault() {
           </h2>
           <BentoGrid>
             {pinned.map(card => (
-              <div key={card.id} onClick={() => setSelectedCardId(card.id)} style={{ cursor: 'pointer' }}>
+              <div key={card.filePath} onClick={() => setSelectedFilePath(card.filePath)} style={{ cursor: 'pointer' }}>
                 <PolymorphicCard card={card} />
               </div>
             ))}
@@ -104,7 +168,7 @@ export function ClientVault() {
         ) : (
           <BentoGrid>
             {rest.map(card => (
-              <div key={card.id} onClick={() => setSelectedCardId(card.id)} style={{ cursor: 'pointer' }}>
+              <div key={card.filePath} onClick={() => setSelectedFilePath(card.filePath)} style={{ cursor: 'pointer' }}>
                 <PolymorphicCard card={card} />
               </div>
             ))}
@@ -112,7 +176,9 @@ export function ClientVault() {
         )}
       </section>
 
-      <CardModal card={selectedCard} onClose={() => setSelectedCardId(null)} />
+      <CardModal card={selectedCard} onClose={() => setSelectedFilePath(null)} />
+        </>
+      )}
     </div>
   );
 }

@@ -27,6 +27,9 @@ const DEFAULT_TYPES = [
 export function FilterBar({ selected, onSelect, counts, config, vaultReady }: FilterBarProps) {
   const [items, setItems] = useState<Array<{ value: string; label: string }>>([]);
   const latestItemsRef = useRef(items);
+  /** Avoid resetting Reorder when React Query returns a new `config` object with identical content (every refetch). */
+  const lastConfigItemsSig = useRef<string>('');
+
   useLayoutEffect(() => {
     latestItemsRef.current = items;
   }, [items]);
@@ -34,16 +37,18 @@ export function FilterBar({ selected, onSelect, counts, config, vaultReady }: Fi
   useLayoutEffect(() => {
     if (!vaultReady) return;
     const order = config?.filterBarOrder;
-    if (order?.length) {
-      const generated = order.map((id) => {
-        if (id === 'all') return { value: 'all', label: 'All' };
-        const found = config?.types?.find((t) => t.id === id);
-        return { value: id, label: found?.label || (id === 'default' ? 'Other' : id) };
-      });
-      setItems(generated);
-    } else {
-      setItems(DEFAULT_TYPES);
-    }
+    const generated =
+      order?.length && order.length > 0
+        ? order.map((id) => {
+            if (id === 'all') return { value: 'all', label: 'All' };
+            const found = config?.types?.find((t) => t.id === id);
+            return { value: id, label: found?.label || (id === 'default' ? 'Other' : id) };
+          })
+        : DEFAULT_TYPES;
+    const sig = JSON.stringify(generated.map((i) => [i.value, i.label]));
+    if (sig === lastConfigItemsSig.current) return;
+    lastConfigItemsSig.current = sig;
+    setItems(generated);
   }, [config, vaultReady]);
 
   if (!vaultReady) {

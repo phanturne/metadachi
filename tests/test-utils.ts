@@ -11,7 +11,7 @@ export const TEST_STATE = {
     pinned: true,
   },
   'demo-team-sync': {
-    favorite: true,
+    favorite: false,
     pinned: false,
   },
   'demo-project-ideas': {

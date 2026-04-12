@@ -1,12 +1,25 @@
 import fs from 'fs';
-import path from 'path';
 import matter from 'gray-matter';
-import { Card, CardMeta, VaultFile, CardType, VaultConfig } from './types';
+import path from 'path';
+import { Card, CardMeta, CardType, VaultConfig, VaultFile } from './types';
 
 const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 const rawVaultPath = (isDemoMode ? (process.env.DEMO_VAULT_PATH || './demo-vault') : process.env.VAULT_PATH) || '';
 
-const VAULT_PATH = path.resolve(process.cwd(), rawVaultPath);
+const resolvedVaultBase = path.resolve(process.cwd(), rawVaultPath);
+
+/** One physical path per file on case-insensitive volumes (e.g. APFS default). */
+export function canonicalVaultFilePath(filePath: string): string {
+  try {
+    return fs.realpathSync.native(filePath);
+  } catch {
+    return path.resolve(filePath);
+  }
+}
+
+const VAULT_PATH = fs.existsSync(resolvedVaultBase)
+  ? canonicalVaultFilePath(resolvedVaultBase)
+  : resolvedVaultBase;
 
 function generateId(filePath: string): string {
   // Use relative path as stable ID
@@ -65,23 +78,24 @@ function inferType(filePath: string, content: string, frontmatter: Record<string
 
 export function parseFile(filePath: string, config: VaultConfig): VaultFile | null {
   try {
-    const raw = fs.readFileSync(filePath, 'utf-8');
+    const resolvedPath = canonicalVaultFilePath(filePath);
+    const raw = fs.readFileSync(resolvedPath, 'utf-8');
     const { data, content } = matter(raw);
-    const stats = fs.statSync(filePath);
-    
-    const type = inferType(filePath, content, data, config);
-    
+    const stats = fs.statSync(resolvedPath);
+
+    const type = inferType(resolvedPath, content, data, config);
+
     const meta: CardMeta = {
-      id: (data.id as string) || generateId(filePath),
+      id: (data.id as string) || generateId(resolvedPath),
       type,
-      title: (data.title as string) || path.basename(filePath, '.md'),
+      title: (data.title as string) || path.basename(resolvedPath, '.md'),
       created: (data.created as string) || stats.birthtime.toISOString(),
       tags: (data.tags as string[]) || [],
       pinned: (data.pinned as boolean) || false,
       favorite: (data.favorite as boolean) || false,
     };
 
-    return { path: filePath, meta, rawContent: content.trim() };
+    return { path: resolvedPath, meta, rawContent: content.trim() };
   } catch {
     return null;
   }
@@ -95,11 +109,24 @@ export function readVault(): VaultFile[] {
   const files: VaultFile[] = [];
 
   const config = getVaultConfig();
+  /** Prevents symlink cycles / revisiting the same directory on case-insensitive FS. */
+  const visitedDirs = new Set<string>();
 
   function walk(dir: string) {
+    let dirKey: string;
+    try {
+      dirKey = fs.realpathSync.native(dir);
+    } catch {
+      dirKey = path.resolve(dir);
+    }
+    if (visitedDirs.has(dirKey)) return;
+    visitedDirs.add(dirKey);
+
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const full = path.join(dir, entry.name);
+      // Do not follow symlinks: avoids infinite recursion, huge trees, and blocking the Node event loop.
+      if (entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) {
         if (entry.name !== '.metadachi') {
           walk(full);
@@ -120,6 +147,7 @@ export function cardsFromVault(files: VaultFile[]): Card[] {
     ...f.meta,
     rawContent: f.rawContent,
     filePath: f.path,
+    relativePath: path.relative(VAULT_PATH, f.path).replace(/\\/g, '/'),
   }));
 }
 

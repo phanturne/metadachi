@@ -8,5 +8,6 @@ export async function GET() {
   const files = vaultCache.getVaultFiles();
   const cards = cardsFromVault(files);
   const config = getVaultConfig();
-  return NextResponse.json({ files, cards, config });
+  // Omit `files`: same markdown as `cards[].rawContent` — halved payload and JSON parse cost on refresh.
+  return NextResponse.json({ cards, config });
 }

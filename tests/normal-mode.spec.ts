@@ -57,12 +57,12 @@ test.describe('Normal Mode (Chokidar & API)', () => {
       "demo-project-ideas": { favorite: true, pinned: true }
     }, null, 2));
 
-    // Wait for the UI to Auto-Sync
-    // The "Project Ideas" card should appear as favored.
+    // Wait for the UI to auto-sync (SSE → vault refetch). Prefer button chrome over Lucide SVG classes.
+    const favorites = page.locator('section').filter({ has: page.getByRole('heading', { name: /Favorites/i }) });
+    await expect(favorites).toContainText('Exciting Project Ideas', { timeout: 20_000 });
     const ideaCard = page.locator('.h-full.cursor-pointer', { hasText: 'Project Ideas' }).first();
     const favButton = ideaCard.locator('button:has(svg.lucide-heart)');
-    // It should turn red (fill-current is added)
-    await expect(favButton.locator('svg')).toHaveClass(/fill-current/, { timeout: 15000 });
+    await expect(favButton).toHaveClass(/text-red-500/);
   });
 
   test('Data Hydration: State loads correctly on refresh', async ({ page }) => {
@@ -72,22 +72,31 @@ test.describe('Normal Mode (Chokidar & API)', () => {
       "demo-project-ideas": { favorite: false, pinned: false }
     }, null, 2));
 
-    await page.waitForTimeout(200); // Let Chokidar catch up
-    await page.reload();
-    
+    await page.waitForTimeout(500);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForResponse(
+      r => r.url().includes('/api/vault') && r.request().method() === 'GET' && r.ok(),
+      { timeout: 30_000 }
+    );
+
     // Now make it pinned manually via file
     await fs.writeFile(STATE_FILE_PATH, JSON.stringify({
       ...TEST_STATE,
       "demo-project-ideas": { favorite: false, pinned: true }
     }, null, 2));
 
-    await page.waitForTimeout(200); // Let Chokidar catch up
-    // Refresh page
-    await page.reload();
+    const pinned = page.locator('section').filter({ has: page.getByRole('heading', { name: /Pinned/i }) });
+    await expect(pinned).toContainText('Exciting Project Ideas', { timeout: 25_000 });
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForResponse(
+      r => r.url().includes('/api/vault') && r.request().method() === 'GET' && r.ok(),
+      { timeout: 30_000 }
+    );
 
     const ideaCard = page.locator('.h-full.cursor-pointer', { hasText: 'Project Ideas' }).first();
     const pinButton = ideaCard.locator('button:has(svg.lucide-pin)');
-    await expect(pinButton.locator('svg')).toHaveClass(/fill-current/);
+    await expect(pinButton).toHaveClass(/text-yellow-500/);
   });
 
   test('API Resilience: Malformed POST payloads are rejected cleanly', async ({ request }) => {

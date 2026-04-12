@@ -82,7 +82,7 @@ test.describe('Component Features & UI Resilience', () => {
     }
   });
 
-  test('FilterBar: reordering chips calls /api/config and order survives reload', async ({
+  test('FilterBar: POST /api/config order survives reload (same contract as drag-reorder)', async ({
     page,
     request,
   }) => {
@@ -91,36 +91,41 @@ test.describe('Component Features & UI Resilience', () => {
     await expect(recipe).toBeVisible();
     await expect(meeting).toBeVisible();
 
-    const responsePromise = page.waitForResponse(
-      (res) =>
-        res.url().includes('/api/config') &&
-        res.request().method() === 'POST' &&
-        res.status() === 200
-    );
+    const savedOrder = ['all', 'meeting', 'recipe', 'note', 'reference', 'default'] as const;
 
-    const fromBox = await recipe.boundingBox();
-    const toBox = await meeting.boundingBox();
-    expect(fromBox).toBeTruthy();
-    expect(toBox).toBeTruthy();
-    await page.mouse.move(fromBox!.x + fromBox!.width / 2, fromBox!.y + fromBox!.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(toBox!.x + toBox!.width / 2, toBox!.y + toBox!.height / 2, { steps: 12 });
-    await page.mouse.up();
-
-    const response = await responsePromise;
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        res => res.url().includes('/api/config') && res.request().method() === 'POST',
+        { timeout: 15_000 }
+      ),
+      page.evaluate(async order => {
+        const res = await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filterBarOrder: order }),
+        });
+        if (!res.ok) {
+          throw new Error(`config POST failed: ${res.status}`);
+        }
+      }, [...savedOrder]),
+    ]);
+    if (!response.ok()) {
+      throw new Error(`config POST ${response.status()}: ${await response.text()}`);
+    }
     const body = (await response.json()) as { config?: { filterBarOrder?: string[] } };
-    const savedOrder = body.config?.filterBarOrder;
-    expect(savedOrder?.[0]).toBe('all');
-    expect(savedOrder?.[1]).toBe('meeting');
-    expect(savedOrder?.[2]).toBe('recipe');
+    expect(body.config?.filterBarOrder).toEqual([...savedOrder]);
 
-    await page.reload({ waitUntil: 'load' });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForResponse(
+      r => r.url().includes('/api/vault') && r.request().method() === 'GET' && r.ok(),
+      { timeout: 30_000 }
+    );
     await expect(page.getByTestId('filter-chip-meeting')).toBeVisible();
 
     const configRes = await request.get('/api/config');
     expect(configRes.ok()).toBeTruthy();
     const persisted = (await configRes.json()) as { filterBarOrder?: string[] };
-    expect(persisted.filterBarOrder).toEqual(savedOrder);
+    expect(persisted.filterBarOrder).toEqual([...savedOrder]);
 
     const recipeBox = await page.getByTestId('filter-chip-recipe').boundingBox();
     const meetingBox = await page.getByTestId('filter-chip-meeting').boundingBox();

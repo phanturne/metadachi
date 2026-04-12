@@ -4,7 +4,7 @@
     "pinned": true
   },
   "demo-team-sync": {
-    "favorite": true,
+    "favorite": false,
     "pinned": false
   },
   "demo-project-ideas": {

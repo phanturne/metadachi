@@ -24,7 +24,22 @@ export interface CardMeta {
 
 export interface Card extends CardMeta {
   rawContent: string;
+  /** Absolute path on the server; demo-only virtual cards may use vault-relative path only. */
   filePath: string;
+  /** Path relative to vault root (used for tree layout and client-side parsing). */
+  relativePath: string;
+}
+
+/** Browser-only overlay for `NEXT_PUBLIC_DEMO_MODE`; never sent to the server. */
+export interface DemoOverlayV1 {
+  schemaVersion: 1;
+  pinFavoriteById: Record<string, { pinned?: boolean; favorite?: boolean }>;
+  /** Full markdown including frontmatter, keyed by card id. */
+  contentByCardId: Record<string, string>;
+  virtualFiles: Array<{ relativePath: string; raw: string }>;
+  tombstonedIds: string[];
+  /** Demo-only: map stable card id → new vault-relative path (rename/move UI). */
+  renamedByCardId: Record<string, string>;
 }
 
 export interface VaultFile {
