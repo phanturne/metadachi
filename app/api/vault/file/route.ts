@@ -1,11 +1,12 @@
 import { VAULT_PATH } from '@/lib/vault';
+import { getVaultMode } from '@/lib/vaultMode';
 import { resolveSafeVaultMarkdownPath } from '@/lib/vaultPaths';
 import { randomUUID } from 'crypto';
 import fs from 'fs';
 import { NextResponse } from 'next/server';
 import path from 'path';
 
-const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+const isDemoMode = getVaultMode() === 'demo';
 
 function assertWritable() {
   if (isDemoMode) {

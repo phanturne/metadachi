@@ -2,8 +2,9 @@ import fs from 'fs';
 import matter from 'gray-matter';
 import path from 'path';
 import { Card, CardMeta, CardType, VaultConfig, VaultFile } from './types';
+import { getVaultMode } from './vaultMode';
 
-const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+const isDemoMode = getVaultMode() === 'demo';
 const rawVaultPath = (isDemoMode ? (process.env.DEMO_VAULT_PATH || './demo-vault') : process.env.VAULT_PATH) || '';
 
 const resolvedVaultBase = path.resolve(process.cwd(), rawVaultPath);

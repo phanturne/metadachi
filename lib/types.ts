@@ -30,7 +30,7 @@ export interface Card extends CardMeta {
   relativePath: string;
 }
 
-/** Browser-only overlay for `NEXT_PUBLIC_DEMO_MODE`; never sent to the server. */
+/** Browser-only overlay for demo mode; never sent to the server. */
 export interface DemoOverlayV1 {
   schemaVersion: 1;
   pinFavoriteById: Record<string, { pinned?: boolean; favorite?: boolean }>;

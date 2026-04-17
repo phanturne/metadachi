@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { setState } from '@/lib/stateDb';
 import { vaultCache } from '@/lib/vaultCache';
+import { getVaultMode } from '@/lib/vaultMode';
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
 
-    if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    if (getVaultMode() === 'demo') {
       return NextResponse.json({ success: true, fake: true });
     }
 

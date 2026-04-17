@@ -1,17 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Eye } from 'lucide-react'; // use lucide-react eye icon
+import { Eye } from 'lucide-react';
+import { getVaultMode } from '@/lib/vaultMode';
 
 export function DemoBadge() {
-  const [isDemo, setIsDemo] = useState(false);
-
-  useEffect(() => {
-    setIsDemo(process.env.NEXT_PUBLIC_DEMO_MODE === 'true');
-  }, []);
-
-  if (!isDemo) return null;
+  if (getVaultMode() !== 'demo') return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50">

@@ -28,7 +28,8 @@ export type VaultMarkdownWorkspaceProps = {
 
 export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
   const {
-    isDemoMode,
+    mode,
+    capabilities,
     saveVaultFileAsync,
     addVaultFile,
     removeVaultFile,
@@ -37,6 +38,7 @@ export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
     vaultFileBusy,
     allCards,
   } = useVault();
+  const isDemoMode = mode === 'demo';
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
@@ -103,12 +105,14 @@ export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
 
   const handleRemove = () => {
     if (!selected) return;
+    if (!capabilities.canDeleteFile) return;
     removeVaultFile(selected.id, selected.relativePath);
     setSelectedId(null);
   };
 
   const openRename = () => {
     if (!selected) return;
+    if (!capabilities.canRelocateFile) return;
     setRenameBasename(basenameRel(selected.relativePath));
     setRelocateError(null);
     setRenameOpen(true);
@@ -116,6 +120,7 @@ export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
 
   const openMove = () => {
     if (!selected) return;
+    if (!capabilities.canRelocateFile) return;
     setMoveTargetFolder(dirnameRel(selected.relativePath));
     setRelocateError(null);
     setMoveOpen(true);
@@ -123,6 +128,7 @@ export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
 
   const submitRename = async () => {
     if (!selected) return;
+    if (!capabilities.canRelocateFile) return;
     const name = renameBasename.trim();
     if (!name || !name.endsWith('.md')) {
       setRelocateError('File name must end with .md');
@@ -143,6 +149,7 @@ export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
 
   const submitMove = async () => {
     if (!selected) return;
+    if (!capabilities.canRelocateFile) return;
     const base = basenameRel(selected.relativePath);
     const toRel = joinRel(moveTargetFolder, base);
     if (toRel === selected.relativePath) {
@@ -172,7 +179,7 @@ export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
               <Plus className="size-3.5" />
               New note
             </Button>
-            {isDemoMode && (
+            {capabilities.canResetOverlay && (
               <Button
                 type="button"
                 size="sm"
@@ -203,14 +210,38 @@ export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
               <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
                 <p className="truncate text-xs text-muted-foreground font-mono">{selected.relativePath}</p>
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" size="sm" variant="outline" className="gap-1" onClick={openRename}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="gap-1"
+                    onClick={openRename}
+                    disabled={!capabilities.canRelocateFile}
+                    title={!capabilities.canRelocateFile ? 'Rename is unavailable in this mode.' : undefined}
+                  >
                     Rename…
                   </Button>
-                  <Button type="button" size="sm" variant="outline" className="gap-1" onClick={openMove}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="gap-1"
+                    onClick={openMove}
+                    disabled={!capabilities.canRelocateFile}
+                    title={!capabilities.canRelocateFile ? 'Move is unavailable in this mode.' : undefined}
+                  >
                     <Folder className="size-3.5" />
                     Move…
                   </Button>
-                  <Button type="button" size="sm" variant="destructive" className="gap-1" onClick={handleRemove}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    className="gap-1"
+                    onClick={handleRemove}
+                    disabled={!capabilities.canDeleteFile}
+                    title={!capabilities.canDeleteFile ? 'Delete is unavailable in this mode.' : undefined}
+                  >
                     <Trash2 className="size-3.5" />
                     Remove
                   </Button>
