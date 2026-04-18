@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Folder, Plus, RotateCcw, Save, Trash2 } from 'lucide-react';
+import { Folder, Plus, Save, Trash2 } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import type { Card } from '@/lib/types';
 import { VaultFileTree } from '@/components/VaultFileTree';
@@ -34,7 +34,6 @@ export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
     addVaultFile,
     removeVaultFile,
     relocateVaultFileAsync,
-    resetDemoOverlay,
     vaultFileBusy,
     allCards,
   } = useVault();
@@ -179,21 +178,6 @@ export function VaultMarkdownWorkspace({ cards }: VaultMarkdownWorkspaceProps) {
               <Plus className="size-3.5" />
               New note
             </Button>
-            {capabilities.canResetOverlay && (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="gap-1 text-muted-foreground"
-                onClick={() => {
-                  resetDemoOverlay();
-                  setSelectedId(null);
-                }}
-              >
-                <RotateCcw className="size-3.5" />
-                Reset local overlay
-              </Button>
-            )}
           </div>
           {cards.length === 0 ? (
             <p className="text-sm text-muted-foreground">No files match the current filters.</p>

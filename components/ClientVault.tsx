@@ -2,6 +2,7 @@
 
 import { BentoGrid } from '@/components/BentoGrid';
 import { CardModal } from '@/components/CardModal';
+import { DemoBadge } from '@/components/DemoBadge';
 import { PolymorphicCard } from '@/components/cards';
 import { FilterBar } from '@/components/FilterBar';
 import { SearchBar } from '@/components/SearchBar';
@@ -77,7 +78,10 @@ export function ClientVault() {
   return (
     <div className="w-full max-w-6xl mx-auto p-6 sm:p-8">
       <header className="mb-8 flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Metadachi</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Metadachi</h1>
+          <DemoBadge />
+        </div>
         <ThemeToggle />
       </header>
 
