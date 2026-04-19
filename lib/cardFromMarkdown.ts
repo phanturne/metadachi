@@ -24,6 +24,9 @@ export function cardFromRawMarkdown(
       tags: (fm.tags as string[]) || [],
       pinned: (fm.pinned as boolean) || false,
       favorite: (fm.favorite as boolean) || false,
+      inbox: typeof fm.inbox === 'boolean' ? fm.inbox : undefined,
+      source: typeof fm.source === 'string' ? fm.source : undefined,
+      suggested_path: typeof fm.suggested_path === 'string' ? fm.suggested_path : undefined,
     };
     return {
       ...meta,

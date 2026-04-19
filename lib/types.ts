@@ -20,6 +20,12 @@ export interface CardMeta {
   tags: string[];
   pinned: boolean;
   favorite: boolean;
+  /** When true (or file lives under `Inbox/`), the card is shown in the Inbox triage section. */
+  inbox?: boolean;
+  /** Optional provenance (e.g. `openclaw`). */
+  source?: string;
+  /** Optional vault-relative path hint for approve destination. */
+  suggested_path?: string;
 }
 
 export interface Card extends CardMeta {

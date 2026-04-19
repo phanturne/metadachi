@@ -94,6 +94,9 @@ export function parseFile(filePath: string, config: VaultConfig): VaultFile | nu
       tags: (data.tags as string[]) || [],
       pinned: (data.pinned as boolean) || false,
       favorite: (data.favorite as boolean) || false,
+      inbox: typeof data.inbox === 'boolean' ? data.inbox : undefined,
+      source: typeof data.source === 'string' ? data.source : undefined,
+      suggested_path: typeof data.suggested_path === 'string' ? data.suggested_path : undefined,
     };
 
     return { path: resolvedPath, meta, rawContent: content.trim() };

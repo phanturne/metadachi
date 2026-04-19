@@ -8,7 +8,9 @@ import { FilterBar } from '@/components/FilterBar';
 import { SearchBar } from '@/components/SearchBar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { VaultMarkdownWorkspace } from '@/components/VaultMarkdownWorkspace';
+import { InboxHomeSection } from '@/components/InboxHomeSection';
 import { useVault } from '@/hooks/useVault';
+import { cardIsInbox } from '@/lib/inbox';
 import { cn } from '@/lib/utils';
 import { CardType } from '@/lib/types';
 import { useEffect, useMemo, useState } from 'react';
@@ -39,8 +41,12 @@ export function ClientVault() {
     [cards, selectedFilePath]
   );
 
+  const galleryPool = useMemo(() => cards.filter(c => !cardIsInbox(c)), [cards]);
+
+  const inboxCards = useMemo(() => cards.filter(cardIsInbox), [cards]);
+
   const filtered = useMemo(() => {
-    return cards.filter(card => {
+    return galleryPool.filter(card => {
       const matchesType = typeFilter === 'all' || card.type === typeFilter;
       const matchesQuery = !query ||
         card.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -48,15 +54,15 @@ export function ClientVault() {
         card.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()));
       return matchesType && matchesQuery;
     });
-  }, [cards, typeFilter, query]);
+  }, [galleryPool, typeFilter, query]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: cards.length };
-    for (const card of cards) {
+    const c: Record<string, number> = { all: galleryPool.length };
+    for (const card of galleryPool) {
       c[card.type] = (c[card.type] ?? 0) + 1;
     }
     return c;
-  }, [cards]);
+  }, [galleryPool]);
 
   const pinned = useMemo(() => filtered.filter(c => c.pinned && !c.favorite), [filtered]);
   const favorite = useMemo(() => filtered.filter(c => c.favorite), [filtered]);
@@ -126,6 +132,8 @@ export function ClientVault() {
         <VaultMarkdownWorkspace cards={filtered} />
       ) : (
         <>
+      {typeFilter === 'all' && <InboxHomeSection inboxCards={inboxCards} />}
+
       {favorite.length > 0 && (
         <section className="mb-8">
           <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
@@ -167,7 +175,11 @@ export function ClientVault() {
           <div className="text-center py-16 text-muted-foreground text-sm border hover:border-foreground/20 transition-colors border-dashed border-border rounded-xl">
             {cards.length === 0
               ? 'No cards yet. Add markdown files to your vault to get started.'
-              : 'No cards match your search.'}
+              : query || typeFilter !== 'all'
+                ? 'No cards match your search.'
+                : galleryPool.length === 0 && inboxCards.length > 0
+                  ? 'Nothing else in the vault yet — open the Inbox to triage captures.'
+                  : 'No cards match your search.'}
           </div>
         ) : (
           <BentoGrid>

@@ -4,8 +4,16 @@ import { defineConfig, devices } from '@playwright/test';
 const baseURL = process.env.BASE_URL || 'http://localhost:3000';
 const port = new URL(baseURL).port || 3000;
 
+/** Which specs to run (avoids repeating file lists in package.json). Set via npm scripts. */
+const suite = process.env.PW_SUITE as 'normal' | 'demo' | undefined;
+const suiteTestMatch: Record<'normal' | 'demo', string[]> = {
+  normal: ['normal-mode.spec.ts', 'features.spec.ts', 'tree-view.spec.ts'],
+  demo: ['demo-mode.spec.ts', 'features.spec.ts', 'tree-view.spec.ts'],
+};
+
 export default defineConfig({
   testDir: './tests',
+  ...(suite ? { testMatch: suiteTestMatch[suite] } : {}),
   timeout: 45_000,
   // Next.js dev server modifies shared files, so we disable parallel runs to keep environment isolation.
   fullyParallel: false,

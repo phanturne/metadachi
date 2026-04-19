@@ -134,4 +134,17 @@ test.describe('Component Features & UI Resilience', () => {
     expect(meetingBox!.x).toBeLessThan(recipeBox!.x);
   });
 
+  test('Inbox: home summary links to full inbox page', async ({ page }) => {
+    await expect(page.getByTestId('inbox-home-section')).toBeVisible();
+    await expect(page.getByTestId('inbox-home-link')).toBeVisible();
+    await expect(page.getByTestId('inbox-home-section')).toContainText('OpenClaw idea');
+
+    await page.getByTestId('inbox-home-link').click();
+    await expect(page).toHaveURL(/\/inbox$/);
+    await expect(page.getByTestId('inbox-page')).toBeVisible();
+    const row = page.locator('[data-testid^="inbox-row-"]');
+    await expect(row.first()).toContainText('OpenClaw idea');
+    await expect(row.first()).toContainText('openclaw');
+  });
+
 });

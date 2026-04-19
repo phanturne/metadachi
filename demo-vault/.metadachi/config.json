@@ -1,34 +1,10 @@
 {
   "types": [
-    {
-      "id": "recipe",
-      "label": "Recipes",
-      "inferFromPath": "recipes/"
-    },
-    {
-      "id": "meeting",
-      "label": "Meetings",
-      "inferFromContent": "## Meeting"
-    },
-    {
-      "id": "note",
-      "label": "Notes"
-    },
-    {
-      "id": "reference",
-      "label": "Reference"
-    },
-    {
-      "id": "default",
-      "label": "Other"
-    }
+    { "id": "recipe", "label": "Recipes", "inferFromPath": "recipes/" },
+    { "id": "meeting", "label": "Meetings", "inferFromContent": "## Meeting" },
+    { "id": "note", "label": "Notes" },
+    { "id": "reference", "label": "Reference" },
+    { "id": "default", "label": "Other" }
   ],
-  "filterBarOrder": [
-    "all",
-    "meeting",
-    "recipe",
-    "note",
-    "reference",
-    "default"
-  ]
+  "filterBarOrder": ["all", "recipe", "meeting", "note", "reference", "default"]
 }
