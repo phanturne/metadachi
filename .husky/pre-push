@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo "Running pre-push checks: build + e2e"
+pnpm build && pnpm test:e2e

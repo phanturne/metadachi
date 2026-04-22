@@ -7,11 +7,15 @@ import { cn } from '@/lib/utils';
 interface BentoGridProps {
   children: ReactNode;
   className?: string;
+  columns?: number;
 }
 
-export function BentoGrid({ children, className }: BentoGridProps) {
+export function BentoGrid({ children, className, columns = 3 }: BentoGridProps) {
   return (
-    <div className={cn("grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6", className)}>
+    <div
+      className={cn('grid gap-6', className)}
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
       {children}
     </div>
   );

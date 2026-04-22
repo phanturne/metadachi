@@ -4,13 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { CardType, VaultConfig } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Reorder } from 'framer-motion';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { ReactNode, useLayoutEffect, useRef, useState } from 'react';
 
 interface FilterBarProps {
   selected: CardType | 'all';
   onSelect: (type: CardType | 'all') => void;
   counts: Record<CardType | 'all', number>;
   config: VaultConfig | null;
+  rightSlot?: ReactNode;
   /** When false, show a placeholder so we never paint the hardcoded default order before real config loads (avoids reorder flash on refresh). */
   vaultReady: boolean;
 }
@@ -24,7 +25,7 @@ const DEFAULT_TYPES = [
   { value: 'default', label: 'Other' },
 ];
 
-export function FilterBar({ selected, onSelect, counts, config, vaultReady }: FilterBarProps) {
+export function FilterBar({ selected, onSelect, counts, config, rightSlot, vaultReady }: FilterBarProps) {
   const [items, setItems] = useState<Array<{ value: string; label: string }>>([]);
   const latestItemsRef = useRef(items);
   /** Avoid resetting Reorder when React Query returns a new `config` object with identical content (every refetch). */
@@ -53,20 +54,23 @@ export function FilterBar({ selected, onSelect, counts, config, vaultReady }: Fi
 
   if (!vaultReady) {
     return (
-      <div
-        className="flex flex-wrap gap-2 m-0 p-0 list-none"
-        aria-busy="true"
-        aria-label="Loading filters"
-      >
-        {DEFAULT_TYPES.map(({ value }, i) => (
-          <div
-            key={value}
-            className={cn(
-              'h-6 rounded-full bg-muted animate-pulse',
-              ['w-10', 'w-[4.25rem]', 'w-[4.75rem]', 'w-12', 'w-20', 'w-14'][i]
-            )}
-          />
-        ))}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div
+          className="flex flex-wrap gap-2 m-0 p-0 list-none"
+          aria-busy="true"
+          aria-label="Loading filters"
+        >
+          {DEFAULT_TYPES.map(({ value }, i) => (
+            <div
+              key={value}
+              className={cn(
+                'h-6 rounded-full bg-muted animate-pulse',
+                ['w-10', 'w-[4.25rem]', 'w-[4.75rem]', 'w-12', 'w-20', 'w-14'][i]
+              )}
+            />
+          ))}
+        </div>
+        {rightSlot && <div className="flex flex-wrap items-center gap-2">{rightSlot}</div>}
       </div>
     );
   }
@@ -91,36 +95,39 @@ export function FilterBar({ selected, onSelect, counts, config, vaultReady }: Fi
   };
 
   return (
-    <Reorder.Group
-      axis="x"
-      values={items}
-      onReorder={handleReorder}
-      className="flex flex-wrap gap-2 m-0 p-0 list-none"
-    >
-      {items.map((item) => {
-        const isActive = selected === item.value;
-        const count = counts[item.value] || 0;
-        return (
-          <Reorder.Item key={item.value} value={item} className="list-none" data-testid={`filter-reorder-${item.value}`}>
-            <Badge
-              variant={isActive ? 'default' : 'outline'}
-              onClick={() => onSelect(item.value)}
-              data-testid={`filter-chip-${item.value}`}
-              className={cn(
-                'cursor-grab active:cursor-grabbing px-4 py-3 rounded-full transition-all text-sm font-medium',
-                isActive && 'shadow-md'
-              )}
-            >
-              {item.label}
-              {count > 0 && (
-                <span className="ml-1.5 text-[0.65rem] opacity-70 font-normal">
-                  {count}
-                </span>
-              )}
-            </Badge>
-          </Reorder.Item>
-        );
-      })}
-    </Reorder.Group>
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <Reorder.Group
+        axis="x"
+        values={items}
+        onReorder={handleReorder}
+        className="flex flex-wrap gap-2 m-0 p-0 list-none"
+      >
+        {items.map((item) => {
+          const isActive = selected === item.value;
+          const count = counts[item.value] || 0;
+          return (
+            <Reorder.Item key={item.value} value={item} className="list-none" data-testid={`filter-reorder-${item.value}`}>
+              <Badge
+                variant={isActive ? 'default' : 'outline'}
+                onClick={() => onSelect(item.value)}
+                data-testid={`filter-chip-${item.value}`}
+                className={cn(
+                  'cursor-grab active:cursor-grabbing px-4 py-3 rounded-full transition-all text-sm font-medium',
+                  isActive && 'shadow-md'
+                )}
+              >
+                {item.label}
+                {count > 0 && (
+                  <span className="ml-1.5 text-[0.65rem] opacity-70 font-normal">
+                    {count}
+                  </span>
+                )}
+              </Badge>
+            </Reorder.Item>
+          );
+        })}
+      </Reorder.Group>
+      {rightSlot && <div className="flex flex-wrap items-center gap-2">{rightSlot}</div>}
+    </div>
   );
 }
