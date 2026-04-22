@@ -1,61 +1,112 @@
 # Metadachi
 
-Metadachi is a sleek, gallery-style viewer for your OpenClaw memories stored in an Obsidian vault.
+Metadachi is a knowledge/second-brain workspace for Markdown vaults, designed to work with OpenClaw and other AI agents.
 
-It reads your local Obsidian `.md` files, parses their YAML frontmatter, categorizes your memories automatically, and displays them in a beautiful, interactive visual gallery.
+It provides a structured, agent-friendly layer over your notes: parse frontmatter, triage AI captures, organize files, and keep everything in sync with local disk changes.
 
-## Features
+## Core Features
 
-- **Markdown & Frontmatter Support**: Automatically ingests `.md` files using `gray-matter`, picking up titles, tags, creation dates, and custom categorization.
-- **Dynamic Categorization**: Infers note types (e.g., Recipe, Meeting, Note) either directly from frontmatter properties (`type`) or by parsing the file path and content.
-- **Custom UI System**: Built with Next.js App Router, React 19, Tailwind CSS v4, and `@base-ui/react` for an accessible, stylish, dark-mode-first experience.
-- **Rich Interactions**: Features animated layout transitions and interactive cards with Framer Motion.
-- **Search & Filtering**: Instantly filter your vault by category or use text search across tags, titles, and raw markdown content.
+- **AI capture triage**: inbox workflow to review and route notes created by OpenClaw/agent pipelines.
+- **Vault workspace + file operations**: tree editor with create, edit, rename, move, and delete actions.
+- **Live and demo modes**: persist directly to vault files in live mode, or safely experiment in browser-only demo overlay mode.
+- **Real-time sync**: Server-Sent Events + React Query invalidation keep the UI fresh when files change.
+- **Markdown + frontmatter intelligence**: parse with `gray-matter` and infer types from frontmatter, path, and content.
+- **Search and filter UI** across title, tags, and markdown content.
+- **Config-driven knowledge model**: vault-specific type definitions and filter ordering from `.metadachi/config.json`.
+
+## Architecture
+
+```mermaid
+flowchart TD
+  U[User Browser] --> APP[Next.js App Router UI]
+
+  APP --> CV[ClientVault / ClientInboxPage]
+  CV --> UV[useVault hook + React Query cache]
+  UV --> API[/api/vault GET]
+  UV --> WA[vaultWriteAdapter]
+  UV --> SSEB[VaultSseBridge]
+  SSEB --> SSE[/api/vault/stream SSE]
+
+  API --> VC[vaultCache]
+  VC --> VLIB[lib/vault read/parse]
+  VLIB --> FS[(Vault files on disk)]
+  VLIB --> CFG[.metadachi/config.json]
+
+  WA -->|live mode| FILEAPI[/api/vault/file PUT/PATCH/POST/DELETE]
+  FILEAPI --> FS
+  WA -->|demo mode| OVL[(IndexedDB demo overlay)]
+
+  OVL --> MERGE[mergeDemoOverlay]
+  MERGE --> UV
+
+  CV --> INBOX[InboxTriageList]
+  INBOX --> INBOXLIB[lib/inbox transform + destination logic]
+  INBOXLIB --> WA
+```
+
+For a standalone version with deeper design rationale and flow details, see [`docs/architecture.md`](docs/architecture.md).
+
+### Runtime Modes
+
+- **Live mode** (`NEXT_PUBLIC_DEMO_MODE=false`): writes go through server APIs and persist to vault files.
+- **Demo mode** (`NEXT_PUBLIC_DEMO_MODE=true`): writes are redirected to browser-local overlay storage.
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.2 / React 19
-- **Styling**: Tailwind CSS v4, `tw-animate-css`
-- **Animations**: Framer Motion
-- **Data & State**: React Query (`@tanstack/react-query`)
-- **Markdown Handling**: `gray-matter`, `react-markdown`
-- **Component Primitives**: `@base-ui/react`
+- **Framework**: Next.js 16.2 + React 19
+- **State/Data**: React Query (`@tanstack/react-query`)
+- **Styling/UI**: Tailwind CSS v4, `@base-ui/react`, `tw-animate-css`
+- **Markdown**: `gray-matter`, `react-markdown`
+- **FS and watching**: Node `fs`, `chokidar`
+- **Testing**: Vitest, Playwright
 
 ## Getting Started
 
 ### Prerequisites
 
-Ensure you have Node.js and `pnpm` installed. You will also need an absolute path to a local directory containing your Markdown files.
+- Node.js 20+
+- `pnpm`
+- A local Markdown knowledge vault used by OpenClaw and/or other AI agents (or use `./demo-vault` for local demo/testing)
 
 ### Installation
 
-1. Clone this repository:
+1. Clone and install:
    ```bash
    git clone https://github.com/phanturne/metadachi.git
    cd metadachi
-   ```
-
-2. Install dependencies:
-   ```bash
    pnpm install
    ```
 
-3. Configure your environment variable by copying the `.env.example` file to a new `.env` file:
+2. Create `.env`:
    ```bash
    cp .env.example .env
    ```
-   Open `.env` and set the `VAULT_PATH` to the absolute path of your markdown folder:
+
+3. Configure:
    ```env
    VAULT_PATH=/Users/username/Documents/Obsidian Vault
+   NEXT_PUBLIC_DEMO_MODE=false
+   # Optional: DEMO_VAULT_PATH=./demo-vault
    ```
 
-4. Start the development server:
+4. Run:
    ```bash
    pnpm dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser to view your vault.
+5. Open [http://localhost:3000](http://localhost:3000).
+
+## Testing
+
+- Unit tests:
+  ```bash
+  pnpm test
+  ```
+- E2E tests (normal + demo):
+  ```bash
+  pnpm test:e2e
+  ```
 
 ## Customization & AI Agents
 
-If you want to augment or customize Metadachi, read configuring rules and architecture guidelines via the [AGENTS.md](AGENTS.md) steering document.
+For contributor conventions and architecture guardrails, see [AGENTS.md](AGENTS.md).
