@@ -10,6 +10,8 @@ export interface TypeConfig {
 export interface VaultConfig {
   types?: TypeConfig[];
   filterBarOrder?: string[];
+  authorHandle?: string;
+  hubUrl?: string;
 }
 
 export interface CardMeta {
@@ -26,6 +28,10 @@ export interface CardMeta {
   source?: string;
   /** Optional vault-relative path hint for approve destination. */
   suggested_path?: string;
+  /** Community Platform Fields */
+  published?: boolean;
+  slug?: string;
+  author?: string;
 }
 
 export interface Card extends CardMeta {
@@ -39,7 +45,7 @@ export interface Card extends CardMeta {
 /** Browser-only overlay for demo mode; never sent to the server. */
 export interface DemoOverlayV1 {
   schemaVersion: 1;
-  pinFavoriteById: Record<string, { pinned?: boolean; favorite?: boolean }>;
+  pinFavoriteById: Record<string, { pinned?: boolean; favorite?: boolean; published?: boolean }>;
   /** Full markdown including frontmatter, keyed by card id. */
   contentByCardId: Record<string, string>;
   virtualFiles: Array<{ relativePath: string; raw: string }>;

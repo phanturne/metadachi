@@ -3,6 +3,7 @@ import { parseFile, readVault, VAULT_PATH, getVaultConfig, canonicalVaultFilePat
 import { VaultFile } from './types';
 import { getStates } from './stateDb';
 import { EventEmitter } from 'events';
+import './syncService'; // Initialize sync service
 
 // Prevent multiple instances in development
 const globalForVaultCache = globalThis as unknown as {
@@ -34,6 +35,7 @@ class VaultCacheSingleton {
         if (state) {
            if (state.pinned !== undefined) f.meta.pinned = state.pinned;
            if (state.favorite !== undefined) f.meta.favorite = state.favorite;
+           if (state.published !== undefined) f.meta.published = state.published;
         }
         this.files.set(f.path, f);
       }
@@ -82,6 +84,7 @@ class VaultCacheSingleton {
         // Notice we apply both truthy and falsy values here since it could be toggled off manually
         file.meta.pinned = state.pinned ?? false;
         file.meta.favorite = state.favorite ?? false;
+        file.meta.published = state.published ?? false;
         this.files.set(path, file);
       }
       this.emitUpdate();
@@ -117,6 +120,9 @@ class VaultCacheSingleton {
       if (state && state.favorite !== undefined) {
          parsed.meta.favorite = state.favorite;
       }
+      if (state && state.published !== undefined) {
+         parsed.meta.published = state.published;
+      }
       this.files.set(parsed.path, parsed);
       this.emitUpdate();
     }
@@ -142,6 +148,9 @@ class VaultCacheSingleton {
         }
         if (stateUpdate.favorite !== undefined) {
           file.meta.favorite = stateUpdate.favorite;
+        }
+        if (stateUpdate.published !== undefined) {
+          file.meta.published = stateUpdate.published;
         }
         this.files.set(path, file);
         break; // IDs are unique

@@ -11,5 +11,8 @@ export function serializeCardToMarkdown(card: Card): string {
     tags: card.tags,
     pinned: card.pinned,
     favorite: card.favorite,
+    published: card.published,
+    slug: card.slug,
+    author: card.author,
   });
 }

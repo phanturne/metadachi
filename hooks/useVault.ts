@@ -184,12 +184,46 @@ export function useVault() {
     },
   });
 
+  const togglePublishedMutation = useMutation({
+    mutationFn: async ({ id, published }: { id: string; published: boolean }) => {
+      await writeAdapter.togglePublished({ id, published });
+    },
+    onMutate: async ({ id, published }) => {
+      await queryClient.cancelQueries({ queryKey: VAULT_CARDS_QUERY_KEY });
+      const previous = queryClient.getQueryData<VaultCardsQueryData>(VAULT_CARDS_QUERY_KEY);
+
+      queryClient.setQueryData<VaultCardsQueryData>(VAULT_CARDS_QUERY_KEY, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          cards: old.cards.map(card => (card.id === id ? { ...card, published } : card)),
+        };
+      });
+
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(VAULT_CARDS_QUERY_KEY, context.previous);
+      }
+    },
+    onSettled: () => {
+      if (!isDemoMode) {
+        queryClient.invalidateQueries({ queryKey: VAULT_CARDS_QUERY_KEY });
+      }
+    },
+  });
+
   const togglePin = (id: string, currentPinned: boolean) => {
     togglePinMutation.mutate({ id, pinned: !currentPinned });
   };
 
   const toggleFavorite = (id: string, currentFavorite: boolean) => {
     toggleFavoriteMutation.mutate({ id, favorite: !currentFavorite });
+  };
+
+  const togglePublished = (id: string, currentPublished: boolean) => {
+    togglePublishedMutation.mutate({ id, published: !currentPublished });
   };
 
   const saveVaultFileMutation = useMutation({
@@ -237,9 +271,45 @@ export function useVault() {
   const saveVaultFileAsync = (id: string, relativePath: string, raw: string) =>
     saveVaultFileMutation.mutateAsync({ id, relativePath, raw });
 
+  const saveVaultConfigMutation = useMutation({
+    mutationFn: async (newConfig: VaultConfig) => {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConfig),
+      });
+      if (!res.ok) throw new Error('Failed to save config');
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: VAULT_CARDS_QUERY_KEY });
+    },
+  });
+
+  const saveVaultConfig = (newConfig: VaultConfig) => 
+    saveVaultConfigMutation.mutate(newConfig);
+
   const addVaultFile = () => {
     addVaultFileMutation.mutate();
   };
+
+  const importCommunityCardMutation = useMutation({
+    mutationFn: async (card: Card) => {
+      const res = await fetch('/api/vault/file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raw: `---\nid: ${card.id}\ntitle: ${card.title}\ntype: ${card.type}\nsource: community\ninbox: true\n---\n\n${card.rawContent}`
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to import card');
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: VAULT_CARDS_QUERY_KEY });
+    },
+  });
+
+  const importCommunityCard = (card: Card) => 
+    importCommunityCardMutation.mutate(card);
 
   const removeVaultFile = (id: string, relativePath: string) => {
     removeVaultFileMutation.mutate({ id, relativePath });
@@ -272,7 +342,10 @@ export function useVault() {
     refresh,
     togglePin,
     toggleFavorite,
+    togglePublished,
     saveVaultFileAsync,
+    saveVaultConfig,
+    importCommunityCard,
     addVaultFile,
     removeVaultFile,
     relocateVaultFileAsync,

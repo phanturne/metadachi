@@ -97,6 +97,9 @@ export function parseFile(filePath: string, config: VaultConfig): VaultFile | nu
       inbox: typeof data.inbox === 'boolean' ? data.inbox : undefined,
       source: typeof data.source === 'string' ? data.source : undefined,
       suggested_path: typeof data.suggested_path === 'string' ? data.suggested_path : undefined,
+      published: typeof data.published === 'boolean' ? data.published : false,
+      slug: typeof data.slug === 'string' ? data.slug : undefined,
+      author: typeof data.author === 'string' ? data.author : undefined,
     };
 
     return { path: resolvedPath, meta, rawContent: content.trim() };

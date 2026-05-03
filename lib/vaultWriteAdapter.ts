@@ -3,6 +3,7 @@ import type { VaultMode } from '@/lib/vaultMode';
 
 export type TogglePinInput = { id: string; pinned: boolean };
 export type ToggleFavoriteInput = { id: string; favorite: boolean };
+export type TogglePublishedInput = { id: string; published: boolean };
 export type SaveFileInput = { id: string; relativePath: string; raw: string };
 export type DeleteFileInput = { id: string; relativePath: string };
 export type RelocateFileInput = { id: string; fromRelativePath: string; toRelativePath: string };
@@ -35,6 +36,7 @@ async function assertOkOrThrow(res: Response, fallbackMessage: string) {
 export type VaultWriteAdapter = {
   togglePin(input: TogglePinInput): Promise<void>;
   toggleFavorite(input: ToggleFavoriteInput): Promise<void>;
+  togglePublished(input: TogglePublishedInput): Promise<void>;
   saveVaultFile(input: SaveFileInput): Promise<void>;
   addVaultFile(): Promise<string | undefined>;
   removeVaultFile(input: DeleteFileInput): Promise<void>;
@@ -63,6 +65,17 @@ function createDemoAdapter(): VaultWriteAdapter {
         pinFavoriteById: {
           ...overlay.pinFavoriteById,
           [id]: { ...overlay.pinFavoriteById[id], favorite },
+        },
+      });
+    },
+    async togglePublished({ id, published }) {
+      // Demo mode doesn't really have a "hub", but we track the state anyway
+      const overlay = await loadDemoOverlay();
+      await saveDemoOverlay({
+        ...overlay,
+        pinFavoriteById: {
+          ...overlay.pinFavoriteById,
+          [id]: { ...overlay.pinFavoriteById[id], published },
         },
       });
     },
@@ -145,6 +158,14 @@ function createLiveAdapter(): VaultWriteAdapter {
         body: JSON.stringify({ id, favorite }),
       });
       await assertOkOrThrow(res, 'Failed to toggle favorite');
+    },
+    async togglePublished({ id, published }) {
+      const res = await fetch('/api/vault/published', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, published }),
+      });
+      await assertOkOrThrow(res, 'Failed to toggle published');
     },
     async saveVaultFile({ relativePath, raw }) {
       const res = await fetch('/api/vault/file', {

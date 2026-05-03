@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Tag, FileText, Heart, Pin } from 'lucide-react';
+import { Calendar, Tag, FileText, Heart, Pin, Globe } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Card } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -14,7 +14,7 @@ interface CardModalProps {
 }
 
 export function CardModal({ card, onClose }: CardModalProps) {
-  const { togglePin, toggleFavorite } = useVault();
+  const { togglePin, toggleFavorite, togglePublished } = useVault();
   
   return (
     <Dialog open={!!card} onOpenChange={(open) => !open && onClose()}>
@@ -37,6 +37,19 @@ export function CardModal({ card, onClose }: CardModalProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => togglePublished(card.id, !!card.published)}
+                    title={card.published ? "Published to Community" : "Publish to Community"}
+                    className={`transition-all rounded-full ${
+                      card.published 
+                      ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-500/10' 
+                      : 'text-muted-foreground hover:text-blue-500 hover:bg-muted'
+                    }`}
+                  >
+                    <Globe className="w-4 h-4" strokeWidth={2} />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

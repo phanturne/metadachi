@@ -9,6 +9,7 @@ const LEGACY_STATE_FILE = path.join(VAULT_PATH, '.metadachi.json');
 export type ItemState = {
   pinned?: boolean;
   favorite?: boolean;
+  published?: boolean;
 };
 
 export type VaultStates = Record<string, ItemState>;

@@ -15,6 +15,8 @@ export async function POST(req: Request) {
     const newConfig: VaultConfig = {
       types: body.types ?? currentConfig.types,
       filterBarOrder: body.filterBarOrder ?? currentConfig.filterBarOrder,
+      authorHandle: body.authorHandle ?? currentConfig.authorHandle,
+      hubUrl: body.hubUrl ?? currentConfig.hubUrl,
     };
 
     const METADACHI_DIR = path.join(VAULT_PATH, '.metadachi');
