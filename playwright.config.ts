@@ -7,7 +7,7 @@ const port = new URL(baseURL).port || 3000;
 /** Which specs to run (avoids repeating file lists in package.json). Set via npm scripts. */
 const suite = process.env.PW_SUITE as 'normal' | 'demo' | undefined;
 const suiteTestMatch: Record<'normal' | 'demo', string[]> = {
-  normal: ['normal-mode.spec.ts', 'features.spec.ts', 'tree-view.spec.ts'],
+  normal: ['normal-mode.spec.ts', 'features.spec.ts', 'tree-view.spec.ts', 'community.spec.ts'],
   demo: ['demo-mode.spec.ts', 'features.spec.ts', 'tree-view.spec.ts'],
 };
 
@@ -32,7 +32,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `cross-env NEXT_PUBLIC_DEMO_MODE=${process.env.NEXT_PUBLIC_DEMO_MODE || 'false'} VAULT_PATH=${process.env.VAULT_PATH || './demo-vault'} pnpm run dev --port ${port}`,
+    command: `NEXT_PUBLIC_DEMO_MODE=${process.env.NEXT_PUBLIC_DEMO_MODE || 'false'} VAULT_PATH=${process.env.VAULT_PATH || './demo-vault'} pnpm run dev --port ${port}`,
     url: baseURL,
     // Set PW_REUSE_SERVER=1 locally if you already have a matching dev server (same port + env).
     reuseExistingServer: process.env.PW_REUSE_SERVER === '1',

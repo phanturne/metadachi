@@ -1,10 +1,10 @@
 import { vaultCache } from './vaultCache';
 import { getVaultConfig } from './vault';
 import { Card } from './types';
+import { supabaseService as supabase } from './supabase/service';
 
 class HubSyncService {
   private isSyncing: boolean = false;
-  private syncQueue: Set<string> = new Set();
   private syncTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
@@ -12,51 +12,68 @@ class HubSyncService {
     vaultCache.events.on('update', () => this.handleVaultUpdate());
   }
 
-  private handleVaultUpdate() {
+  private async handleVaultUpdate() {
     const config = getVaultConfig();
-    if (!config.authorHandle || !config.hubUrl) {
-      // Missing sync config, skip
-      return;
-    }
-
+    
     const cards = vaultCache.getVaultFiles();
     const publishedCards = cards.filter(f => f.meta.published);
 
     if (publishedCards.length === 0) return;
 
-    // In a real implementation, we would compare hashes to see what actually changed.
-    // For now, we'll trigger a debounced sync check.
-    this.scheduleSync();
+    // Check if we have an active session before attempting sync
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.warn('[HubSync] Cards are marked as published, but no active Supabase session found. Please sign in.');
+      return;
+    }
+
+    if (!config.hubUrl) {
+      console.warn('[HubSync] Cards are marked as published, but Hub URL is not configured.');
+      return;
+    }
+
+    this.scheduleSync(session.user.id);
   }
 
-  private scheduleSync() {
+  private scheduleSync(userId: string) {
     if (this.syncTimer) clearTimeout(this.syncTimer);
-    this.syncTimer = setTimeout(() => this.performSync(), 2000); // 2 second debounce
+    this.syncTimer = setTimeout(() => this.performSync(userId), 2000); // 2 second debounce
   }
 
-  private async performSync() {
+  private async performSync(userId: string) {
     if (this.isSyncing) return;
     
     const config = getVaultConfig();
     const publishedCards = vaultCache.getVaultFiles()
       .filter(f => f.meta.published)
       .map(f => ({
-        ...f.meta,
-        rawContent: f.rawContent,
-        author: config.authorHandle
+        author_id: userId,
+        id: f.meta.id, // We use the stable local ID as the DB ID if possible, or mapping
+        title: f.meta.title,
+        raw_content: f.rawContent,
+        type: f.meta.type,
+        slug: f.meta.slug || f.meta.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        tags: f.meta.tags,
+        published: true,
+        metadata: {
+            source: f.meta.source,
+            suggested_path: f.meta.suggested_path
+        }
       }));
 
     if (publishedCards.length === 0) return;
 
     this.isSyncing = true;
-    console.log(`[HubSync] Syncing ${publishedCards.length} cards to ${config.hubUrl}...`);
+    console.log(`[HubSync] Syncing ${publishedCards.length} cards to Supabase...`);
 
     try {
-      // In a real scenario, this would be a POST to your Hub API
-      // await fetch(`${config.hubUrl}/api/hub/sync`, {
-      //   method: 'POST',
-      //   body: JSON.stringify({ author: config.authorHandle, cards: publishedCards })
-      // });
+      // Upsert cards to the 'cards' table
+      const { error } = await supabase
+        .from('cards')
+        .upsert(publishedCards, { onConflict: 'id' });
+
+      if (error) throw error;
       
       console.log('[HubSync] Sync successful');
     } catch (error) {

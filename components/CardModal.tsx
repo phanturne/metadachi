@@ -14,7 +14,7 @@ interface CardModalProps {
 }
 
 export function CardModal({ card, onClose }: CardModalProps) {
-  const { togglePin, toggleFavorite, togglePublished } = useVault();
+  const { togglePin, toggleFavorite, togglePublished, capabilities } = useVault();
   
   return (
     <Dialog open={!!card} onOpenChange={(open) => !open && onClose()}>
@@ -35,45 +35,56 @@ export function CardModal({ card, onClose }: CardModalProps) {
                       day: 'numeric',
                     })}
                   </span>
+                  {card.author && (
+                    <span className="text-xs text-blue-500 font-medium">
+                      @{card.author}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => togglePublished(card.id, !!card.published)}
-                    title={card.published ? "Published to Community" : "Publish to Community"}
-                    className={`transition-all rounded-full ${
-                      card.published 
-                      ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-500/10' 
-                      : 'text-muted-foreground hover:text-blue-500 hover:bg-muted'
-                    }`}
-                  >
-                    <Globe className="w-4 h-4" strokeWidth={2} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggleFavorite(card.id, !!card.favorite)}
-                    className={`transition-all rounded-full ${
-                      card.favorite 
-                      ? 'text-pink-500 hover:text-pink-600 hover:bg-pink-500/10' 
-                      : 'text-muted-foreground hover:text-pink-500 hover:bg-muted'
-                    }`}
-                  >
-                    <Heart className="w-4 h-4" strokeWidth={2} fill={card.favorite ? "currentColor" : "none"} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => togglePin(card.id, !!card.pinned)}
-                    className={`transition-all rounded-full ${
-                      card.pinned 
-                      ? 'text-red-500 hover:text-red-600 hover:bg-red-500/10' 
-                      : 'text-muted-foreground hover:text-red-500 hover:bg-muted'
-                    }`}
-                  >
-                    <Pin className="w-4 h-4" strokeWidth={2} fill={card.pinned ? "currentColor" : "none"} />
-                  </Button>
+                  {capabilities.canPublish && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => togglePublished(card.id, !!card.published)}
+                      title={card.published ? "Published to Community" : "Publish to Community"}
+                      className={`transition-all rounded-full ${
+                        card.published 
+                        ? 'text-blue-500 hover:text-blue-600 hover:bg-blue-500/10' 
+                        : 'text-muted-foreground hover:text-blue-500 hover:bg-muted'
+                      }`}
+                    >
+                      <Globe className="w-4 h-4" strokeWidth={2} />
+                    </Button>
+                  )}
+                  {capabilities.canTogglePinFavorite && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => toggleFavorite(card.id, !!card.favorite)}
+                        className={`transition-all rounded-full ${
+                          card.favorite 
+                          ? 'text-pink-500 hover:text-pink-600 hover:bg-pink-500/10' 
+                          : 'text-muted-foreground hover:text-pink-500 hover:bg-muted'
+                        }`}
+                      >
+                        <Heart className="w-4 h-4" strokeWidth={2} fill={card.favorite ? "currentColor" : "none"} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => togglePin(card.id, !!card.pinned)}
+                        className={`transition-all rounded-full ${
+                          card.pinned 
+                          ? 'text-red-500 hover:text-red-600 hover:bg-red-500/10' 
+                          : 'text-muted-foreground hover:text-red-500 hover:bg-muted'
+                        }`}
+                      >
+                        <Pin className="w-4 h-4" strokeWidth={2} fill={card.pinned ? "currentColor" : "none"} />
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
 

@@ -54,7 +54,7 @@ function readStoredGridColumns(): GridColumns {
 }
 
 export function ClientVault() {
-  const { cards, config, isVaultPending, importCommunityCard } = useVault();
+  const { cards, config, mode, isVaultPending, importCommunityCard } = useVault();
   const [hasHydrated, setHasHydrated] = useState(false);
   const [viewMode, setViewMode] = useState<VaultViewMode>('cards');
   const [gridColumns, setGridColumns] = useState<GridColumns>(3);
@@ -76,7 +76,7 @@ export function ClientVault() {
 
   // Community Search Effect
   useEffect(() => {
-    if (searchMode !== 'community' || !query || !config?.hubUrl) {
+    if (searchMode !== 'community') {
       setCommunityResults([]);
       return;
     }
@@ -84,10 +84,44 @@ export function ClientVault() {
     const timer = setTimeout(async () => {
       setIsSearchingCommunity(true);
       try {
-        // Mocking a hub search for now. In reality, you'd fetch from config.hubUrl/api/hub/search
-        console.log(`[HubSearch] Searching for "${query}" on ${config.hubUrl}...`);
-        // For demo purposes, we'll return an empty array until real backend is ready
-        setCommunityResults([]);
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+        
+        let queryBuilder = supabase
+          .from('cards')
+          .select('*, profiles(handle)')
+          .eq('published', true)
+          .limit(20);
+
+        if (query) {
+          // If there's a query, use Full-Text Search
+          queryBuilder = queryBuilder.textSearch('fts', query, { config: 'english' });
+        } else {
+          // If no query, just show the most recent cards
+          queryBuilder = queryBuilder.order('created_at', { ascending: false });
+        }
+
+        const { data: dbCards, error } = await queryBuilder;
+
+        if (error) throw error;
+
+        const formattedResults: Card[] = (dbCards || []).map(c => ({
+          id: c.id,
+          title: c.title,
+          rawContent: c.raw_content,
+          type: c.type,
+          tags: c.tags,
+          created: c.created_at,
+          author: c.profiles?.handle,
+          slug: c.slug,
+          published: true,
+          pinned: false,
+          favorite: false,
+          filePath: `community/${c.profiles?.handle}/${c.slug}`,
+          relativePath: `${c.profiles?.handle}/${c.slug}`
+        }));
+
+        setCommunityResults(formattedResults);
       } catch (err) {
         console.error('Community search failed:', err);
       } finally {
@@ -96,7 +130,7 @@ export function ClientVault() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [query, searchMode, config?.hubUrl]);
+  }, [query, searchMode]);
 
   const goalsContent = useMemo(() => extractGoalsContent(cards), [cards]);
   const goalStats = useMemo(() => {
@@ -115,6 +149,7 @@ export function ClientVault() {
   }, [cards, goalsContent]);
 
   const inboxCards = useMemo(() => cards.filter(cardIsInbox), [cards]);
+  const isHubMode = mode === 'hub';
 
   const filtered = useMemo(() => {
     return galleryPool.filter(card => {
@@ -171,15 +206,17 @@ export function ClientVault() {
           <DemoBadge />
         </div>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setIsConfigOpen(true)}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Community Settings"
-            title="Community Settings"
-          >
-            <Users className="h-5 w-5" />
-          </button>
+          {!isHubMode && (
+            <button
+              type="button"
+              onClick={() => setIsConfigOpen(true)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Community Settings"
+              title="Community Settings"
+            >
+              <Users className="h-5 w-5" />
+            </button>
+          )}
           <a
             href="https://github.com/phanturne/metadachi"
             target="_blank"
@@ -200,11 +237,11 @@ export function ClientVault() {
         <SearchBar 
           value={query} 
           onChange={setQuery} 
-          searchMode={searchMode} 
+          searchMode={isHubMode ? 'community' : searchMode} 
           onModeChange={setSearchMode}
-          showToggle={true}
+          showToggle={!isHubMode}
         />
-        {searchMode === 'local' && (
+        {!isHubMode && searchMode === 'local' && (
           <FilterBar
             selected={typeFilter}
             onSelect={setTypeFilter}
@@ -301,7 +338,7 @@ export function ClientVault() {
             <VaultMarkdownWorkspace cards={filtered} />
           ) : (
             <>
-              {goalsContent && (
+              {!isHubMode && goalsContent && (
                 <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-card/80">
                   <div className="border-b border-border/80 bg-linear-to-r from-indigo-500/10 via-violet-500/10 to-fuchsia-500/10 p-5">
                     <div className="mb-3 flex items-center justify-between gap-3">
@@ -384,7 +421,7 @@ export function ClientVault() {
                 </section>
               )}
 
-              {typeFilter === 'all' && <InboxHomeSection inboxCards={inboxCards} />}
+              {!isHubMode && typeFilter === 'all' && <InboxHomeSection inboxCards={inboxCards} />}
 
               {favorite.length > 0 && (
                 <section className="mb-8">

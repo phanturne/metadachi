@@ -3,7 +3,6 @@ import { parseFile, readVault, VAULT_PATH, getVaultConfig, canonicalVaultFilePat
 import { VaultFile } from './types';
 import { getStates } from './stateDb';
 import { EventEmitter } from 'events';
-import './syncService'; // Initialize sync service
 
 // Prevent multiple instances in development
 const globalForVaultCache = globalThis as unknown as {
@@ -19,7 +18,10 @@ class VaultCacheSingleton {
   private updateEmitTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    this.init();
+    // Only initialize in a real Node.js environment, not during static generation traces
+    if (typeof process !== 'undefined' && process.env.NEXT_PHASE !== 'phase-production-build') {
+      this.init();
+    }
   }
 
   private init() {
@@ -153,6 +155,7 @@ class VaultCacheSingleton {
           file.meta.published = stateUpdate.published;
         }
         this.files.set(path, file);
+        this.emitUpdate();
         break; // IDs are unique
       }
     }
