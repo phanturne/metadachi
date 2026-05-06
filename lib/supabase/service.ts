@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
+import { resolveSupabasePublishableKey, resolveSupabaseUrl } from './config';
 
 /**
  * SERVICE CLIENT
@@ -8,8 +9,8 @@ import path from 'path';
  * It uses file-based session persistence to keep the user logged in across restarts.
  */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+const supabaseUrl = resolveSupabaseUrl();
+const supabasePublishableKey = resolveSupabasePublishableKey();
 
 // Persistence logic
 const VAULT_PATH = process.env.VAULT_PATH || './demo-vault';

@@ -68,10 +68,10 @@ class HubSyncService {
     console.log(`[HubSync] Syncing ${publishedCards.length} cards to Supabase...`);
 
     try {
-      // Upsert cards to the 'cards' table
-      const { error } = await supabase
-        .from('cards')
-        .upsert(publishedCards, { onConflict: 'id' });
+      // Quota-gated RPC (see migration upsert_published_cards); ignores client author_id inside DB
+      const { error } = await supabase.rpc('upsert_published_cards', {
+        p_cards: publishedCards,
+      });
 
       if (error) throw error;
       
