@@ -49,3 +49,31 @@ Welcome to the Metadachi codebase! This document serves as a guide for AI agents
 - Always prioritize using functional components and hooks.
 - Write strict TypeScript. Do not use `any`; define interfaces in `lib/types.ts`.
 - Validate environment variables (like `VAULT_PATH`) where appropriate.
+
+## 5. OpenClaw Skills
+
+Metadachi includes specialized skill definitions for the OpenClaw agent to interact with the vault. Skills follow the OpenClaw format and are located in `skills/` at the project root:
+
+```
+skills/
+├── capture/
+│   └── SKILL.md
+└── context/
+    └── SKILL.md
+```
+
+- **Capture Skill**: Instructions for saving new information, research, and links into the `Inbox/` for triage.
+- **Context Skill**: Instructions for reading vault metadata, configuration (`.metadachi/config.json`), and content to provide informed, context-aware responses.
+
+### Skill Format
+
+Each skill is a directory containing a `SKILL.md` file with YAML frontmatter:
+
+```yaml
+---
+name: skill-name
+description: When to use this skill
+---
+```
+
+When acting as an OpenClaw agent, refer to these skills to ensure consistent integration with the Metadachi workflow.
