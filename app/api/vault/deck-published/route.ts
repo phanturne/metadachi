@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { setDeckState, getDeckState } from '@/lib/stateDb';
 import { vaultCache } from '@/lib/vaultCache';
 import { getVaultMode } from '@/lib/vaultMode';
+import { triggerSync } from '@/lib/syncService';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
 
     setDeckState(deck, { published });
     vaultCache.updateDeckState(deck, { published });
+    triggerSync();
 
     return NextResponse.json({ success: true, deck, published });
   } catch (error) {

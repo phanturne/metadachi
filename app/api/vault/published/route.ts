@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { setState } from '@/lib/stateDb';
 import { vaultCache } from '@/lib/vaultCache';
 import { getVaultMode } from '@/lib/vaultMode';
+import { triggerSync } from '@/lib/syncService';
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +22,9 @@ export async function POST(request: Request) {
 
     // 2. Immediately update the in-memory cache
     vaultCache.updateState(id, { published });
+
+    // 3. Trigger hub sync
+    triggerSync();
 
     return NextResponse.json({ success: true, id, published });
   } catch (error) {

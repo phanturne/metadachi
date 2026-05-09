@@ -1,3 +1,4 @@
+import fs from 'fs';
 import chokidar, { FSWatcher } from 'chokidar';
 import { parseFile, readVault, VAULT_PATH, getVaultConfig, canonicalVaultFilePath } from './vault';
 import { VaultFile } from './types';
@@ -185,6 +186,17 @@ class VaultCacheSingleton {
 
   public isDeckPublished(deck: string): boolean {
     return this.deckPublishStates.get(deck) ?? false;
+  }
+
+  public getFileModTime(filePath: string): number | null {
+    const key = canonicalVaultFilePath(filePath);
+    const file = this.files.get(key);
+    if (!file) return null;
+    try {
+      return fs.statSync(filePath).mtimeMs;
+    } catch {
+      return null;
+    }
   }
 }
 
