@@ -12,7 +12,17 @@ export type ItemState = {
   published?: boolean;
 };
 
+export type DeckState = {
+  published?: boolean;
+};
+
 export type VaultStates = Record<string, ItemState>;
+export type DeckStates = Record<string, DeckState>;
+
+interface StateFile {
+  items?: VaultStates;
+  decks?: DeckStates;
+}
 
 export function getStates(): VaultStates {
   // Migration logic
@@ -23,8 +33,6 @@ export function getStates(): VaultStates {
       }
       fs.copyFileSync(LEGACY_STATE_FILE, STATE_FILE);
       console.log('[stateDb] Migrated legacy .metadachi.json to .metadachi/state.json');
-      // Optionally rename or delete the old file, but leaving it or deleting it is fine.
-      // We will delete it to clean up.
       fs.unlinkSync(LEGACY_STATE_FILE);
     } catch (e) {
       console.error(`[stateDb] Failed to migrate legacy state file: ${(e as Error).message}`);
@@ -37,7 +45,26 @@ export function getStates(): VaultStates {
   try {
     const content = fs.readFileSync(STATE_FILE, 'utf-8');
     if (!content || content.trim() === '') return {};
-    return JSON.parse(content) as VaultStates;
+    const state = JSON.parse(content) as StateFile;
+    // Support both old format (flat) and new format (nested)
+    if (state.items) return state.items;
+    // Legacy migration: if the file is just a flat object of item states, return it
+    return state as VaultStates;
+  } catch (e) {
+    console.warn(`[stateDb] Failed to parse .metadachi/state.json: ${(e as Error).message}`);
+    return {};
+  }
+}
+
+export function getDeckStates(): DeckStates {
+  if (!fs.existsSync(STATE_FILE)) {
+    return {};
+  }
+  try {
+    const content = fs.readFileSync(STATE_FILE, 'utf-8');
+    if (!content || content.trim() === '') return {};
+    const state = JSON.parse(content) as StateFile;
+    return state.decks || {};
   } catch (e) {
     console.warn(`[stateDb] Failed to parse .metadachi/state.json: ${(e as Error).message}`);
     return {};
@@ -49,13 +76,26 @@ export function getState(id: string): ItemState {
   return states[id] || {};
 }
 
-export function setState(id: string, newState: Partial<ItemState>) {
-  const states = getStates();
-  states[id] = { ...states[id], ...newState };
-  
-  // Ensure the directory exists
+export function getDeckState(deck: string): DeckState {
+  const states = getDeckStates();
+  return states[deck] || {};
+}
+
+function saveState(state: StateFile) {
   if (!fs.existsSync(METADACHI_DIR)) {
     fs.mkdirSync(METADACHI_DIR, { recursive: true });
   }
-  fs.writeFileSync(STATE_FILE, JSON.stringify(states, null, 2));
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+}
+
+export function setState(id: string, newState: Partial<ItemState>) {
+  const items = getStates();
+  items[id] = { ...items[id], ...newState };
+  saveState({ items, decks: getDeckStates() });
+}
+
+export function setDeckState(deck: string, newState: Partial<DeckState>) {
+  const decks = getDeckStates();
+  decks[deck] = { ...decks[deck], ...newState };
+  saveState({ items: getStates(), decks });
 }

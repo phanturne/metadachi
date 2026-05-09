@@ -15,6 +15,7 @@ import { cardIsInbox } from '@/lib/inbox';
 import { Card, CardType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { FolderTree, LayoutGrid, Target, Users, Download, Globe } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { VaultConfigModal } from './VaultConfigModal';
 
@@ -54,7 +55,7 @@ function readStoredGridColumns(): GridColumns {
 }
 
 export function ClientVault() {
-  const { cards, config, mode, isVaultPending, importCommunityCard } = useVault();
+  const { cards, config, mode, isVaultPending, importCommunityCard, flashcardCollections } = useVault();
   const [hasHydrated, setHasHydrated] = useState(false);
   const [viewMode, setViewMode] = useState<VaultViewMode>('cards');
   const [gridColumns, setGridColumns] = useState<GridColumns>(3);
@@ -91,6 +92,7 @@ export function ClientVault() {
           .from('cards')
           .select('*, profiles(handle)')
           .eq('published', true)
+          .neq('type', 'flashcard')  // Exclude flashcards
           .limit(20);
 
         if (query) {
@@ -105,7 +107,9 @@ export function ClientVault() {
 
         if (error) throw error;
 
-        const formattedResults: Card[] = (dbCards || []).map(c => ({
+        const formattedResults: Card[] = (dbCards || [])
+          .filter(c => c.type !== 'flashcard')  // Exclude flashcards from search results
+          .map(c => ({
           id: c.id,
           title: c.title,
           rawContent: c.raw_content,
@@ -144,6 +148,8 @@ export function ClientVault() {
     return cards.filter((card) => {
       if (cardIsInbox(card)) return false;
       if (goalsContent && card.filePath === goalsContent.sourceCard.filePath) return false;
+      // Exclude flashcards from the main vault view (they have their own page)
+      if (card.type === 'flashcard') return false;
       return true;
     });
   }, [cards, goalsContent]);
@@ -206,6 +212,12 @@ export function ClientVault() {
           <DemoBadge />
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/flashcards"
+            className="inline-flex items-center rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          >
+            Flashcards
+          </Link>
           {!isHubMode && (
             <button
               type="button"
@@ -450,6 +462,38 @@ export function ClientVault() {
                       </div>
                     ))}
                   </BentoGrid>
+                </section>
+              )}
+
+              {/* Flashcard Collections in Hub Mode */}
+              {isHubMode && flashcardCollections && flashcardCollections.length > 0 && (
+                <section className="mb-8">
+                  <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+                    📚 Flashcard Collections
+                    <span className="bg-secondary text-secondary-foreground text-[0.65rem] px-2 py-0.5 rounded-full font-normal">
+                      {flashcardCollections.length}
+                    </span>
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {flashcardCollections.map((collection) => (
+                      <div
+                        key={collection.deck}
+                        className="rounded-xl border border-border bg-card p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          // TODO: Navigate to flashcard collection view
+                          console.log('View collection:', collection.deck);
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-medium">{collection.deck}</h3>
+                          <span className="text-2xl">📇</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {collection.count} cards
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </section>
               )}
 

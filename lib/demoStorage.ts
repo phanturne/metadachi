@@ -15,6 +15,7 @@ export function createEmptyDemoOverlay(): DemoOverlayV1 {
     virtualFiles: [],
     tombstonedIds: [],
     renamedByCardId: {},
+    publishedDecks: {},
   };
 }
 

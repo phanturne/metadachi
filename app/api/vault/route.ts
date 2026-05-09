@@ -14,7 +14,6 @@ export async function GET() {
     const supabase = await createClient();
     // Fetch all published cards for the global community feed
     const { data: cards, error } = await supabase
-
       .from('cards')
       .select('*, profiles(handle, display_name)')
       .eq('published', true)
@@ -24,8 +23,26 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Format the cards to match our UI Card model
-    const formattedCards = cards.map(c => ({
+    // Separate flashcards from regular cards
+    const regularCards: typeof cards = [];
+    const flashcardDecks: Record<string, { deck: string; count: number; cardIds: string[] }> = {};
+
+    for (const card of cards) {
+      if (card.type === 'flashcard') {
+        // Extract deck from metadata or slug
+        const deck = card.deck || 'default';
+        if (!flashcardDecks[deck]) {
+          flashcardDecks[deck] = { deck, count: 0, cardIds: [] };
+        }
+        flashcardDecks[deck].count++;
+        flashcardDecks[deck].cardIds.push(card.id);
+      } else {
+        regularCards.push(card);
+      }
+    }
+
+    // Format the regular cards to match our UI Card model
+    const formattedCards = regularCards.map(c => ({
       id: c.id,
       title: c.title,
       rawContent: c.raw_content,
@@ -41,7 +58,20 @@ export async function GET() {
       relativePath: `${c.profiles?.handle}/${c.slug}`
     }));
 
-    return NextResponse.json({ cards: formattedCards, config: null });
+    // Format flashcard decks
+    const flashcardCollections = Object.values(flashcardDecks).map(d => ({
+      deck: d.deck,
+      count: d.count,
+      // Store first card ID for preview, but exclude from main list
+      previewId: d.cardIds[0],
+      cardIds: d.cardIds
+    }));
+
+    return NextResponse.json({
+      cards: formattedCards,
+      config: null,
+      flashcardCollections
+    });
   }
 
   const files = vaultCache.getVaultFiles();

@@ -52,6 +52,8 @@ export interface DemoOverlayV1 {
   tombstonedIds: string[];
   /** Demo-only: map stable card id → new vault-relative path (rename/move UI). */
   renamedByCardId: Record<string, string>;
+  /** Demo-only: deck publish states for flashcards */
+  publishedDecks: Record<string, boolean>;
 }
 
 export interface VaultFile {

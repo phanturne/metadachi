@@ -35,10 +35,11 @@ const DEFAULT_CONFIG: VaultConfig = {
     { id: 'recipe', label: 'Recipes', inferFromPath: 'recipes/' },
     { id: 'meeting', label: 'Meetings', inferFromContent: '## Meeting' },
     { id: 'note', label: 'Notes' },
+    { id: 'flashcard', label: 'Flashcards', inferFromPath: 'Flashcards/' },
     { id: 'reference', label: 'Reference' },
     { id: 'default', label: 'Other' },
   ],
-  filterBarOrder: ['all', 'recipe', 'meeting', 'note', 'reference', 'default'],
+  filterBarOrder: ['all', 'flashcard', 'recipe', 'meeting', 'note', 'reference', 'default'],
 };
 
 export function getVaultConfig(): VaultConfig {
@@ -61,6 +62,13 @@ export function getVaultConfig(): VaultConfig {
 function inferType(filePath: string, content: string, frontmatter: Record<string, unknown>, config: VaultConfig): CardType {
   if (frontmatter.type && typeof frontmatter.type === 'string') {
     return frontmatter.type;
+  }
+  // Auto-detect flashcards by familiarity_level, last review field, or Q:/A:::: format
+  const hasFamiliarityLevel = frontmatter['familiarity_level'] !== undefined;
+  const hasLastReview = frontmatter['last_reviewed_at'] !== undefined;
+  const hasFlashcardFormat = content.includes('Q:') && content.includes('A::::');
+  if (hasFamiliarityLevel || hasLastReview || hasFlashcardFormat) {
+    return 'flashcard';
   }
   // Infer dynamically from config
   const relative = path.relative(VAULT_PATH, filePath);
@@ -101,6 +109,12 @@ export function parseFile(filePath: string, config: VaultConfig): VaultFile | nu
       slug: typeof data.slug === 'string' ? data.slug : undefined,
       author: typeof data.author === 'string' ? data.author : undefined,
     };
+
+    // Parse flashcard-specific fields
+    if (type === 'flashcard') {
+      (meta as unknown as Record<string, unknown>)['familiarity_level'] = data['familiarity_level'];
+      (meta as unknown as Record<string, unknown>)['last_reviewed_at'] = data['last_reviewed_at'];
+    }
 
     return { path: resolvedPath, meta, rawContent: content.trim() };
   } catch {

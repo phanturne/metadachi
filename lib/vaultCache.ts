@@ -1,7 +1,7 @@
 import chokidar, { FSWatcher } from 'chokidar';
 import { parseFile, readVault, VAULT_PATH, getVaultConfig, canonicalVaultFilePath } from './vault';
 import { VaultFile } from './types';
-import { getStates } from './stateDb';
+import { getStates, getDeckStates, type DeckState } from './stateDb';
 import { EventEmitter } from 'events';
 
 // Prevent multiple instances in development
@@ -16,6 +16,7 @@ class VaultCacheSingleton {
   private watcher: FSWatcher | null = null;
   private syncDone: boolean = false;
   private updateEmitTimer: ReturnType<typeof setTimeout> | null = null;
+  private deckPublishStates: Map<string, boolean> = new Map();
 
   constructor() {
     // Only initialize in a real Node.js environment, not during static generation traces
@@ -31,6 +32,7 @@ class VaultCacheSingleton {
       console.log('[VaultCache] Synchronously populating cache...');
       const initialFiles = readVault();
       const states = getStates();
+      const deckStates = getDeckStates();
       
       for (const f of initialFiles) {
         const state = states[f.meta.id];
@@ -40,6 +42,12 @@ class VaultCacheSingleton {
            if (state.published !== undefined) f.meta.published = state.published;
         }
         this.files.set(f.path, f);
+      }
+      this.deckPublishStates.clear();
+      for (const [deck, state] of Object.entries(deckStates)) {
+        if (state.published !== undefined) {
+          this.deckPublishStates.set(deck, state.published);
+        }
       }
       this.syncDone = true;
       this.isReady = true;
@@ -80,6 +88,7 @@ class VaultCacheSingleton {
     if (filePath.endsWith('state.json') || filePath.endsWith('.metadachi.json')) {
       console.log('[VaultCache] State updated, applying states...');
       const states = getStates();
+      const deckStates = getDeckStates();
       for (const [path, file] of this.files.entries()) {
         const state = states[file.meta.id] || {};
         // If state changed manually, we must update the cache object
@@ -88,6 +97,12 @@ class VaultCacheSingleton {
         file.meta.favorite = state.favorite ?? false;
         file.meta.published = state.published ?? false;
         this.files.set(path, file);
+      }
+      this.deckPublishStates.clear();
+      for (const [deck, state] of Object.entries(deckStates)) {
+        if (state.published !== undefined) {
+          this.deckPublishStates.set(deck, state.published);
+        }
       }
       this.emitUpdate();
       return;
@@ -159,6 +174,17 @@ class VaultCacheSingleton {
         break; // IDs are unique
       }
     }
+  }
+
+  public updateDeckState(deck: string, stateUpdate: Partial<DeckState>) {
+    if (stateUpdate.published !== undefined) {
+      this.deckPublishStates.set(deck, stateUpdate.published);
+    }
+    this.emitUpdate();
+  }
+
+  public isDeckPublished(deck: string): boolean {
+    return this.deckPublishStates.get(deck) ?? false;
   }
 }
 

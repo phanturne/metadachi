@@ -11,6 +11,12 @@ export const VAULT_CARDS_QUERY_KEY = ['vault-cards'] as const;
 export type VaultCardsQueryData = {
   cards: Card[];
   config: VaultConfig | null;
+  flashcardCollections?: Array<{
+    deck: string;
+    count: number;
+    previewId?: string;
+    cardIds: string[];
+  }>;
 };
 
 const EMPTY_VAULT_CONFIG: VaultConfig = { types: [], filterBarOrder: [] };
@@ -20,6 +26,7 @@ async function fetchVaultCardsBundle(isDemoMode: boolean): Promise<VaultCardsQue
   const json = await res.json();
   let fetchedCards = json.cards as Card[];
   const config = json.config as VaultConfig;
+  const flashcardCollections = json.flashcardCollections as VaultCardsQueryData['flashcardCollections'];
 
   if (isDemoMode) {
     if (typeof window !== 'undefined') {
@@ -30,7 +37,7 @@ async function fetchVaultCardsBundle(isDemoMode: boolean): Promise<VaultCardsQue
     }
   }
 
-  return { cards: fetchedCards, config };
+  return { cards: fetchedCards, config, flashcardCollections };
 }
 
 /** Shared options so every `useQuery` for vault shares one cache entry and one network fetch. */
@@ -119,6 +126,7 @@ export function useVault() {
 
   const cards = data.cards;
   const config = data.config;
+  const flashcardCollections = data.flashcardCollections;
 
   const refresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: VAULT_CARDS_QUERY_KEY });
@@ -351,5 +359,6 @@ export function useVault() {
     relocateVaultFileAsync,
     resetDemoOverlay,
     vaultFileBusy,
+    flashcardCollections,
   };
 }

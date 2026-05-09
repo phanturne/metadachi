@@ -1,12 +1,35 @@
 import { clearDemoOverlay, loadDemoOverlay, saveDemoOverlay } from '@/lib/demoStorage';
 import type { VaultMode } from '@/lib/vaultMode';
+import type { FamiliarityLevel } from '@/lib/srs';
 
 export type TogglePinInput = { id: string; pinned: boolean };
 export type ToggleFavoriteInput = { id: string; favorite: boolean };
 export type TogglePublishedInput = { id: string; published: boolean };
+export type ToggleDeckPublishedInput = { deck: string; published: boolean };
 export type SaveFileInput = { id: string; relativePath: string; raw: string };
 export type DeleteFileInput = { id: string; relativePath: string };
 export type RelocateFileInput = { id: string; fromRelativePath: string; toRelativePath: string };
+
+export type CreateFlashcardInput = {
+  front: string;
+  back: string;
+  deck?: string;
+  tags?: string[];
+  difficulty?: string;
+  category?: string;
+};
+
+export type UpdateLastReviewedInput = {
+  id: string;
+  relativePath: string;
+  lastReviewedAt: string;
+};
+
+export type UpdateFamiliarityLevelInput = {
+  id: string;
+  relativePath: string;
+  familiarity_level: FamiliarityLevel;
+};
 
 const DEMO_LOCAL_STORAGE_KEY = 'metadachi-demo-state';
 
@@ -37,11 +60,15 @@ export type VaultWriteAdapter = {
   togglePin(input: TogglePinInput): Promise<void>;
   toggleFavorite(input: ToggleFavoriteInput): Promise<void>;
   togglePublished(input: TogglePublishedInput): Promise<void>;
+  toggleDeckPublished(input: ToggleDeckPublishedInput): Promise<void>;
   saveVaultFile(input: SaveFileInput): Promise<void>;
   addVaultFile(): Promise<string | undefined>;
   removeVaultFile(input: DeleteFileInput): Promise<void>;
   relocateVaultFile(input: RelocateFileInput): Promise<void>;
   resetDemoOverlay(): Promise<void>;
+  createFlashcard(input: CreateFlashcardInput): Promise<string>;
+  updateLastReviewed(input: UpdateLastReviewedInput): Promise<void>;
+  updateFamiliarityLevel(input: UpdateFamiliarityLevelInput): Promise<void>;
 };
 
 function createDemoAdapter(): VaultWriteAdapter {
@@ -69,13 +96,22 @@ function createDemoAdapter(): VaultWriteAdapter {
       });
     },
     async togglePublished({ id, published }) {
-      // Demo mode doesn't really have a "hub", but we track the state anyway
       const overlay = await loadDemoOverlay();
       await saveDemoOverlay({
         ...overlay,
         pinFavoriteById: {
           ...overlay.pinFavoriteById,
           [id]: { ...overlay.pinFavoriteById[id], published },
+        },
+      });
+    },
+    async toggleDeckPublished({ deck, published }) {
+      const overlay = await loadDemoOverlay();
+      await saveDemoOverlay({
+        ...overlay,
+        publishedDecks: {
+          ...overlay.publishedDecks,
+          [deck]: published,
         },
       });
     },
@@ -138,6 +174,79 @@ function createDemoAdapter(): VaultWriteAdapter {
     async resetDemoOverlay() {
       await clearDemoOverlay();
     },
+    async createFlashcard({ front, back, deck = 'default', tags = [], difficulty, category }) {
+      const overlay = await loadDemoOverlay();
+      const cardId = crypto.randomUUID();
+      const relativePath = `__demo__/Flashcards/${cardId}.md`;
+      const now = new Date().toISOString();
+      const raw = `---\nid: ${cardId}\ntitle: "${front.slice(0, 50)}"\ntype: flashcard\ndeck: ${deck}\ntags: [${tags.map(t => `"${t}"`).join(', ')}]\nfamiliarity_level: new\nlast_reviewed_at: ${now}\ncreated: ${now}\n${difficulty ? `difficulty: ${difficulty}\n` : ''}${category ? `category: ${category}\n` : ''}---\n\nQ: ${front}\nA::::\n\n${back}\n`;
+      await saveDemoOverlay({
+        ...overlay,
+        virtualFiles: [...overlay.virtualFiles, { relativePath, raw }],
+        pinFavoriteById: {
+          ...overlay.pinFavoriteById,
+          [cardId]: { pinned: false, favorite: false },
+        },
+      });
+      return relativePath;
+    },
+    async updateLastReviewed({ relativePath, lastReviewedAt }) {
+      const overlay = await loadDemoOverlay();
+      const vf = overlay.virtualFiles.find(vf => vf.relativePath === relativePath);
+      if (!vf) throw new Error('Flashcard not found');
+
+      const frontmatterMatch = vf.raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+      if (!frontmatterMatch) throw new Error('Invalid frontmatter');
+
+      const [, frontmatterStr, content] = frontmatterMatch;
+
+      let newFrontmatter = frontmatterStr
+        .replace(/^last_reviewed_at:.*$/m, `last_reviewed_at: ${lastReviewedAt}`);
+
+      if (!newFrontmatter.includes('last_reviewed_at:')) {
+        newFrontmatter += `\nlast_reviewed_at: ${lastReviewedAt}`;
+      }
+
+      newFrontmatter = newFrontmatter
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .join('\n');
+
+      const newRaw = `---\n${newFrontmatter}\n---\n${content}`;
+
+      await saveDemoOverlay({
+        ...overlay,
+        virtualFiles: overlay.virtualFiles.map(vf =>
+          vf.relativePath === relativePath ? { ...vf, raw: newRaw } : vf
+        ),
+      });
+    },
+    async updateFamiliarityLevel({ relativePath, familiarity_level }) {
+      const overlay = await loadDemoOverlay();
+      const vf = overlay.virtualFiles.find(vf => vf.relativePath === relativePath);
+      if (!vf) throw new Error('Flashcard not found');
+
+      const frontmatterMatch = vf.raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+      if (!frontmatterMatch) throw new Error('Invalid frontmatter');
+
+      const [, frontmatterStr, content] = frontmatterMatch;
+
+      let newFrontmatter = frontmatterStr
+        .replace(/^familiarity_level:.*$/m, `familiarity_level: ${familiarity_level}`);
+
+      if (!newFrontmatter.includes('familiarity_level:')) {
+        newFrontmatter += `\nfamiliarity_level: ${familiarity_level}`;
+      }
+
+      const newRaw = `---\n${newFrontmatter}\n---\n${content}`;
+
+      await saveDemoOverlay({
+        ...overlay,
+        virtualFiles: overlay.virtualFiles.map(vf =>
+          vf.relativePath === relativePath ? { ...vf, raw: newRaw } : vf
+        ),
+      });
+    },
   };
 }
 
@@ -166,6 +275,14 @@ function createLiveAdapter(): VaultWriteAdapter {
         body: JSON.stringify({ id, published }),
       });
       await assertOkOrThrow(res, 'Failed to toggle published');
+    },
+    async toggleDeckPublished({ deck, published }) {
+      const res = await fetch('/api/vault/deck-published', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deck, published }),
+      });
+      await assertOkOrThrow(res, 'Failed to toggle deck publish');
     },
     async saveVaultFile({ relativePath, raw }) {
       const res = await fetch('/api/vault/file', {
@@ -197,6 +314,32 @@ function createLiveAdapter(): VaultWriteAdapter {
     },
     async resetDemoOverlay() {
       // No-op in live mode.
+    },
+    async createFlashcard({ front, back, deck = 'default', tags = [], difficulty, category }) {
+      const res = await fetch('/api/flashcards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ front, back, deck, tags, difficulty, category }),
+      });
+      await assertOkOrThrow(res, 'Failed to create flashcard');
+      const json = (await res.json()) as { relativePath?: string };
+      return json.relativePath || '';
+    },
+    async updateLastReviewed({ relativePath, lastReviewedAt }) {
+      const res = await fetch('/api/flashcards', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ relativePath, last_reviewed_at: lastReviewedAt }),
+      });
+      await assertOkOrThrow(res, 'Failed to update last reviewed');
+    },
+    async updateFamiliarityLevel({ relativePath, familiarity_level }) {
+      const res = await fetch('/api/flashcards', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ relativePath, familiarity_level }),
+      });
+      await assertOkOrThrow(res, 'Failed to update familiarity level');
     },
   };
 }
