@@ -1,18 +1,17 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import type { Flashcard } from "@/lib/hooks/useFlashcards"
-import { ReviewResponse } from "@/lib/srs"
+import { Button } from "@/components/ui/button"
+import { FAMILIARITY_LEVELS, type Flashcard } from "@/lib/hooks/useFlashcards"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import { useState } from "react"
-import { RatingButtons } from "./RatingButtons"
 
 interface FlashcardViewInteractiveProps {
   flashcard: Flashcard
-  onRate?: (flashcard: Flashcard, response: ReviewResponse) => void
+  onTouchReviewed?: (flashcard: Flashcard) => void | Promise<void>
+  onMoveLevel?: (flashcard: Flashcard, newLevel: Flashcard["familiarity_level"]) => void | Promise<void>
   onClose?: () => void
-  showRateButtons?: boolean
   onFlip?: (isFlipped: boolean) => void
 }
 
@@ -88,9 +87,9 @@ function MarkdownContent({ content }: { content: string }) {
 
 export function FlashcardViewInteractive({
   flashcard,
-  onRate,
+  onTouchReviewed,
+  onMoveLevel,
   onClose,
-  showRateButtons = true,
   onFlip,
 }: FlashcardViewInteractiveProps) {
   const [isFlipped, setIsFlipped] = useState(false)
@@ -101,8 +100,19 @@ export function FlashcardViewInteractive({
     onFlip?.(newState)
   }
 
-  const handleRate = (response: ReviewResponse) => {
-    onRate?.(flashcard, response)
+  const handleTouchReviewed = () => {
+    if (!onTouchReviewed) return
+    void onTouchReviewed(flashcard)
+  }
+
+  const handleBucketClick = (target: Flashcard["familiarity_level"]) => {
+    if (target === flashcard.familiarity_level) {
+      if (!onTouchReviewed) return
+      void onTouchReviewed(flashcard)
+      return
+    }
+    if (!onMoveLevel) return
+    void onMoveLevel(flashcard, target)
   }
 
   return (
@@ -143,15 +153,35 @@ export function FlashcardViewInteractive({
         </AnimatePresence>
       </div>
 
-      {/* Rating Buttons */}
-      {showRateButtons && isFlipped && onRate && (
-        <div className="mt-6">
-          <RatingButtons onRate={handleRate} />
+      {/* Bucket selector (manual familiarity) */}
+      {isFlipped && (onMoveLevel || onTouchReviewed) && (
+        <div className="mt-6 flex items-center justify-center gap-1">
+          {FAMILIARITY_LEVELS.map((level) => {
+            const isCurrent = level === flashcard.familiarity_level
+            const title = isCurrent
+              ? `Mark reviewed (keep ${level})`
+              : `Move to ${level}`
+
+            return (
+              <Button
+                key={level}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "capitalize",
+                  isCurrent ? "bg-muted text-foreground" : "text-muted-foreground"
+                )}
+                aria-pressed={isCurrent}
+                title={title}
+                onClick={() => handleBucketClick(level)}
+              >
+                {level}
+              </Button>
+            )
+          })}
         </div>
       )}
     </div>
   )
 }
 
-// Re-export RatingButtons for convenience
-export { RatingButtons } from "./RatingButtons"

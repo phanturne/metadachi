@@ -72,7 +72,10 @@ function parseFlashcardFromCard(card: Card): Flashcard {
     deck = String(cardData['deck']);
   } else if (card.relativePath) {
     const parts = card.relativePath.split('/');
-    if (parts.length >= 2) {
+    // If under Flashcards/, use the subfolder (parts[1]) as deck
+    if (parts[0] === 'Flashcards' && parts.length >= 3) {
+      deck = parts[1];
+    } else if (parts.length >= 2) {
       deck = parts[0];
     }
   }
@@ -297,13 +300,14 @@ export function useFlashcardsByFamiliarity() {
       buckets[card.familiarity_level].push(card);
     }
 
-    // Sort each bucket by last_reviewed_at (most recent first), nulls at end
+    // Sort each bucket by last_reviewed_at (oldest first), nulls at start.
+    // This makes "mark reviewed" naturally push a card to the bottom.
     for (const level of FAMILIARITY_LEVELS) {
       buckets[level].sort((a, b) => {
         if (!a.last_reviewed_at && !b.last_reviewed_at) return 0;
-        if (!a.last_reviewed_at) return 1;
-        if (!b.last_reviewed_at) return -1;
-        return new Date(b.last_reviewed_at).getTime() - new Date(a.last_reviewed_at).getTime();
+        if (!a.last_reviewed_at) return -1;
+        if (!b.last_reviewed_at) return 1;
+        return new Date(a.last_reviewed_at).getTime() - new Date(b.last_reviewed_at).getTime();
       });
     }
 

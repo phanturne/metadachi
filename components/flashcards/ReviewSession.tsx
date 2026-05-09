@@ -2,20 +2,18 @@
 
 import { Button } from "@/components/ui/button"
 import type { Flashcard } from "@/lib/hooks/useFlashcards"
-import { ReviewResponse } from "@/lib/srs"
 import { AnimatePresence, motion } from "framer-motion"
 import { ArrowRight, CheckCircle, RotateCcw } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { FlashcardView } from "./FlashcardView"
-import { RatingButtons } from "./RatingButtons"
 
 interface ReviewSessionProps {
   flashcards: Flashcard[]
   onComplete: () => void
-  onRate: (flashcard: Flashcard, response: ReviewResponse) => void
+  onSelectLevel: (flashcard: Flashcard, level: Flashcard["familiarity_level"]) => void | Promise<void>
 }
 
-export function ReviewSession({ flashcards, onComplete, onRate }: ReviewSessionProps) {
+export function ReviewSession({ flashcards, onComplete, onSelectLevel }: ReviewSessionProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isComplete, setIsComplete] = useState(false)
   const [answerRevealed, setAnswerRevealed] = useState(false)
@@ -23,11 +21,7 @@ export function ReviewSession({ flashcards, onComplete, onRate }: ReviewSessionP
   const currentCard = flashcards[currentIndex]
   const progress = `${currentIndex + 1} of ${flashcards.length}`
 
-  const handleRate = useCallback((response: ReviewResponse) => {
-    if (!currentCard || !onRate) return
-
-    onRate(currentCard, response)
-
+  const advance = useCallback(() => {
     // Move to next card
     if (currentIndex < flashcards.length - 1) {
       setCurrentIndex(prev => prev + 1)
@@ -35,16 +29,17 @@ export function ReviewSession({ flashcards, onComplete, onRate }: ReviewSessionP
     } else {
       setIsComplete(true)
     }
-  }, [currentCard, currentIndex, flashcards.length, onRate])
+  }, [currentIndex, flashcards.length])
+
+  const handleSelect = useCallback(async (level: Flashcard["familiarity_level"]) => {
+    if (!currentCard) return
+    await Promise.resolve(onSelectLevel(currentCard, level))
+    advance()
+  }, [advance, currentCard, onSelectLevel])
 
   const handleNext = useCallback(() => {
-    if (currentIndex < flashcards.length - 1) {
-      setCurrentIndex(prev => prev + 1)
-      setAnswerRevealed(false)
-    } else {
-      setIsComplete(true)
-    }
-  }, [currentIndex, flashcards.length])
+    advance()
+  }, [advance])
 
   const handleRestart = () => {
     setCurrentIndex(0)
@@ -123,7 +118,24 @@ export function ReviewSession({ flashcards, onComplete, onRate }: ReviewSessionP
 
       {/* Rating buttons */}
       {answerRevealed && (
-        <RatingButtons onRate={handleRate} />
+        <div className="mt-6 flex items-center justify-center gap-2">
+          {(["new", "learning", "mastered"] as const).map((level) => {
+            const isCurrent = level === currentCard.familiarity_level
+            return (
+              <Button
+                key={level}
+                variant="ghost"
+                size="sm"
+                className={isCurrent ? "bg-muted text-foreground capitalize" : "text-muted-foreground capitalize"}
+                aria-pressed={isCurrent}
+                title={isCurrent ? `Mark reviewed (keep ${level})` : `Move to ${level}`}
+                onClick={() => void handleSelect(level)}
+              >
+                {level}
+              </Button>
+            )
+          })}
+        </div>
       )}
 
       {/* Skip button */}

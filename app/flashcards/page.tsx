@@ -22,11 +22,11 @@ import {
   useToggleDeckPublished,
   useUpdateFamiliarityLevel,
 } from '@/lib/hooks/useFlashcards';
-import { FamiliarityLevel, ReviewResponse } from '@/lib/srs';
+import { FamiliarityLevel } from '@/lib/srs';
 import { motion } from 'framer-motion';
-import { ArrowDown, ArrowRight, Brain, ChevronRight, Clock, Globe, Layers, Zap } from 'lucide-react';
+import { Brain, ChevronRight, Clock, Globe, GripVertical, Layers, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type Tab = 'review' | 'decks' | 'all' | 'levels';
 const FLASHCARDS_TAB_STORAGE_KEY = 'metadachi-flashcards-active-tab';
@@ -147,21 +147,16 @@ export default function FlashcardsPage() {
     setEditingCard(undefined);
   };
 
-  const mapReviewToFamiliarity = (
-    currentLevel: FamiliarityLevel,
-    response: ReviewResponse
-  ): FamiliarityLevel => {
-    if (response === ReviewResponse.Again) return 'new';
-    if (response === ReviewResponse.Easy) return 'mastered';
-    if (response === ReviewResponse.Hard) return currentLevel === 'mastered' ? 'learning' : 'new';
-    // Good: promote one step (or keep mastered).
-    if (currentLevel === 'new') return 'learning';
-    return 'mastered';
-  };
-
-  const handleReviewCard = async (flashcard: Flashcard, response: ReviewResponse) => {
+  const handleSelectBucket = async (flashcard: Flashcard, level: FamiliarityLevel) => {
     const now = new Date().toISOString();
-    const nextFamiliarity = mapReviewToFamiliarity(flashcard.familiarity_level, response);
+    if (flashcard.familiarity_level === level) {
+      await reviewFlashcard.mutateAsync({
+        id: flashcard.id,
+        relativePath: flashcard.relativePath,
+        lastReviewedAt: now,
+      });
+      return;
+    }
 
     await Promise.all([
       reviewFlashcard.mutateAsync({
@@ -172,13 +167,9 @@ export default function FlashcardsPage() {
       updateFamiliarityLevel.mutateAsync({
         id: flashcard.id,
         relativePath: flashcard.relativePath,
-        familiarity_level: nextFamiliarity,
+        familiarity_level: level,
       }),
     ]);
-
-    if (previewCard?.id === flashcard.id) {
-      setPreviewCard(null);
-    }
   };
 
   const handleEditCard = (card: Flashcard) => {
@@ -202,6 +193,17 @@ export default function FlashcardsPage() {
   const handleClosePreview = () => {
     setPreviewCard(null);
   };
+
+  useEffect(() => {
+    if (!previewCard) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPreviewCard(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [previewCard]);
 
   const tabs: { id: 'review' | 'decks' | 'all' | 'levels'; label: string; count?: number }[] = [
     { id: 'review', label: 'Review', count: allCards.length },
@@ -317,7 +319,7 @@ export default function FlashcardsPage() {
           <ReviewSession
             flashcards={reviewCards}
             onComplete={() => setActiveTab('decks')}
-            onRate={handleReviewCard}
+            onSelectLevel={handleSelectBucket}
           />
         )}
 
@@ -341,6 +343,14 @@ export default function FlashcardsPage() {
                 id: card.id,
                 relativePath: card.relativePath,
                 familiarity_level: newLevel,
+              });
+            }}
+            onTouchReviewed={async (card: Flashcard) => {
+              const now = new Date().toISOString();
+              await reviewFlashcard.mutateAsync({
+                id: card.id,
+                relativePath: card.relativePath,
+                lastReviewedAt: now,
               });
             }}
           />
@@ -401,8 +411,18 @@ export default function FlashcardsPage() {
 
       {/* Card Preview Modal */}
       {previewCard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-background rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) handleClosePreview();
+          }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="bg-background rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-auto"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <h2 className="text-lg font-semibold">Flashcard Preview</h2>
@@ -412,7 +432,17 @@ export default function FlashcardsPage() {
               </div>
               <FlashcardViewInteractive
                 flashcard={previewCard}
-                onRate={handleReviewCard}
+                onTouchReviewed={async (card) => {
+                  const now = new Date().toISOString();
+                  await reviewFlashcard.mutateAsync({
+                    id: card.id,
+                    relativePath: card.relativePath,
+                    lastReviewedAt: now,
+                  });
+                }}
+                onMoveLevel={async (card, newLevel) => {
+                  await handleSelectBucket(card, newLevel);
+                }}
                 onClose={handleClosePreview}
               />
             </div>
@@ -552,11 +582,90 @@ function LevelsView({
   buckets,
   onCardClick,
   onMoveLevel,
+  onTouchReviewed,
 }: {
   buckets: Record<FamiliarityLevel, Flashcard[]>;
   onCardClick: (card: Flashcard) => void;
-  onMoveLevel: (card: Flashcard, newLevel: FamiliarityLevel) => void;
+  onMoveLevel: (card: Flashcard, newLevel: FamiliarityLevel) => void | Promise<void>;
+  onTouchReviewed: (card: Flashcard) => void | Promise<void>;
 }) {
+  const [dragOverLevel, setDragOverLevel] = useState<FamiliarityLevel | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  const findCardById = useCallback(
+    (id: string): Flashcard | undefined => {
+      for (const level of FAMILIARITY_LEVELS) {
+        const found = buckets[level].find((c) => c.id === id);
+        if (found) return found;
+      }
+      return undefined;
+    },
+    [buckets]
+  );
+
+  const handleDragStart = (e: React.DragEvent, card: Flashcard) => {
+    e.dataTransfer.setData('text/plain', card.id);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggingId(card.id);
+
+    // Use the card row as the drag image (looks much nicer than the small handle).
+    // We clone into an offscreen element so we can safely pass it to setDragImage.
+    const row = (e.currentTarget as HTMLElement | null)?.closest?.('[data-drag-preview="flashcard-row"]') as HTMLElement | null;
+    if (!row) return;
+
+    const clone = row.cloneNode(true) as HTMLElement;
+    clone.style.position = 'absolute';
+    clone.style.top = '-1000px';
+    clone.style.left = '-1000px';
+    clone.style.width = `${row.getBoundingClientRect().width}px`;
+    clone.style.pointerEvents = 'none';
+    clone.style.opacity = '0.95';
+    clone.style.transform = 'rotate(-1deg)';
+    clone.style.boxShadow = '0 10px 30px rgba(0,0,0,0.25)';
+    document.body.appendChild(clone);
+
+    try {
+      e.dataTransfer.setDragImage(clone, 24, 24);
+    } finally {
+      // Cleanup after drag image is captured.
+      window.setTimeout(() => clone.remove(), 0);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverLevel(null);
+  };
+
+  const handleColumnDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleColumnDragOver = (e: React.DragEvent, level: FamiliarityLevel) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverLevel(level);
+  };
+
+  const handleColumnDragLeave = (e: React.DragEvent) => {
+    const next = e.relatedTarget as Node | null;
+    if (next && e.currentTarget.contains(next)) return;
+    setDragOverLevel(null);
+  };
+
+  const handleColumnDrop = async (e: React.DragEvent, level: FamiliarityLevel) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverLevel(null);
+    const id = e.dataTransfer.getData('text/plain');
+    if (!id) return;
+    const card = findCardById(id);
+    if (!card || card.familiarity_level === level) return;
+    await Promise.resolve(onMoveLevel(card, level));
+  };
+
   const levelConfig: Record<FamiliarityLevel, { label: string; description: string; icon: React.ReactNode; color: string; bgColor: string }> = {
     new: {
       label: 'New',
@@ -594,7 +703,17 @@ function LevelsView({
             animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-md mx-auto"
           >
-            <div className={`rounded-xl border ${config.bgColor} p-4 h-[calc(100vh-24rem)] min-h-[24rem] flex flex-col`}>
+            <div
+              className={`rounded-xl border ${config.bgColor} p-4 h-[calc(100vh-24rem)] min-h-[24rem] flex flex-col transition-shadow ${
+                dragOverLevel === level && draggingId
+                  ? 'ring-2 ring-primary/50 shadow-md bg-primary/5'
+                  : ''
+              }`}
+              onDragEnter={handleColumnDragEnter}
+              onDragOver={(e) => handleColumnDragOver(e, level)}
+              onDragLeave={handleColumnDragLeave}
+              onDrop={(e) => handleColumnDrop(e, level)}
+            >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${config.bgColor}`}>
@@ -610,20 +729,36 @@ function LevelsView({
                 </Badge>
               </div>
 
-              <div className="space-y-2 overflow-y-auto pr-1 flex-1 min-h-0">
+              <div
+                className="space-y-2 overflow-y-auto pr-1 flex-1 min-h-0 rounded-lg"
+              >
                 {cards.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center rounded-lg border border-dashed border-border/60 bg-background/30 p-4">
+                  <div className="h-full min-h-[8rem] flex flex-col items-center justify-center text-center rounded-lg border border-dashed border-border/60 bg-background/30 p-4">
                     <p className="text-sm text-muted-foreground">No cards in {config.label.toLowerCase()} yet.</p>
+                    <p className="text-xs text-muted-foreground/80 mt-2">Drop a card here to set it to {config.label.toLowerCase()}.</p>
                   </div>
                 ) : (
                   cards.map((card, index) => (
                     <motion.div
                       key={card.id}
                       initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      animate={{ opacity: draggingId === card.id ? 0.45 : 1, x: 0 }}
                       transition={{ delay: index * 0.03 }}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-background/50 hover:bg-background transition-colors"
+                      className="flex items-center gap-2 p-3 rounded-lg bg-background/50 hover:bg-background transition-colors"
+                      data-drag-preview="flashcard-row"
                     >
+                      <button
+                        type="button"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, card)}
+                        onDragEnd={handleDragEnd}
+                        className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 cursor-grab active:cursor-grabbing touch-none"
+                        title="Drag to another column"
+                        aria-label="Drag to another column"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <GripVertical className="w-4 h-4" />
+                      </button>
                       <div
                         className="flex-1 min-w-0 cursor-pointer"
                         onClick={() => onCardClick(card)}
@@ -639,27 +774,39 @@ function LevelsView({
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        {level !== 'new' && (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => onMoveLevel(card, level === 'mastered' ? 'learning' : 'new')}
-                            title={level === 'mastered' ? 'Move to Learning' : 'Move to New'}
-                          >
-                            <ArrowDown className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {level !== 'mastered' && (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => onMoveLevel(card, level === 'new' ? 'learning' : 'mastered')}
-                            title={level === 'new' ? 'Move to Learning' : 'Move to Mastered'}
-                          >
-                            <ArrowRight className="w-4 h-4" />
-                          </Button>
-                        )}
+                      <div className="flex items-center gap-1 shrink-0">
+                        {FAMILIARITY_LEVELS.map((target) => {
+                          const isCurrent = target === level;
+                          const title = isCurrent
+                            ? `Mark reviewed (keep ${target})`
+                            : `Move to ${target}`;
+                          const icon =
+                            target === 'new'
+                              ? <Zap className="w-4 h-4" />
+                              : target === 'learning'
+                                ? <Clock className="w-4 h-4" />
+                                : <Brain className="w-4 h-4" />;
+
+                          return (
+                            <Button
+                              key={target}
+                              variant="ghost"
+                              size="icon-sm"
+                              className={isCurrent ? 'bg-muted text-foreground' : 'text-muted-foreground'}
+                              aria-pressed={isCurrent}
+                              title={title}
+                              onClick={() => {
+                                if (isCurrent) {
+                                  void onTouchReviewed(card);
+                                } else {
+                                  void onMoveLevel(card, target);
+                                }
+                              }}
+                            >
+                              {icon}
+                            </Button>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   ))
