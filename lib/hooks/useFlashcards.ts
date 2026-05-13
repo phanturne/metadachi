@@ -211,6 +211,38 @@ export function useDeleteFlashcard() {
   });
 }
 
+export function useUpdateFlashcard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      relativePath,
+      front,
+      back,
+      deck,
+      tags,
+      difficulty,
+      category,
+    }: {
+      id: string;
+      relativePath: string;
+      front: string;
+      back: string;
+      deck?: string;
+      tags?: string[];
+      difficulty?: string;
+      category?: string;
+    }) => {
+      const mode = getVaultMode();
+      const adapter = getVaultWriteAdapter(mode);
+      await adapter.updateFlashcard({ id, relativePath, front, back, deck, tags, difficulty, category });
+    },
+    onSuccess: () => {
+      invalidateFlashcardQueries(qc);
+    },
+  });
+}
+
 export function useFlashcardsGrouped() {
   const { data: flashcards = [] } = useFlashcards();
 

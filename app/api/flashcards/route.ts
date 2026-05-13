@@ -112,3 +112,56 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Failed to update flashcard' }, { status: 500 })
   }
 }
+
+export async function PUT(request: Request) {
+  const mode = getVaultMode()
+
+  if (mode === 'demo') {
+    return NextResponse.json({ error: 'Use client-side adapter in demo mode' }, { status: 400 })
+  }
+
+  try {
+    const { relativePath, front, back, deck, tags, difficulty, category } = await request.json() as {
+      relativePath: string
+      front: string
+      back: string
+      deck?: string
+      tags?: string[]
+      difficulty?: string
+      category?: string
+    }
+
+    if (!relativePath) {
+      return NextResponse.json({ error: 'relativePath is required' }, { status: 400 })
+    }
+
+    const abs = resolveSafeVaultMarkdownPath(VAULT_PATH, relativePath)
+    if (!abs) {
+      return NextResponse.json({ error: 'Invalid relativePath' }, { status: 400 })
+    }
+
+    if (!fs.existsSync(abs)) {
+      return NextResponse.json({ error: 'File not found' }, { status: 404 })
+    }
+
+    const raw = fs.readFileSync(abs, 'utf-8')
+    const parsed = matter(raw)
+    const { data, content: _ } = parsed
+
+    // Update frontmatter fields (only update if they already exist - don't add new fields)
+    if (deck !== undefined && 'deck' in data) data.deck = deck
+    if (tags !== undefined && 'tags' in data) data.tags = tags
+    if (difficulty !== undefined && 'difficulty' in data) data.difficulty = difficulty
+    if (category !== undefined && 'category' in data) data.category = category
+
+    // Update content
+    const newContent = `Q: ${front}\nA::::\n\n${back}`
+    const newRaw = matter.stringify(newContent, data)
+    fs.writeFileSync(abs, newRaw, 'utf-8')
+
+    return NextResponse.json({ success: true })
+  } catch (e) {
+    console.error('[flashcards] PUT failed:', e)
+    return NextResponse.json({ error: 'Failed to update flashcard' }, { status: 500 })
+  }
+}

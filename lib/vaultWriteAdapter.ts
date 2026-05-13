@@ -31,6 +31,17 @@ export type UpdateFamiliarityLevelInput = {
   familiarity_level: FamiliarityLevel;
 };
 
+export type UpdateFlashcardInput = {
+  id: string;
+  relativePath: string;
+  front: string;
+  back: string;
+  deck?: string;
+  tags?: string[];
+  difficulty?: string;
+  category?: string;
+};
+
 const DEMO_LOCAL_STORAGE_KEY = 'metadachi-demo-state';
 
 function getDemoState(): Record<string, { pinned?: boolean; favorite?: boolean }> {
@@ -67,6 +78,7 @@ export type VaultWriteAdapter = {
   relocateVaultFile(input: RelocateFileInput): Promise<void>;
   resetDemoOverlay(): Promise<void>;
   createFlashcard(input: CreateFlashcardInput): Promise<string>;
+  updateFlashcard(input: UpdateFlashcardInput): Promise<void>;
   updateLastReviewed(input: UpdateLastReviewedInput): Promise<void>;
   updateFamiliarityLevel(input: UpdateFamiliarityLevelInput): Promise<void>;
 };
@@ -247,6 +259,68 @@ function createDemoAdapter(): VaultWriteAdapter {
         ),
       });
     },
+    async updateFlashcard({ relativePath, front, back, deck, tags, difficulty, category }) {
+      const overlay = await loadDemoOverlay();
+      const vf = overlay.virtualFiles.find(vf => vf.relativePath === relativePath);
+      if (!vf) throw new Error('Flashcard not found');
+
+      const frontmatterMatch = vf.raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+      if (!frontmatterMatch) throw new Error('Invalid frontmatter');
+
+      let [, frontmatterStr] = frontmatterMatch;
+
+      // Update deck
+      if (deck !== undefined) {
+        if (frontmatterStr.includes('deck:')) {
+          frontmatterStr = frontmatterStr.replace(/^deck:.*$/m, `deck: ${deck}`);
+        } else {
+          frontmatterStr += `\ndeck: ${deck}`;
+        }
+      }
+
+      // Update tags
+      if (tags !== undefined) {
+        if (frontmatterStr.includes('tags:')) {
+          frontmatterStr = frontmatterStr.replace(/^tags:.*$/m, `tags: [${tags.map(t => `"${t}"`).join(', ')}]`);
+        } else if (tags.length > 0) {
+          frontmatterStr += `\ntags: [${tags.map(t => `"${t}"`).join(', ')}]`;
+        }
+      }
+
+      // Update difficulty
+      if (difficulty !== undefined) {
+        if (frontmatterStr.includes('difficulty:')) {
+          frontmatterStr = frontmatterStr.replace(/^difficulty:.*$/m, difficulty ? `difficulty: ${difficulty}` : '');
+        } else if (difficulty) {
+          frontmatterStr += `\ndifficulty: ${difficulty}`;
+        }
+      }
+
+      // Update category
+      if (category !== undefined) {
+        if (frontmatterStr.includes('category:')) {
+          frontmatterStr = frontmatterStr.replace(/^category:.*$/m, category ? `category: ${category}` : '');
+        } else if (category) {
+          frontmatterStr += `\ncategory: ${category}`;
+        }
+      }
+
+      // Clean up empty frontmatter lines and update title
+      const titleMatch = frontmatterStr.match(/^title:.*$/m);
+      if (titleMatch) {
+        frontmatterStr = frontmatterStr.replace(/^title:.*$/m, `title: "${front.slice(0, 50)}"`);
+      }
+
+      const newContent = `Q: ${front}\nA::::\n\n${back}`;
+      const newRaw = `---\n${frontmatterStr}\n---\n${newContent}`;
+
+      await saveDemoOverlay({
+        ...overlay,
+        virtualFiles: overlay.virtualFiles.map(vf =>
+          vf.relativePath === relativePath ? { ...vf, raw: newRaw } : vf
+        ),
+      });
+    },
   };
 }
 
@@ -340,6 +414,14 @@ function createLiveAdapter(): VaultWriteAdapter {
         body: JSON.stringify({ relativePath, familiarity_level }),
       });
       await assertOkOrThrow(res, 'Failed to update familiarity level');
+    },
+    async updateFlashcard({ relativePath, front, back, deck, tags, difficulty, category }) {
+      const res = await fetch('/api/flashcards', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ relativePath, front, back, deck, tags, difficulty, category }),
+      });
+      await assertOkOrThrow(res, 'Failed to update flashcard');
     },
   };
 }

@@ -6,6 +6,7 @@ import { FAMILIARITY_LEVELS, type Flashcard } from "@/lib/hooks/useFlashcards"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import { useState } from "react"
+import { Pencil, Trash2 } from "lucide-react"
 
 interface FlashcardViewInteractiveProps {
   flashcard: Flashcard
@@ -13,6 +14,8 @@ interface FlashcardViewInteractiveProps {
   onMoveLevel?: (flashcard: Flashcard, newLevel: Flashcard["familiarity_level"]) => void | Promise<void>
   onClose?: () => void
   onFlip?: (isFlipped: boolean) => void
+  onDelete?: (flashcard: Flashcard) => void | Promise<void>
+  onEdit?: (flashcard: Flashcard) => void
 }
 
 function escapeHtml(value: string): string {
@@ -91,8 +94,11 @@ export function FlashcardViewInteractive({
   onMoveLevel,
   onClose,
   onFlip,
+  onDelete,
+  onEdit,
 }: FlashcardViewInteractiveProps) {
   const [isFlipped, setIsFlipped] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const handleFlip = () => {
     const newState = !isFlipped
@@ -109,14 +115,22 @@ export function FlashcardViewInteractive({
     if (target === flashcard.familiarity_level) {
       if (!onTouchReviewed) return
       void onTouchReviewed(flashcard)
+      onClose?.()
       return
     }
     if (!onMoveLevel) return
     void onMoveLevel(flashcard, target)
+    onClose?.()
+  }
+
+  const handleDelete = () => {
+    if (!onDelete) return
+    void onDelete(flashcard)
+    onClose?.()
   }
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center relative">
       {/* Card */}
       <div
         className="perspective-1000 mx-auto w-full cursor-pointer"
@@ -179,6 +193,54 @@ export function FlashcardViewInteractive({
               </Button>
             )
           })}
+        </div>
+      )}
+
+      {/* Action buttons */}
+      {(onEdit || onDelete) && !showDeleteConfirm && (
+        <div className="absolute top-4 right-4 flex items-center gap-1">
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit(flashcard)
+              }}
+              title="Edit"
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="text-destructive hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowDeleteConfirm(true)
+              }}
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      {showDeleteConfirm && (
+        <div className="mt-6 p-4 border border-destructive/50 rounded-lg bg-destructive/5 text-center">
+          <p className="text-sm mb-3">Delete this flashcard?</p>
+          <div className="flex items-center justify-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
+              Delete
+            </Button>
+          </div>
         </div>
       )}
     </div>

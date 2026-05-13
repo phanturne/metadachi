@@ -21,6 +21,7 @@ import {
   useReviewFlashcard,
   useToggleDeckPublished,
   useUpdateFamiliarityLevel,
+  useUpdateFlashcard,
 } from '@/lib/hooks/useFlashcards';
 import { FamiliarityLevel } from '@/lib/srs';
 import { motion } from 'framer-motion';
@@ -57,6 +58,7 @@ export default function FlashcardsPage() {
   const stats = useFlashcardStats();
   const flashcardsByFamiliarity = useFlashcardsByFamiliarity();
   const createFlashcard = useCreateFlashcard();
+  const updateFlashcard = useUpdateFlashcard();
   const reviewFlashcard = useReviewFlashcard();
   const updateFamiliarityLevel = useUpdateFamiliarityLevel();
   const deleteFlashcard = useDeleteFlashcard();
@@ -135,14 +137,27 @@ export default function FlashcardsPage() {
   };
 
   const handleSaveCard = async (card: { front: string; back: string; deck?: string; tags: string[]; difficulty?: string; category?: string }) => {
-    await createFlashcard.mutateAsync({
-      front: card.front,
-      back: card.back,
-      deck: card.deck || 'default',
-      tags: card.tags,
-      difficulty: card.difficulty,
-      category: card.category,
-    });
+    if (editingCard) {
+      await updateFlashcard.mutateAsync({
+        id: editingCard.id,
+        relativePath: editingCard.relativePath,
+        front: card.front,
+        back: card.back,
+        deck: card.deck || 'default',
+        tags: card.tags,
+        difficulty: card.difficulty,
+        category: card.category,
+      });
+    } else {
+      await createFlashcard.mutateAsync({
+        front: card.front,
+        back: card.back,
+        deck: card.deck || 'default',
+        tags: card.tags,
+        difficulty: card.difficulty,
+        category: card.category,
+      });
+    }
     setIsEditorOpen(false);
     setEditingCard(undefined);
   };
@@ -444,6 +459,14 @@ export default function FlashcardsPage() {
                   await handleSelectBucket(card, newLevel);
                 }}
                 onClose={handleClosePreview}
+                onEdit={(card) => {
+                  setEditingCard(card);
+                  setIsEditorOpen(true);
+                  setPreviewCard(null);
+                }}
+                onDelete={async (card) => {
+                  await deleteFlashcard.mutateAsync(card.id);
+                }}
               />
             </div>
           </div>
